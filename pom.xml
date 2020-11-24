@@ -233,6 +233,36 @@
 		    <version>1.0.0</version>
 		</dependency>
 		
+		<dependency>
+			<groupId>com.strandls.biodiv</groupId>
+			<artifactId>userGroup-client</artifactId>
+			<version>1.0.0</version>
+		</dependency>
+		
+		<dependency>
+			<groupId>com.strandls.biodiv</groupId>
+			<artifactId>traits-client</artifactId>
+			<version>1.0.0</version>
+		</dependency>
+		
+		<dependency>
+			<groupId>com.strandls.biodiv</groupId>
+			<artifactId>user-client</artifactId>
+			<version>1.0.0</version>
+		</dependency>
+		
+		<dependency>
+		    <groupId>com.strandls.biodiv</groupId>
+		    <artifactId>document-client</artifactId>
+		    <version>1.0.0</version>
+		</dependency>
+		
+		<dependency>
+		    <groupId>com.strandls.biodiv</groupId>
+		    <artifactId>taxonomy-client</artifactId>
+		    <version>1.0.0</version>
+		</dependency>
+		
 	</dependencies>
 
 	<build>

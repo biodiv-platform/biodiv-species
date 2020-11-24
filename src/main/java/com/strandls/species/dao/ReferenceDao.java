@@ -3,6 +3,8 @@
  */
 package com.strandls.species.dao;
 
+import java.util.List;
+
 import javax.inject.Inject;
 
 import org.hibernate.Session;
@@ -11,7 +13,7 @@ import org.hibernate.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.strandls.species.pojo.FieldHeader;
+import com.strandls.species.pojo.Reference;
 import com.strandls.species.util.AbstractDAO;
 
 /**
@@ -19,24 +21,24 @@ import com.strandls.species.util.AbstractDAO;
  *
  * 
  */
-public class FieldHeaderDao extends AbstractDAO<FieldHeader, Long> {
+public class ReferenceDao extends AbstractDAO<Reference, Long> {
 
-	private final Logger logger = LoggerFactory.getLogger(FieldHeaderDao.class);
+	private final Logger logger = LoggerFactory.getLogger(ReferenceDao.class);
 
 	/**
 	 * @param sessionFactory
 	 */
 	@Inject
-	protected FieldHeaderDao(SessionFactory sessionFactory) {
+	protected ReferenceDao(SessionFactory sessionFactory) {
 		super(sessionFactory);
 	}
 
 	@Override
-	public FieldHeader findById(Long id) {
-		FieldHeader result = null;
+	public Reference findById(Long id) {
+		Reference result = null;
 		Session session = sessionFactory.openSession();
 		try {
-			result = session.get(FieldHeader.class, id);
+			result = session.get(Reference.class, id);
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 		} finally {
@@ -46,17 +48,18 @@ public class FieldHeaderDao extends AbstractDAO<FieldHeader, Long> {
 	}
 
 	@SuppressWarnings("unchecked")
-	public FieldHeader findByFieldId(Long fieldId, Long languageId) {
-		String qry = "from FieldHeader where fieldId = :fieldId and languageId = :languageId ";
+	public List<Reference> findBySpeciesFieldId(Long speciesFieldId) {
+		String qry = "from Reference where speciesFieldId  = :speciesFieldId";
 		Session session = sessionFactory.openSession();
-		FieldHeader result = null;
+		List<Reference> result = null;
 		try {
-			Query<FieldHeader> query = session.createQuery(qry);
-			query.setParameter("fieldId", fieldId);
-			query.setParameter("languageId", languageId);
-			result = query.getSingleResult();
+			Query<Reference> query = session.createQuery(qry);
+			query.setParameter("speciesFieldId", speciesFieldId);
+			result = query.getResultList();
 		} catch (Exception e) {
 			logger.error(e.getMessage());
+		} finally {
+			session.close();
 		}
 		return result;
 	}
