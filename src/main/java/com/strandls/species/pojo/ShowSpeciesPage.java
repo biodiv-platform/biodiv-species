@@ -5,7 +5,6 @@ package com.strandls.species.pojo;
 
 import java.util.List;
 
-import com.strandls.document.pojo.DocumentMeta;
 import com.strandls.resource.pojo.ResourceData;
 import com.strandls.taxonomy.pojo.BreadCrumb;
 import com.strandls.taxonomy.pojo.TaxonomyDefinition;
@@ -28,7 +27,7 @@ public class ShowSpeciesPage {
 	private List<FactValuePair> facts;
 	private List<UserGroupIbp> userGroups;
 	private List<Featured> featured;
-	private List<DocumentMeta> documentMetaList;
+//	private List<DocumentMeta> documentMetaList;
 
 	/**
 	 * 
@@ -46,11 +45,10 @@ public class ShowSpeciesPage {
 	 * @param facts
 	 * @param userGroups
 	 * @param featured
-	 * @param documentMetaList
 	 */
 	public ShowSpeciesPage(Species species, List<BreadCrumb> breadCrumbs, TaxonomyDefinition taxonomyDefinition,
 			List<ResourceData> resourceData, List<SpeciesFieldData> fieldData, List<FactValuePair> facts,
-			List<UserGroupIbp> userGroups, List<Featured> featured, List<DocumentMeta> documentMetaList) {
+			List<UserGroupIbp> userGroups, List<Featured> featured) {
 		super();
 		this.species = species;
 		this.breadCrumbs = breadCrumbs;
@@ -60,8 +58,33 @@ public class ShowSpeciesPage {
 		this.facts = facts;
 		this.userGroups = userGroups;
 		this.featured = featured;
-		this.documentMetaList = documentMetaList;
 	}
+
+//	/**
+//	 * @param species
+//	 * @param breadCrumbs
+//	 * @param taxonomyDefinition
+//	 * @param resourceData
+//	 * @param fieldData
+//	 * @param facts
+//	 * @param userGroups
+//	 * @param featured
+//	 * @param documentMetaList
+//	 */
+//	public ShowSpeciesPage(Species species, List<BreadCrumb> breadCrumbs, TaxonomyDefinition taxonomyDefinition,
+//			List<ResourceData> resourceData, List<SpeciesFieldData> fieldData, List<FactValuePair> facts,
+//			List<UserGroupIbp> userGroups, List<Featured> featured, List<DocumentMeta> documentMetaList) {
+//		super();
+//		this.species = species;
+//		this.breadCrumbs = breadCrumbs;
+//		this.taxonomyDefinition = taxonomyDefinition;
+//		this.resourceData = resourceData;
+//		this.fieldData = fieldData;
+//		this.facts = facts;
+//		this.userGroups = userGroups;
+//		this.featured = featured;
+//		this.documentMetaList = documentMetaList;
+//	}
 
 	public Species getSpecies() {
 		return species;
@@ -127,12 +150,12 @@ public class ShowSpeciesPage {
 		this.featured = featured;
 	}
 
-	public List<DocumentMeta> getDocumentMetaList() {
-		return documentMetaList;
-	}
-
-	public void setDocumentMetaList(List<DocumentMeta> documentMetaList) {
-		this.documentMetaList = documentMetaList;
-	}
+//	public List<DocumentMeta> getDocumentMetaList() {
+//		return documentMetaList;
+//	}
+//
+//	public void setDocumentMetaList(List<DocumentMeta> documentMetaList) {
+//		this.documentMetaList = documentMetaList;
+//	}
 
 }

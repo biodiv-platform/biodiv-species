@@ -15,8 +15,6 @@ import javax.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.strandls.document.controllers.DocumentServiceApi;
-import com.strandls.document.pojo.DocumentMeta;
 import com.strandls.resource.controllers.ResourceServicesApi;
 import com.strandls.resource.pojo.License;
 import com.strandls.resource.pojo.ResourceData;
@@ -105,8 +103,8 @@ public class SpeciesServiceImpl implements SpeciesServices {
 
 //	injection of services
 
-	@Inject
-	private DocumentServiceApi documentService;
+//	@Inject
+//	private DocumentServiceApi documentService;
 
 	@Inject
 	private ResourceServicesApi resourceServices;
@@ -176,14 +174,18 @@ public class SpeciesServiceImpl implements SpeciesServices {
 				TaxonomyDefinition taxonomyDefinition = taxonomyService
 						.getTaxonomyConceptName(species.getTaxonConceptId().toString());
 
-				List<DocumentMeta> documentMetaList = documentService
-						.getDocumentByTaxonConceptId(species.getTaxonConceptId().toString());
+//				List<DocumentMeta> documentMetaList = documentService
+//						.getDocumentByTaxonConceptId(species.getTaxonConceptId().toString());
 
 				List<UserGroupIbp> userGroupList = ugService.getSpeciesUserGroup(speciesId.toString());
 				List<Featured> featured = ugService.getAllFeatured("species.Species", speciesId.toString());
 
+				
 				ShowSpeciesPage showSpeciesPage = new ShowSpeciesPage(species, breadCrumbs, taxonomyDefinition,
-						resourceData, fieldData, facts, userGroupList, featured, documentMetaList);
+						resourceData, fieldData, facts, userGroupList, featured);
+				
+//				ShowSpeciesPage showSpeciesPage = new ShowSpeciesPage(species, breadCrumbs, taxonomyDefinition,
+//						resourceData, fieldData, facts, userGroupList, featured, documentMetaList);
 
 				return showSpeciesPage;
 

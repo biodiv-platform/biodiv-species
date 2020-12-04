@@ -251,11 +251,11 @@
 			<version>1.0.0</version>
 		</dependency>
 		
-		<dependency>
+		<!-- <dependency>
 		    <groupId>com.strandls.biodiv</groupId>
 		    <artifactId>document-client</artifactId>
 		    <version>1.0.0</version>
-		</dependency>
+		</dependency> -->
 		
 		<dependency>
 		    <groupId>com.strandls.biodiv</groupId>
