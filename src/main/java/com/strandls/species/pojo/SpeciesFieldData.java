@@ -6,6 +6,7 @@ package com.strandls.species.pojo;
 import java.util.List;
 
 import com.strandls.resource.pojo.License;
+import com.strandls.resource.pojo.ResourceData;
 import com.strandls.user.pojo.UserIbp;
 
 /**
@@ -25,8 +26,8 @@ public class SpeciesFieldData {
 	private String attributions;
 	private UserIbp contributor;
 	private String audienceType;
-
 	private License license;
+	private List<ResourceData> speciesFieldResource;
 
 	/**
 	 * 
@@ -47,10 +48,11 @@ public class SpeciesFieldData {
 	 * @param contributor
 	 * @param audienceType
 	 * @param license
+	 * @param speciesFieldResource
 	 */
 	public SpeciesFieldData(Long id, Long fieldId, Long displayOrder, String label, String header,
 			SpeciesField fieldData, List<Reference> references, String attributions, UserIbp contributor,
-			String audienceType, License license) {
+			String audienceType, License license, List<ResourceData> speciesFieldResource) {
 		super();
 		this.id = id;
 		this.fieldId = fieldId;
@@ -63,6 +65,7 @@ public class SpeciesFieldData {
 		this.contributor = contributor;
 		this.audienceType = audienceType;
 		this.license = license;
+		this.speciesFieldResource = speciesFieldResource;
 	}
 
 	public Long getId() {
@@ -151,6 +154,14 @@ public class SpeciesFieldData {
 
 	public void setLicense(License license) {
 		this.license = license;
+	}
+
+	public List<ResourceData> getSpeciesFieldResource() {
+		return speciesFieldResource;
+	}
+
+	public void setSpeciesFieldResource(List<ResourceData> speciesFieldResource) {
+		this.speciesFieldResource = speciesFieldResource;
 	}
 
 }

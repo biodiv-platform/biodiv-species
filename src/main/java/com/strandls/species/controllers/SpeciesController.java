@@ -39,7 +39,7 @@ public class SpeciesController {
 	}
 
 	@GET
-	@Path(ApiConstants.SHOW + "/{spciesId}")
+	@Path(ApiConstants.SHOW + "/{speciesId}")
 	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces(MediaType.APPLICATION_JSON)
 
@@ -47,7 +47,7 @@ public class SpeciesController {
 	@ApiResponses(value = {
 			@ApiResponse(code = 400, message = "unable to fetch the show page", response = String.class) })
 
-	public Response getSpeciesShowPage(@PathParam("speicesId") String sId) {
+	public Response getSpeciesShowPage(@PathParam("speciesId") String sId) {
 		try {
 			Long speciesId = Long.parseLong(sId);
 			ShowSpeciesPage result = speciesService.showSpeciesPage(speciesId);

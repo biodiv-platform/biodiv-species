@@ -25,5 +25,6 @@ public class SpeciesDaoModule extends AbstractModule {
 		bind(SpeciesFieldAudienceTypeDao.class).in(Scopes.SINGLETON);
 		bind(SpeciesFieldLicenseDao.class).in(Scopes.SINGLETON);
 		bind(SpeciesFieldUserDao.class).in(Scopes.SINGLETON);
+
 	}
 }

@@ -143,7 +143,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 				for (SpeciesField speciesField : speciesFields) {
 
 					FieldNew field = fieldNewDao.findById(speciesField.getFieldId());
-					FieldHeader fieldHeader = fieldHeaderDao.findById(field.getId());
+					FieldHeader fieldHeader = fieldHeaderDao.findByFieldId(field.getId(), 205L);
 
 					SpeciesFieldAudienceType sfAudienceType = sfAudienceTypeDao.findById(speciesField.getId());
 
@@ -155,16 +155,23 @@ public class SpeciesServiceImpl implements SpeciesServices {
 //					this is actually the attribution of speciesField and a String 
 
 					SpeciesFieldContributor sfAttribution = sfContributorDao.findBySpeciesFieldId(speciesField.getId());
-					Contributor attribution = contributorDao.findById(sfAttribution.getContributorId());
+					Contributor attribution = null;
+					if (sfAttribution != null)
+						attribution = contributorDao.findById(sfAttribution.getContributorId());
 
 //					species field uploader is the contributor of species field
 
 					UserIbp contributor = userService.getUserIbp(speciesField.getUploaderId().toString());
 
+//					resources of speciesField
+					List<ResourceData> sfResources = resourceServices.getImageResource("SPECIES_FIELD",
+							speciesField.getId().toString());
+
 					fieldData.add(new SpeciesFieldData(speciesField.getId(), field.getId(), field.getDisplayOrder(),
-							field.getLabel(), fieldHeader.getHeader(), speciesField, references, attribution.getName(),
-							contributor, (sfAudienceType != null) ? sfAudienceType.getAudienceType() : null,
-							sfLicenseData));
+							field.getLabel(), fieldHeader.getHeader(), speciesField, references,
+							attribution != null ? attribution.getName() : null, contributor,
+							(sfAudienceType != null) ? sfAudienceType.getAudienceType() : null, sfLicenseData,
+							sfResources));
 
 				}
 
@@ -180,10 +187,9 @@ public class SpeciesServiceImpl implements SpeciesServices {
 				List<UserGroupIbp> userGroupList = ugService.getSpeciesUserGroup(speciesId.toString());
 				List<Featured> featured = ugService.getAllFeatured("species.Species", speciesId.toString());
 
-				
 				ShowSpeciesPage showSpeciesPage = new ShowSpeciesPage(species, breadCrumbs, taxonomyDefinition,
 						resourceData, fieldData, facts, userGroupList, featured);
-				
+
 //				ShowSpeciesPage showSpeciesPage = new ShowSpeciesPage(species, breadCrumbs, taxonomyDefinition,
 //						resourceData, fieldData, facts, userGroupList, featured, documentMetaList);
 
