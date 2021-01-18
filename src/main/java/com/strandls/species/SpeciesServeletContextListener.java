@@ -82,6 +82,8 @@ public class SpeciesServeletContextListener extends GuiceServletContextListener 
 
 				bind(SessionFactory.class).toInstance(sessionFactory);
 
+				bind(Headers.class).in(Scopes.SINGLETON);
+
 				bind(ResourceServicesApi.class).in(Scopes.SINGLETON);
 				bind(TraitsServiceApi.class).in(Scopes.SINGLETON);
 				bind(UserGroupSerivceApi.class).in(Scopes.SINGLETON);

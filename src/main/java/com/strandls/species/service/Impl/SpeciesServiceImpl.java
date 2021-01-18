@@ -4,6 +4,7 @@
 package com.strandls.species.service.Impl;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -11,6 +12,8 @@ import java.util.Map.Entry;
 import java.util.TreeMap;
 
 import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.core.HttpHeaders;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,6 +21,7 @@ import org.slf4j.LoggerFactory;
 import com.strandls.resource.controllers.ResourceServicesApi;
 import com.strandls.resource.pojo.License;
 import com.strandls.resource.pojo.ResourceData;
+import com.strandls.species.Headers;
 import com.strandls.species.dao.ContributorDao;
 import com.strandls.species.dao.FieldDao;
 import com.strandls.species.dao.FieldHeaderDao;
@@ -55,7 +59,11 @@ import com.strandls.user.controller.UserServiceApi;
 import com.strandls.user.pojo.UserIbp;
 import com.strandls.userGroup.controller.UserGroupSerivceApi;
 import com.strandls.userGroup.pojo.Featured;
+import com.strandls.userGroup.pojo.FeaturedCreate;
+import com.strandls.userGroup.pojo.FeaturedCreateData;
 import com.strandls.userGroup.pojo.UserGroupIbp;
+import com.strandls.userGroup.pojo.UserGroupMappingCreateData;
+import com.strandls.userGroup.pojo.UserGroupSpeciesCreateData;
 
 /**
  * @author Abhishek Rudra
@@ -65,6 +73,9 @@ import com.strandls.userGroup.pojo.UserGroupIbp;
 public class SpeciesServiceImpl implements SpeciesServices {
 
 	private final Logger logger = LoggerFactory.getLogger(SpeciesServiceImpl.class);
+
+	@Inject
+	private Headers headers;
 
 //	Injection of Dao
 
@@ -438,6 +449,60 @@ public class SpeciesServiceImpl implements SpeciesServices {
 		}
 
 		return null;
+	}
+
+	@Override
+	public List<UserGroupIbp> updateUserGroup(HttpServletRequest request, String speciesId,
+			UserGroupSpeciesCreateData ugSpeciesCreateData) {
+		try {
+			ugService = headers.addUserGroupHeader(ugService, request.getHeader(HttpHeaders.AUTHORIZATION));
+			List<UserGroupIbp> result = ugService.createUserGroupSpeciesMapping(speciesId, ugSpeciesCreateData);
+			updateLastRevised(Long.parseLong(speciesId));
+			return result;
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return null;
+	}
+
+	@Override
+	public List<Featured> createFeatured(HttpServletRequest request, FeaturedCreate featuredCreate) {
+		try {
+			FeaturedCreateData featuredCreateData = new FeaturedCreateData();
+			featuredCreateData.setFeaturedCreate(featuredCreate);
+			featuredCreateData.setMailData(null);
+			ugService = headers.addUserGroupHeader(ugService, request.getHeader(HttpHeaders.AUTHORIZATION));
+			List<Featured> result = ugService.createFeatured(featuredCreateData);
+			updateLastRevised(featuredCreate.getObjectId());
+			return result;
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return null;
+	}
+
+	@Override
+	public List<Featured> unFeatured(HttpServletRequest request, String speciesId, List<Long> userGroupList) {
+		try {
+
+			UserGroupMappingCreateData userGroupData = new UserGroupMappingCreateData();
+			userGroupData.setUserGroups(userGroupList);
+			userGroupData.setUgFilterData(null);
+			userGroupData.setMailData(null);
+			ugService = headers.addUserGroupHeader(ugService, request.getHeader(HttpHeaders.AUTHORIZATION));
+			List<Featured> result = ugService.unFeatured("species", speciesId, userGroupData);
+			updateLastRevised(Long.parseLong(speciesId));
+			return result;
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return null;
+	}
+
+	private void updateLastRevised(Long speciesId) {
+		Species species = speciesDao.findById(speciesId);
+		species.setLastUpdated(new Date());
+		speciesDao.update(species);
 	}
 
 }

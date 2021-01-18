@@ -16,6 +16,7 @@ public class ApiConstants {
 //	<----- Species controller------>
 
 	public static final String ALL = "/all";
+	public static final String FEATURED = "/featured";
 	public static final String FIELDS = "/fields";
 	public static final String MIGRATEFIELD = "/migrateField";
 	public static final String PING = "/ping";
@@ -24,5 +25,8 @@ public class ApiConstants {
 	public static final String SPECIES = "/species";
 	public static final String TAXONOMY = "/taxonomy";
 	public static final String TRAITS = "/traits";
+	public static final String UNFEATURED = "/unfeatured";
+	public static final String UPDATE = "/update";
+	public static final String USERGROUP = "/usergroup";
 
 }
