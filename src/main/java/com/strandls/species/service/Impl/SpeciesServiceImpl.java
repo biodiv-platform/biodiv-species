@@ -54,6 +54,7 @@ import com.strandls.taxonomy.pojo.BreadCrumb;
 import com.strandls.taxonomy.pojo.TaxonomyDefinition;
 import com.strandls.traits.controller.TraitsServiceApi;
 import com.strandls.traits.pojo.FactValuePair;
+import com.strandls.traits.pojo.FactsUpdateData;
 import com.strandls.traits.pojo.TraitsValuePair;
 import com.strandls.user.controller.UserServiceApi;
 import com.strandls.user.pojo.UserIbp;
@@ -503,6 +504,21 @@ public class SpeciesServiceImpl implements SpeciesServices {
 		Species species = speciesDao.findById(speciesId);
 		species.setLastUpdated(new Date());
 		speciesDao.update(species);
+	}
+
+	@Override
+	public List<FactValuePair> updateTraits(HttpServletRequest request, String speciesId, String traitId,
+			FactsUpdateData factsUpdateData) {
+		try {
+			traitService = headers.addTraitsHeader(traitService, request.getHeader(HttpHeaders.AUTHORIZATION));
+			List<FactValuePair> result = traitService.updateTraits("species.Species", speciesId, traitId,
+					factsUpdateData);
+			return result;
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return null;
+
 	}
 
 }

@@ -22,6 +22,8 @@ import com.strandls.species.pojo.FieldRender;
 import com.strandls.species.pojo.ShowSpeciesPage;
 import com.strandls.species.pojo.SpeciesTrait;
 import com.strandls.species.service.SpeciesServices;
+import com.strandls.traits.pojo.FactValuePair;
+import com.strandls.traits.pojo.FactsUpdateData;
 import com.strandls.userGroup.pojo.Featured;
 import com.strandls.userGroup.pojo.FeaturedCreate;
 import com.strandls.userGroup.pojo.UserGroupIbp;
@@ -196,6 +198,28 @@ public class SpeciesController {
 			List<Featured> result = speciesService.unFeatured(request, speciesId, userGroupList);
 			return Response.status(Status.OK).entity(result).build();
 		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+	}
+
+	@PUT
+	@Path(ApiConstants.UPDATE + ApiConstants.TRAITS + "/{speciesId}/{traitId}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+
+	@ValidateUser
+
+	@ApiOperation(value = "update species Traits", notes = "Return all the traits", response = FactValuePair.class, responseContainer = "List")
+	@ApiResponses(value = {
+			@ApiResponse(code = 404, message = "unable to update the traits", response = String.class) })
+
+	public Response updateTraits(@Context HttpServletRequest request, @PathParam("speciesId") String speciesId,
+			@PathParam("traitId") String traitId, @ApiParam(name = "factsUpdateData") FactsUpdateData factsUpdateData) {
+		try {
+			List<FactValuePair> result = speciesService.updateTraits(request, speciesId, traitId, factsUpdateData);
+			return Response.status(Status.OK).entity(result).build();
+		} catch (Exception e) {
+
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
 	}

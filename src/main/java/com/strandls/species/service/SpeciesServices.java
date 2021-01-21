@@ -10,6 +10,8 @@ import javax.servlet.http.HttpServletRequest;
 import com.strandls.species.pojo.FieldRender;
 import com.strandls.species.pojo.ShowSpeciesPage;
 import com.strandls.species.pojo.SpeciesTrait;
+import com.strandls.traits.pojo.FactValuePair;
+import com.strandls.traits.pojo.FactsUpdateData;
 import com.strandls.userGroup.pojo.Featured;
 import com.strandls.userGroup.pojo.FeaturedCreate;
 import com.strandls.userGroup.pojo.UserGroupIbp;
@@ -40,5 +42,8 @@ public interface SpeciesServices {
 	public List<Featured> createFeatured(HttpServletRequest request, FeaturedCreate featuredCreate);
 
 	public List<Featured> unFeatured(HttpServletRequest request, String speciesId, List<Long> userGroupList);
+
+	public List<FactValuePair> updateTraits(HttpServletRequest request, String speciesId, String traitId,
+			FactsUpdateData factsUpdateData);
 
 }
