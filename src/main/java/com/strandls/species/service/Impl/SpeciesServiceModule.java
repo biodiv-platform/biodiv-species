@@ -17,5 +17,6 @@ public class SpeciesServiceModule extends AbstractModule {
 	@Override
 	protected void configure() {
 		bind(SpeciesServices.class).to(SpeciesServiceImpl.class).in(Scopes.SINGLETON);
+		bind(SpeciesHelper.class).in(Scopes.SINGLETON);
 	}
 }

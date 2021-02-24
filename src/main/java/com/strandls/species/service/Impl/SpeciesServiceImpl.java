@@ -15,11 +15,14 @@ import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.HttpHeaders;
 
+import org.pac4j.core.profile.CommonProfile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.strandls.authentication_utility.util.AuthUtil;
 import com.strandls.resource.controllers.ResourceServicesApi;
 import com.strandls.resource.pojo.License;
+import com.strandls.resource.pojo.Resource;
 import com.strandls.resource.pojo.ResourceData;
 import com.strandls.species.Headers;
 import com.strandls.species.dao.ContributorDao;
@@ -47,6 +50,7 @@ import com.strandls.species.pojo.SpeciesFieldAudienceType;
 import com.strandls.species.pojo.SpeciesFieldContributor;
 import com.strandls.species.pojo.SpeciesFieldData;
 import com.strandls.species.pojo.SpeciesFieldLicense;
+import com.strandls.species.pojo.SpeciesFieldUpdateData;
 import com.strandls.species.pojo.SpeciesTrait;
 import com.strandls.species.service.SpeciesServices;
 import com.strandls.taxonomy.controllers.TaxonomyServicesApi;
@@ -65,6 +69,8 @@ import com.strandls.userGroup.pojo.FeaturedCreateData;
 import com.strandls.userGroup.pojo.UserGroupIbp;
 import com.strandls.userGroup.pojo.UserGroupMappingCreateData;
 import com.strandls.userGroup.pojo.UserGroupSpeciesCreateData;
+
+import net.minidev.json.JSONArray;
 
 /**
  * @author Abhishek Rudra
@@ -122,6 +128,9 @@ public class SpeciesServiceImpl implements SpeciesServices {
 	private ResourceServicesApi resourceServices;
 
 	@Inject
+	private SpeciesHelper speciesHelper;
+
+	@Inject
 	private UserServiceApi userService;
 
 	@Inject
@@ -154,36 +163,10 @@ public class SpeciesServiceImpl implements SpeciesServices {
 //				segregating on the basis of multiple data
 				for (SpeciesField speciesField : speciesFields) {
 
-					FieldNew field = fieldNewDao.findById(speciesField.getFieldId());
-					FieldHeader fieldHeader = fieldHeaderDao.findByFieldId(field.getId(), 205L);
+					SpeciesFieldData speciesFieldData = getSpeciesFieldData(speciesField);
 
-					SpeciesFieldAudienceType sfAudienceType = sfAudienceTypeDao.findById(speciesField.getId());
-
-					SpeciesFieldLicense sfLicense = sfLicenseDao.findById(speciesField.getId());
-					License sfLicenseData = resourceServices.getLicenseResource(sfLicense.getLicenseId().toString());
-
-					List<Reference> references = referenceDao.findBySpeciesFieldId(speciesField.getId());
-
-//					this is actually the attribution of speciesField and a String 
-
-					SpeciesFieldContributor sfAttribution = sfContributorDao.findBySpeciesFieldId(speciesField.getId());
-					Contributor attribution = null;
-					if (sfAttribution != null)
-						attribution = contributorDao.findById(sfAttribution.getContributorId());
-
-//					species field uploader is the contributor of species field
-
-					UserIbp contributor = userService.getUserIbp(speciesField.getUploaderId().toString());
-
-//					resources of speciesField
-					List<ResourceData> sfResources = resourceServices.getImageResource("SPECIES_FIELD",
-							speciesField.getId().toString());
-
-					fieldData.add(new SpeciesFieldData(speciesField.getId(), field.getId(), field.getDisplayOrder(),
-							field.getLabel(), fieldHeader.getHeader(), speciesField, references,
-							attribution != null ? attribution.getName() : null, contributor,
-							(sfAudienceType != null) ? sfAudienceType.getAudienceType() : null, sfLicenseData,
-							sfResources));
+					if (speciesFieldData != null)
+						fieldData.add(speciesFieldData);
 
 				}
 
@@ -208,6 +191,55 @@ public class SpeciesServiceImpl implements SpeciesServices {
 				return showSpeciesPage;
 
 			}
+
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+
+		return null;
+
+	}
+
+	private SpeciesFieldData getSpeciesFieldData(SpeciesField speciesField) {
+
+		try {
+
+			FieldNew field = fieldNewDao.findById(speciesField.getFieldId());
+			FieldHeader fieldHeader = fieldHeaderDao.findByFieldId(field.getId(), 205L);
+
+			SpeciesFieldAudienceType sfAudienceType = sfAudienceTypeDao.findById(speciesField.getId());
+
+			SpeciesFieldLicense sfLicense = sfLicenseDao.findById(speciesField.getId());
+			License sfLicenseData = resourceServices.getLicenseResource(sfLicense.getLicenseId().toString());
+
+			List<Reference> references = referenceDao.findBySpeciesFieldId(speciesField.getId());
+
+//			this is actually the attribution of speciesField and a String 
+
+			SpeciesFieldContributor sfAttribution = sfContributorDao.findBySpeciesFieldId(speciesField.getId());
+			Contributor attribution = null;
+			if (sfAttribution != null)
+				attribution = contributorDao.findById(sfAttribution.getContributorId());
+
+//			species field user is the contributor of species field
+
+			List<Long> userList = sfUserDao.findBySpeciesFieldId(speciesField.getId());
+			List<UserIbp> contributors = new ArrayList<UserIbp>();
+			for (Long userId : userList) {
+				UserIbp contributor = userService.getUserIbp(userId.toString());
+				contributors.add(contributor);
+			}
+
+//			resources of speciesField
+			List<ResourceData> sfResources = resourceServices.getImageResource("SPECIES_FIELD",
+					speciesField.getId().toString());
+
+			SpeciesFieldData speciesFieldData = new SpeciesFieldData(speciesField.getId(), field.getId(),
+					field.getDisplayOrder(), field.getLabel(), fieldHeader.getHeader(), fieldHeader.getDescription(),
+					speciesField, references, attribution != null ? attribution.getName() : null, contributors,
+					(sfAudienceType != null) ? sfAudienceType.getAudienceType() : null, sfLicenseData, sfResources);
+
+			return speciesFieldData;
 
 		} catch (Exception e) {
 			logger.error(e.getMessage());
@@ -521,4 +553,76 @@ public class SpeciesServiceImpl implements SpeciesServices {
 
 	}
 
+	@Override
+	public SpeciesFieldData updateSpeciesField(HttpServletRequest request, Long speciesId,
+			SpeciesFieldUpdateData sfUpdatedata) {
+
+		try {
+
+			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
+			Long userId = Long.parseLong(profile.getId());
+
+			List<Long> sfUser = sfUserDao.findBySpeciesFieldId(sfUpdatedata.getSpeciesFieldId());
+			JSONArray userRole = (JSONArray) profile.getAttribute("roles");
+
+			if (userRole.contains("ROLE_ADMIN") || sfUser.contains(userId)) {
+
+//				speciesField core update
+				SpeciesField speciesField = speciesFieldDao.findById(sfUpdatedata.getSpeciesFieldId());
+				speciesField.setDescription(sfUpdatedata.getSfDescription());
+				speciesField.setStatus(sfUpdatedata.getSfStatus());
+				speciesField.setLastUpdated(new Date());
+
+				speciesFieldDao.update(speciesField);
+
+//				attribution update
+//				this is actually the attribution of speciesField and a String 
+
+				SpeciesFieldContributor sfAttribution = sfContributorDao.findBySpeciesFieldId(speciesField.getId());
+				Contributor attribution = null;
+				if (sfAttribution != null) {
+					attribution = contributorDao.findById(sfAttribution.getContributorId());
+					if (sfUpdatedata.getAttributions() == null || sfUpdatedata.getAttributions().isEmpty()) {
+//						remove attributions
+						contributorDao.delete(attribution);
+						sfContributorDao.delete(sfAttribution);
+
+					} else {
+//						update attributions
+						attribution.setName(sfUpdatedata.getAttributions());
+						contributorDao.update(attribution);
+					}
+
+				} else if (sfUpdatedata.getAttributions() != null && !sfUpdatedata.getAttributions().isEmpty()) {
+//					create new attributions
+
+					Contributor contributor = new Contributor(null, sfUpdatedata.getAttributions(), null);
+					contributor = contributorDao.save(contributor);
+
+					sfAttribution = new SpeciesFieldContributor(sfUpdatedata.getSpeciesFieldId(), contributor.getId(),
+							null);
+					sfContributorDao.save(sfAttribution);
+
+				}
+
+//				species field resource
+
+				List<Resource> resources = speciesHelper.createResourceMapping(request, userId,
+						sfUpdatedata.getSpeciesFieldResource());
+
+				if (resources != null && !resources.isEmpty()) {
+					resourceServices = headers.addResourceHeaders(resourceServices,
+							request.getHeader(HttpHeaders.AUTHORIZATION));
+					resources = resourceServices.updateResources("SPECIES_FIELD",
+							String.valueOf(sfUpdatedata.getSpeciesFieldId()), resources);
+
+				}
+
+				return getSpeciesFieldData(speciesField);
+			}
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return null;
+	}
 }

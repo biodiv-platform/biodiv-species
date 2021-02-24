@@ -20,11 +20,12 @@ public class SpeciesFieldData {
 	private Long fieldId;
 	private Long displayOrder;
 	private String label;
+	private String fieldDescription;
 	private String header;
 	private SpeciesField fieldData;
 	private List<Reference> references;
 	private String attributions;
-	private UserIbp contributor;
+	private List<UserIbp> contributor;
 	private String audienceType;
 	private License license;
 	private List<ResourceData> speciesFieldResource;
@@ -41,6 +42,7 @@ public class SpeciesFieldData {
 	 * @param fieldId
 	 * @param displayOrder
 	 * @param label
+	 * @param fieldDescription
 	 * @param header
 	 * @param fieldData
 	 * @param references
@@ -50,14 +52,15 @@ public class SpeciesFieldData {
 	 * @param license
 	 * @param speciesFieldResource
 	 */
-	public SpeciesFieldData(Long id, Long fieldId, Long displayOrder, String label, String header,
-			SpeciesField fieldData, List<Reference> references, String attributions, UserIbp contributor,
-			String audienceType, License license, List<ResourceData> speciesFieldResource) {
+	public SpeciesFieldData(Long id, Long fieldId, Long displayOrder, String label, String fieldDescription,
+			String header, SpeciesField fieldData, List<Reference> references, String attributions,
+			List<UserIbp> contributor, String audienceType, License license, List<ResourceData> speciesFieldResource) {
 		super();
 		this.id = id;
 		this.fieldId = fieldId;
 		this.displayOrder = displayOrder;
 		this.label = label;
+		this.fieldDescription = fieldDescription;
 		this.header = header;
 		this.fieldData = fieldData;
 		this.references = references;
@@ -100,6 +103,14 @@ public class SpeciesFieldData {
 		this.label = label;
 	}
 
+	public String getFieldDescription() {
+		return fieldDescription;
+	}
+
+	public void setFieldDescription(String fieldDescription) {
+		this.fieldDescription = fieldDescription;
+	}
+
 	public String getHeader() {
 		return header;
 	}
@@ -132,11 +143,11 @@ public class SpeciesFieldData {
 		this.attributions = attributions;
 	}
 
-	public UserIbp getContributor() {
+	public List<UserIbp> getContributor() {
 		return contributor;
 	}
 
-	public void setContributor(UserIbp contributor) {
+	public void setContributor(List<UserIbp> contributor) {
 		this.contributor = contributor;
 	}
 

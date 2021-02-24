@@ -8,6 +8,7 @@ import java.io.Serializable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.IdClass;
 import javax.persistence.Table;
 
 /**
@@ -17,6 +18,7 @@ import javax.persistence.Table;
  */
 @Entity
 @Table(name = "species_field_contributor")
+@IdClass(SpeciesFieldContributorCompositeKey.class)
 public class SpeciesFieldContributor implements Serializable {
 
 	/**
@@ -26,6 +28,25 @@ public class SpeciesFieldContributor implements Serializable {
 	private Long speciesFieldId;
 	private Long contributorId;
 	private Long attributorsId;
+
+	/**
+	 * 
+	 */
+	public SpeciesFieldContributor() {
+		super();
+	}
+
+	/**
+	 * @param speciesFieldId
+	 * @param contributorId
+	 * @param attributorsId
+	 */
+	public SpeciesFieldContributor(Long speciesFieldId, Long contributorId, Long attributorsId) {
+		super();
+		this.speciesFieldId = speciesFieldId;
+		this.contributorId = contributorId;
+		this.attributorsId = attributorsId;
+	}
 
 	@Id
 	@Column(name = "species_field_attributors_id")
@@ -37,6 +58,7 @@ public class SpeciesFieldContributor implements Serializable {
 		this.speciesFieldId = speciesFieldId;
 	}
 
+	@Id
 	@Column(name = "contributor_id")
 	public Long getContributorId() {
 		return contributorId;
@@ -46,6 +68,7 @@ public class SpeciesFieldContributor implements Serializable {
 		this.contributorId = contributorId;
 	}
 
+	@Id
 	@Column(name = "attributors_idx")
 	public Long getAttributorsId() {
 		return attributorsId;

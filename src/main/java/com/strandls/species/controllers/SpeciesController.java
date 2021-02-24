@@ -20,6 +20,8 @@ import com.strandls.authentication_utility.filter.ValidateUser;
 import com.strandls.species.ApiConstants;
 import com.strandls.species.pojo.FieldRender;
 import com.strandls.species.pojo.ShowSpeciesPage;
+import com.strandls.species.pojo.SpeciesFieldData;
+import com.strandls.species.pojo.SpeciesFieldUpdateData;
 import com.strandls.species.pojo.SpeciesTrait;
 import com.strandls.species.service.SpeciesServices;
 import com.strandls.traits.pojo.FactValuePair;
@@ -220,6 +222,31 @@ public class SpeciesController {
 			return Response.status(Status.OK).entity(result).build();
 		} catch (Exception e) {
 
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+	}
+
+	@PUT
+	@Path(ApiConstants.UPDATE + ApiConstants.SPECIESFIELD + "/speciesId")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+
+	@ValidateUser
+
+	@ApiOperation(value = "update species field", notes = "return species field data", response = SpeciesFieldData.class)
+	@ApiResponses(value = {
+			@ApiResponse(code = 404, message = "unable to update the species Field", response = String.class) })
+
+	public Response updateSpeciesField(@Context HttpServletRequest request, @PathParam("speciesId") String speciesId,
+			@ApiParam(name = "sfUpdateData") SpeciesFieldUpdateData sfUpdateData) {
+		try {
+			Long sId = Long.parseLong(speciesId);
+			SpeciesFieldData result = speciesService.updateSpeciesField(request, sId, sfUpdateData);
+			if (result != null)
+				return Response.status(Status.OK).entity(result).build();
+			return Response.status(Status.NOT_ACCEPTABLE).build();
+
+		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
 	}

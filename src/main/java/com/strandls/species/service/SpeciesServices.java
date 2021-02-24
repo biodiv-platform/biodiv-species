@@ -9,6 +9,8 @@ import javax.servlet.http.HttpServletRequest;
 
 import com.strandls.species.pojo.FieldRender;
 import com.strandls.species.pojo.ShowSpeciesPage;
+import com.strandls.species.pojo.SpeciesFieldData;
+import com.strandls.species.pojo.SpeciesFieldUpdateData;
 import com.strandls.species.pojo.SpeciesTrait;
 import com.strandls.traits.pojo.FactValuePair;
 import com.strandls.traits.pojo.FactsUpdateData;
@@ -45,5 +47,8 @@ public interface SpeciesServices {
 
 	public List<FactValuePair> updateTraits(HttpServletRequest request, String speciesId, String traitId,
 			FactsUpdateData factsUpdateData);
+
+	public SpeciesFieldData updateSpeciesField(HttpServletRequest request, Long speciesId,
+			SpeciesFieldUpdateData sfUpdatedata);
 
 }

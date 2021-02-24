@@ -30,6 +30,25 @@ public class Contributor implements Serializable {
 	private String name;
 	private Long userId;
 
+	/**
+	 * 
+	 */
+	public Contributor() {
+		super();
+	}
+
+	/**
+	 * @param id
+	 * @param name
+	 * @param userId
+	 */
+	public Contributor(Long id, String name, Long userId) {
+		super();
+		this.id = id;
+		this.name = name;
+		this.userId = userId;
+	}
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	@Column(name = "id")
