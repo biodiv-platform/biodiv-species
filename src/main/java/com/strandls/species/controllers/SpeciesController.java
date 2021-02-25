@@ -227,7 +227,7 @@ public class SpeciesController {
 	}
 
 	@PUT
-	@Path(ApiConstants.UPDATE + ApiConstants.SPECIESFIELD + "/speciesId")
+	@Path(ApiConstants.UPDATE + ApiConstants.SPECIESFIELD + "/{speciesId}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 
