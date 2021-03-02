@@ -30,6 +30,25 @@ public class SpeciesFieldUser implements Serializable {
 	private Long userId;
 	private Long contributorId;
 
+	/**
+	 * 
+	 */
+	public SpeciesFieldUser() {
+		super();
+	}
+
+	/**
+	 * @param speciesFieldId
+	 * @param userId
+	 * @param contributorId
+	 */
+	public SpeciesFieldUser(Long speciesFieldId, Long userId, Long contributorId) {
+		super();
+		this.speciesFieldId = speciesFieldId;
+		this.userId = userId;
+		this.contributorId = contributorId;
+	}
+
 	@Id
 	@Column(name = "species_field_contributors_id")
 	public Long getSpeciesFieldId() {

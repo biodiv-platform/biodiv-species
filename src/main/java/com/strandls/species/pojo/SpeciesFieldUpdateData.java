@@ -13,6 +13,7 @@ import java.util.List;
 public class SpeciesFieldUpdateData {
 
 	private Long speciesFieldId;
+	private Long licenseId;
 //	----Core SpeciesField Data------
 	private String sfDescription;
 	private String sfStatus;
@@ -20,6 +21,8 @@ public class SpeciesFieldUpdateData {
 	private String attributions;
 //	-------SpeciesField Resource--------
 	private List<SpeciesResourceData> speciesFieldResource;
+//	-------COntributor Ids--------------
+	private List<Long> contributorIds;
 
 	/**
 	* 
@@ -30,19 +33,23 @@ public class SpeciesFieldUpdateData {
 
 	/**
 	 * @param speciesFieldId
+	 * @param licenseId
 	 * @param sfDescription
 	 * @param sfStatus
 	 * @param attributions
 	 * @param speciesFieldResource
+	 * @param contributorIds
 	 */
-	public SpeciesFieldUpdateData(Long speciesFieldId, String sfDescription, String sfStatus, String attributions,
-			List<SpeciesResourceData> speciesFieldResource) {
+	public SpeciesFieldUpdateData(Long speciesFieldId, Long licenseId, String sfDescription, String sfStatus,
+			String attributions, List<SpeciesResourceData> speciesFieldResource, List<Long> contributorIds) {
 		super();
 		this.speciesFieldId = speciesFieldId;
+		this.licenseId = licenseId;
 		this.sfDescription = sfDescription;
 		this.sfStatus = sfStatus;
 		this.attributions = attributions;
 		this.speciesFieldResource = speciesFieldResource;
+		this.contributorIds = contributorIds;
 	}
 
 	public Long getSpeciesFieldId() {
@@ -51,6 +58,14 @@ public class SpeciesFieldUpdateData {
 
 	public void setSpeciesFieldId(Long speciesFieldId) {
 		this.speciesFieldId = speciesFieldId;
+	}
+
+	public Long getLicenseId() {
+		return licenseId;
+	}
+
+	public void setLicenseId(Long licenseId) {
+		this.licenseId = licenseId;
 	}
 
 	public String getSfDescription() {
@@ -83,6 +98,14 @@ public class SpeciesFieldUpdateData {
 
 	public void setSpeciesFieldResource(List<SpeciesResourceData> speciesFieldResource) {
 		this.speciesFieldResource = speciesFieldResource;
+	}
+
+	public List<Long> getContributorIds() {
+		return contributorIds;
+	}
+
+	public void setContributorIds(List<Long> contributorIds) {
+		this.contributorIds = contributorIds;
 	}
 
 }

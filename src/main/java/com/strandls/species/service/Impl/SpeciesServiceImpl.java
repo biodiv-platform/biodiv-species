@@ -51,6 +51,7 @@ import com.strandls.species.pojo.SpeciesFieldContributor;
 import com.strandls.species.pojo.SpeciesFieldData;
 import com.strandls.species.pojo.SpeciesFieldLicense;
 import com.strandls.species.pojo.SpeciesFieldUpdateData;
+import com.strandls.species.pojo.SpeciesFieldUser;
 import com.strandls.species.pojo.SpeciesTrait;
 import com.strandls.species.service.SpeciesServices;
 import com.strandls.taxonomy.controllers.TaxonomyServicesApi;
@@ -562,10 +563,10 @@ public class SpeciesServiceImpl implements SpeciesServices {
 			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 			Long userId = Long.parseLong(profile.getId());
 
-			List<Long> sfUser = sfUserDao.findBySpeciesFieldId(sfUpdatedata.getSpeciesFieldId());
+			List<Long> sfUserList = sfUserDao.findBySpeciesFieldId(sfUpdatedata.getSpeciesFieldId());
 			JSONArray userRole = (JSONArray) profile.getAttribute("roles");
 
-			if (userRole.contains("ROLE_ADMIN") || sfUser.contains(userId)) {
+			if (userRole.contains("ROLE_ADMIN") || sfUserList.contains(userId)) {
 
 //				speciesField core update
 				SpeciesField speciesField = speciesFieldDao.findById(sfUpdatedata.getSpeciesFieldId());
@@ -616,6 +617,32 @@ public class SpeciesServiceImpl implements SpeciesServices {
 					resources = resourceServices.updateResources("SPECIES_FIELD",
 							String.valueOf(sfUpdatedata.getSpeciesFieldId()), resources);
 
+				}
+
+//				sf user contributor
+//				deletign existing contributors
+				for (Long existingUserId : sfUserList) {
+					if (!sfUpdatedata.getContributorIds().contains(existingUserId)) {
+						SpeciesFieldUser sfUser = sfUserDao.findBySpeciesFieldIdUserId(sfUpdatedata.getSpeciesFieldId(),
+								existingUserId);
+						sfUserDao.delete(sfUser);
+					}
+				}
+//				adding new user contributors
+				for (Long newUserId : sfUpdatedata.getContributorIds()) {
+					if (!sfUserList.contains(newUserId)) {
+						SpeciesFieldUser sfUser = new SpeciesFieldUser(sfUpdatedata.getSpeciesFieldId(), newUserId,
+								null);
+						sfUserDao.save(sfUser);
+					}
+				}
+
+//				sf license 
+				SpeciesFieldLicense sfLicense = sfLicenseDao.findById(speciesField.getId());
+				if (!sfLicense.getLicenseId().equals(sfUpdatedata.getLicenseId())) {
+
+					sfLicense.setLicenseId(sfUpdatedata.getLicenseId());
+					sfLicenseDao.update(sfLicense);
 				}
 
 				return getSpeciesFieldData(speciesField);

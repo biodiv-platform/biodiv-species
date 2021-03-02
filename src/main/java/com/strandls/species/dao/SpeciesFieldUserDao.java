@@ -49,6 +49,26 @@ public class SpeciesFieldUserDao extends AbstractDAO<SpeciesFieldUser, Long> {
 	}
 
 	@SuppressWarnings("unchecked")
+	public SpeciesFieldUser findBySpeciesFieldIdUserId(Long speciesFieldId, Long userId) {
+		String qry = "from SpeciesFieldUser where speciesFieldId = :speciesFieldId and userId = :userId ";
+		SpeciesFieldUser result = null;
+
+		Session session = sessionFactory.openSession();
+
+		try {
+			Query<SpeciesFieldUser> query = session.createQuery(qry);
+			query.setParameter("speciesFieldId", speciesFieldId);
+			query.setParameter("userId", userId);
+			result = query.getSingleResult();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		} finally {
+			session.close();
+		}
+		return result;
+	}
+
+	@SuppressWarnings("unchecked")
 	public List<Long> findBySpeciesFieldId(Long speciesFieldId) {
 		String qry = "select userId from SpeciesFieldUser where speciesFieldId = :speciesFieldId";
 		List<Long> result = null;
