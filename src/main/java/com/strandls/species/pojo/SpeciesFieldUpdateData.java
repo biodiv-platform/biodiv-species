@@ -12,6 +12,8 @@ import java.util.List;
  */
 public class SpeciesFieldUpdateData {
 
+	private Boolean isEdit;
+	private Long fieldId;
 	private Long speciesFieldId;
 	private Long licenseId;
 //	----Core SpeciesField Data------
@@ -32,6 +34,8 @@ public class SpeciesFieldUpdateData {
 	}
 
 	/**
+	 * @param isEdit
+	 * @param fieldId
 	 * @param speciesFieldId
 	 * @param licenseId
 	 * @param sfDescription
@@ -40,9 +44,12 @@ public class SpeciesFieldUpdateData {
 	 * @param speciesFieldResource
 	 * @param contributorIds
 	 */
-	public SpeciesFieldUpdateData(Long speciesFieldId, Long licenseId, String sfDescription, String sfStatus,
-			String attributions, List<SpeciesResourceData> speciesFieldResource, List<Long> contributorIds) {
+	public SpeciesFieldUpdateData(Boolean isEdit, Long fieldId, Long speciesFieldId, Long licenseId,
+			String sfDescription, String sfStatus, String attributions, List<SpeciesResourceData> speciesFieldResource,
+			List<Long> contributorIds) {
 		super();
+		this.isEdit = isEdit;
+		this.fieldId = fieldId;
 		this.speciesFieldId = speciesFieldId;
 		this.licenseId = licenseId;
 		this.sfDescription = sfDescription;
@@ -50,6 +57,22 @@ public class SpeciesFieldUpdateData {
 		this.attributions = attributions;
 		this.speciesFieldResource = speciesFieldResource;
 		this.contributorIds = contributorIds;
+	}
+
+	public Boolean getIsEdit() {
+		return isEdit;
+	}
+
+	public void setIsEdit(Boolean isEdit) {
+		this.isEdit = isEdit;
+	}
+
+	public Long getFieldId() {
+		return fieldId;
+	}
+
+	public void setFieldId(Long fieldId) {
+		this.fieldId = fieldId;
 	}
 
 	public Long getSpeciesFieldId() {

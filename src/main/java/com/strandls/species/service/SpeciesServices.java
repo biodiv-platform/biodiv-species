@@ -51,4 +51,6 @@ public interface SpeciesServices {
 	public SpeciesFieldData updateSpeciesField(HttpServletRequest request, Long speciesId,
 			SpeciesFieldUpdateData sfUpdatedata);
 
+	public Boolean removeSpeciesField(HttpServletRequest request, Long speciesfield);
+
 }

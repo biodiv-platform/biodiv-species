@@ -5,6 +5,7 @@ import java.util.List;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -246,6 +247,30 @@ public class SpeciesController {
 				return Response.status(Status.OK).entity(result).build();
 			return Response.status(Status.NOT_ACCEPTABLE).build();
 
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+	}
+
+	@DELETE
+	@Path(ApiConstants.REMOVE + ApiConstants.SPECIESFIELD + "/{speciesFieldId}")
+	@Consumes(MediaType.TEXT_PLAIN)
+	@Produces(MediaType.APPLICATION_JSON)
+
+	@ValidateUser
+
+	@ApiOperation(value = "Delete species field", notes = "return Boolean value", response = Boolean.class)
+	@ApiResponses(value = {
+			@ApiResponse(code = 404, message = "unable to delete the species Field", response = String.class) })
+
+	public Response removeSpeciesField(@Context HttpServletRequest request,
+			@PathParam("speciesFieldId") String speciesFieldId) {
+		try {
+			Long sfId = Long.parseLong(speciesFieldId);
+			Boolean result = speciesService.removeSpeciesField(request, sfId);
+			if (result)
+				return Response.status(Status.OK).entity("DELETED").build();
+			return Response.status(Status.NOT_MODIFIED).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}

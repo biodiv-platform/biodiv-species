@@ -13,13 +13,16 @@ import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.HttpHeaders;
 
+import org.pac4j.core.profile.CommonProfile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.strandls.authentication_utility.util.AuthUtil;
 import com.strandls.file.api.UploadApi;
 import com.strandls.file.model.FilesDTO;
 import com.strandls.resource.pojo.Resource;
 import com.strandls.species.Headers;
+import com.strandls.species.pojo.SpeciesFieldUpdateData;
 import com.strandls.species.pojo.SpeciesResourceData;
 
 /**
@@ -38,8 +41,12 @@ public class SpeciesHelper {
 	private Headers headers;
 
 	@SuppressWarnings("unchecked")
-	public List<Resource> createResourceMapping(HttpServletRequest request, Long userId,
+	public List<Resource> createResourceMapping(HttpServletRequest request,
 			List<SpeciesResourceData> resourceDataList) {
+
+		CommonProfile profile = AuthUtil.getProfileFromRequest(request);
+		Long userId = Long.parseLong(profile.getId());
+
 		List<Resource> resources = new ArrayList<Resource>();
 		try {
 			List<String> fileList = new ArrayList<String>();
@@ -110,6 +117,18 @@ public class SpeciesHelper {
 		}
 		return null;
 
+	}
+
+	public Boolean validateSpeciesFieldData(SpeciesFieldUpdateData sfData) {
+		if (sfData.getAttributions() == null || sfData.getAttributions().isEmpty())
+			return false;
+		if (sfData.getLicenseId() == null)
+			return false;
+		if (sfData.getContributorIds() == null || sfData.getContributorIds().isEmpty())
+			return false;
+		if (sfData.getSfDescription() == null || sfData.getSfDescription().isEmpty())
+			return false;
+		return true;
 	}
 
 }

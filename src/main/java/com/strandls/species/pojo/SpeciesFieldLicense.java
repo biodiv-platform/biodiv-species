@@ -27,6 +27,23 @@ public class SpeciesFieldLicense implements Serializable {
 	private Long speciesFieldId;
 	private Long licenseId;
 
+	/**
+	 * 
+	 */
+	public SpeciesFieldLicense() {
+		super();
+	}
+
+	/**
+	 * @param speciesFieldId
+	 * @param licenseId
+	 */
+	public SpeciesFieldLicense(Long speciesFieldId, Long licenseId) {
+		super();
+		this.speciesFieldId = speciesFieldId;
+		this.licenseId = licenseId;
+	}
+
 	@Id
 	@Column(name = "species_field_licenses_id")
 	public Long getSpeciesFieldId() {

@@ -52,6 +52,7 @@ import com.strandls.species.pojo.SpeciesFieldData;
 import com.strandls.species.pojo.SpeciesFieldLicense;
 import com.strandls.species.pojo.SpeciesFieldUpdateData;
 import com.strandls.species.pojo.SpeciesFieldUser;
+import com.strandls.species.pojo.SpeciesResourceData;
 import com.strandls.species.pojo.SpeciesTrait;
 import com.strandls.species.service.SpeciesServices;
 import com.strandls.taxonomy.controllers.TaxonomyServicesApi;
@@ -556,93 +557,88 @@ public class SpeciesServiceImpl implements SpeciesServices {
 
 	@Override
 	public SpeciesFieldData updateSpeciesField(HttpServletRequest request, Long speciesId,
-			SpeciesFieldUpdateData sfUpdatedata) {
+			SpeciesFieldUpdateData sfdata) {
 
 		try {
 
+			Boolean isValid = speciesHelper.validateSpeciesFieldData(sfdata);
+			if (!isValid)
+				return null;
 			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 			Long userId = Long.parseLong(profile.getId());
 
-			List<Long> sfUserList = sfUserDao.findBySpeciesFieldId(sfUpdatedata.getSpeciesFieldId());
+//			this needs to be checked
+			List<Long> sfUserList = sfUserDao.findBySpeciesFieldId(sfdata.getSpeciesFieldId());
 			JSONArray userRole = (JSONArray) profile.getAttribute("roles");
 
 			if (userRole.contains("ROLE_ADMIN") || sfUserList.contains(userId)) {
 
 //				speciesField core update
-				SpeciesField speciesField = speciesFieldDao.findById(sfUpdatedata.getSpeciesFieldId());
-				speciesField.setDescription(sfUpdatedata.getSfDescription());
-				speciesField.setStatus(sfUpdatedata.getSfStatus());
-				speciesField.setLastUpdated(new Date());
-
-				speciesFieldDao.update(speciesField);
+				SpeciesField speciesField = updateCreateSpeciesField(speciesId, userId, sfdata);
 
 //				attribution update
 //				this is actually the attribution of speciesField and a String 
-
-				SpeciesFieldContributor sfAttribution = sfContributorDao.findBySpeciesFieldId(speciesField.getId());
-				Contributor attribution = null;
-				if (sfAttribution != null) {
-					attribution = contributorDao.findById(sfAttribution.getContributorId());
-					if (sfUpdatedata.getAttributions() == null || sfUpdatedata.getAttributions().isEmpty()) {
-//						remove attributions
+				if (sfdata.getIsEdit()) {
+					SpeciesFieldContributor sfAttribution = sfContributorDao.findBySpeciesFieldId(speciesField.getId());
+					Contributor attribution = contributorDao.findById(sfAttribution.getContributorId());
+					if (sfdata.getAttributions() == null || sfdata.getAttributions().isEmpty()) {
+//							remove attributions
 						contributorDao.delete(attribution);
 						sfContributorDao.delete(sfAttribution);
-
 					} else {
-//						update attributions
-						attribution.setName(sfUpdatedata.getAttributions());
+//							update attributions
+						attribution.setName(sfdata.getAttributions());
 						contributorDao.update(attribution);
 					}
-
-				} else if (sfUpdatedata.getAttributions() != null && !sfUpdatedata.getAttributions().isEmpty()) {
-//					create new attributions
-
-					Contributor contributor = new Contributor(null, sfUpdatedata.getAttributions(), null);
+				} else {
+//						create new attributions
+					Contributor contributor = new Contributor(null, sfdata.getAttributions(), null);
 					contributor = contributorDao.save(contributor);
 
-					sfAttribution = new SpeciesFieldContributor(sfUpdatedata.getSpeciesFieldId(), contributor.getId(),
-							null);
+					SpeciesFieldContributor sfAttribution = new SpeciesFieldContributor(sfdata.getSpeciesFieldId(),
+							contributor.getId(), null);
 					sfContributorDao.save(sfAttribution);
-
 				}
 
 //				species field resource
-
-				List<Resource> resources = speciesHelper.createResourceMapping(request, userId,
-						sfUpdatedata.getSpeciesFieldResource());
-
-				if (resources != null && !resources.isEmpty()) {
-					resourceServices = headers.addResourceHeaders(resourceServices,
-							request.getHeader(HttpHeaders.AUTHORIZATION));
-					resources = resourceServices.updateResources("SPECIES_FIELD",
-							String.valueOf(sfUpdatedata.getSpeciesFieldId()), resources);
-
-				}
+				updateCreateSpeciesResource(request, "SPECIES_FIELD", speciesField.getId().toString(),
+						sfdata.getIsEdit(), sfdata.getSpeciesFieldResource());
 
 //				sf user contributor
-//				deletign existing contributors
-				for (Long existingUserId : sfUserList) {
-					if (!sfUpdatedata.getContributorIds().contains(existingUserId)) {
-						SpeciesFieldUser sfUser = sfUserDao.findBySpeciesFieldIdUserId(sfUpdatedata.getSpeciesFieldId(),
-								existingUserId);
-						sfUserDao.delete(sfUser);
+				if (sfdata.getIsEdit()) {
+//					deleting existing contributors
+					for (Long existingUserId : sfUserList) {
+						if (!sfdata.getContributorIds().contains(existingUserId)) {
+							SpeciesFieldUser sfUser = sfUserDao.findBySpeciesFieldIdUserId(speciesField.getId(),
+									existingUserId);
+							sfUserDao.delete(sfUser);
+						}
 					}
-				}
-//				adding new user contributors
-				for (Long newUserId : sfUpdatedata.getContributorIds()) {
-					if (!sfUserList.contains(newUserId)) {
-						SpeciesFieldUser sfUser = new SpeciesFieldUser(sfUpdatedata.getSpeciesFieldId(), newUserId,
-								null);
+//					adding new user contributors
+					for (Long newUserId : sfdata.getContributorIds()) {
+						if (!sfUserList.contains(newUserId)) {
+							SpeciesFieldUser sfUser = new SpeciesFieldUser(speciesField.getId(), newUserId, null);
+							sfUserDao.save(sfUser);
+						}
+					}
+				} else {
+					for (Long newUserId : sfdata.getContributorIds()) {
+						SpeciesFieldUser sfUser = new SpeciesFieldUser(speciesField.getId(), newUserId, null);
 						sfUserDao.save(sfUser);
 					}
 				}
 
 //				sf license 
-				SpeciesFieldLicense sfLicense = sfLicenseDao.findById(speciesField.getId());
-				if (!sfLicense.getLicenseId().equals(sfUpdatedata.getLicenseId())) {
-
-					sfLicense.setLicenseId(sfUpdatedata.getLicenseId());
-					sfLicenseDao.update(sfLicense);
+				if (sfdata.getIsEdit()) {
+					SpeciesFieldLicense sfLicense = sfLicenseDao.findById(speciesField.getId());
+					if (!sfLicense.getLicenseId().equals(sfdata.getLicenseId())) {
+						sfLicense.setLicenseId(sfdata.getLicenseId());
+						sfLicenseDao.update(sfLicense);
+					}
+				} else {
+					SpeciesFieldLicense sfLicense = new SpeciesFieldLicense(speciesField.getId(),
+							sfdata.getLicenseId());
+					sfLicenseDao.save(sfLicense);
 				}
 
 				return getSpeciesFieldData(speciesField);
@@ -651,5 +647,70 @@ public class SpeciesServiceImpl implements SpeciesServices {
 			logger.error(e.getMessage());
 		}
 		return null;
+	}
+
+	private List<Resource> updateCreateSpeciesResource(HttpServletRequest request, String objectType, String objectId,
+			Boolean isEdit, List<SpeciesResourceData> speciesResourceData) {
+
+		try {
+			if (speciesResourceData != null && !speciesResourceData.isEmpty()) {
+				List<Resource> resources = speciesHelper.createResourceMapping(request, speciesResourceData);
+
+				if (resources != null && !resources.isEmpty()) {
+					resourceServices = headers.addResourceHeaders(resourceServices,
+							request.getHeader(HttpHeaders.AUTHORIZATION));
+
+					if (isEdit) {
+						resources = resourceServices.updateResources(objectType, objectId, resources);
+					} else {
+						resources = resourceServices.createResource(objectType, objectId, resources);
+					}
+					return resources;
+				}
+			}
+
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return null;
+
+	}
+
+	private SpeciesField updateCreateSpeciesField(Long speciesId, Long uploaderId, SpeciesFieldUpdateData sfData) {
+
+		SpeciesField field = null;
+		if (sfData.getIsEdit()) {
+//			update the species field
+			field = speciesFieldDao.findById(sfData.getSpeciesFieldId());
+			field.setDescription(sfData.getSfDescription());
+			field.setStatus(sfData.getSfStatus());
+			field.setLastUpdated(new Date());
+
+			speciesFieldDao.update(field);
+		} else {
+//			create the species field
+			field = new SpeciesField(null, 0L, sfData.getSfDescription(), sfData.getFieldId(), speciesId,
+					sfData.getSfStatus(), "species.SpeciesField", null, new Date(), new Date(), new Date(), uploaderId,
+					205L, null);
+			field = speciesFieldDao.save(field);
+		}
+
+		return field;
+	}
+
+	@Override
+	public Boolean removeSpeciesField(HttpServletRequest request, Long speciesfieldId) {
+		CommonProfile profile = AuthUtil.getProfileFromRequest(request);
+		JSONArray userRoles = (JSONArray) profile.getAttribute("roles");
+		Long userId = Long.parseLong(profile.getId());
+		List<Long> sfUserList = sfUserDao.findBySpeciesFieldId(speciesfieldId);
+
+		if (userRoles.contains("ROLE_ADMIN") || sfUserList.contains(userId)) {
+			SpeciesField speciesfield = speciesFieldDao.findById(speciesfieldId);
+			speciesFieldDao.delete(speciesfield);
+			return true;
+		}
+
+		return false;
 	}
 }
