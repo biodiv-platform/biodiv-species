@@ -57,6 +57,7 @@ import com.strandls.species.pojo.SpeciesTrait;
 import com.strandls.species.service.SpeciesServices;
 import com.strandls.taxonomy.controllers.TaxonomyServicesApi;
 import com.strandls.taxonomy.pojo.BreadCrumb;
+import com.strandls.taxonomy.pojo.TaxonomicNames;
 import com.strandls.taxonomy.pojo.TaxonomyDefinition;
 import com.strandls.traits.controller.TraitsServiceApi;
 import com.strandls.traits.pojo.FactValuePair;
@@ -184,8 +185,11 @@ public class SpeciesServiceImpl implements SpeciesServices {
 				List<UserGroupIbp> userGroupList = ugService.getSpeciesUserGroup(speciesId.toString());
 				List<Featured> featured = ugService.getAllFeatured("species.Species", speciesId.toString());
 
+//				common name and synonyms
+				TaxonomicNames names = taxonomyService.getNames(species.getTaxonConceptId().toString());
+
 				ShowSpeciesPage showSpeciesPage = new ShowSpeciesPage(species, breadCrumbs, taxonomyDefinition,
-						resourceData, fieldData, facts, userGroupList, featured);
+						resourceData, fieldData, facts, userGroupList, featured, names);
 
 //				ShowSpeciesPage showSpeciesPage = new ShowSpeciesPage(species, breadCrumbs, taxonomyDefinition,
 //						resourceData, fieldData, facts, userGroupList, featured, documentMetaList);
