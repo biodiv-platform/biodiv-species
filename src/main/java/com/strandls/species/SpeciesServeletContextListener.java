@@ -34,6 +34,7 @@ import com.google.inject.Injector;
 import com.google.inject.Scopes;
 import com.google.inject.servlet.GuiceServletContextListener;
 import com.google.inject.servlet.ServletModule;
+import com.strandls.esmodule.controllers.EsServicesApi;
 import com.strandls.file.api.UploadApi;
 import com.strandls.resource.controllers.ResourceServicesApi;
 import com.strandls.species.controllers.SpeciesControllerModule;
@@ -92,6 +93,7 @@ public class SpeciesServeletContextListener extends GuiceServletContextListener 
 				bind(UserGroupSerivceApi.class).in(Scopes.SINGLETON);
 				bind(UserServiceApi.class).in(Scopes.SINGLETON);
 				bind(TaxonomyServicesApi.class).in(Scopes.SINGLETON);
+				bind(EsServicesApi.class).in(Scopes.SINGLETON);
 
 				bind(ServletContainer.class).in(Scopes.SINGLETON);
 				serve("/api/*").with(ServletContainer.class, props);

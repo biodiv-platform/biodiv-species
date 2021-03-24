@@ -4,6 +4,7 @@
 package com.strandls.species.pojo;
 
 import java.util.List;
+import java.util.Map;
 
 import com.strandls.resource.pojo.ResourceData;
 import com.strandls.taxonomy.pojo.BreadCrumb;
@@ -29,6 +30,7 @@ public class ShowSpeciesPage {
 	private List<UserGroupIbp> userGroups;
 	private List<Featured> featured;
 	private TaxonomicNames taxonomicNames;
+	private Map<String, Long> temporalData;
 //	private List<DocumentMeta> documentMetaList;
 
 	/**
@@ -48,10 +50,12 @@ public class ShowSpeciesPage {
 	 * @param userGroups
 	 * @param featured
 	 * @param taxonomicNames
+	 * @param temporalData
 	 */
 	public ShowSpeciesPage(Species species, List<BreadCrumb> breadCrumbs, TaxonomyDefinition taxonomyDefinition,
 			List<ResourceData> resourceData, List<SpeciesFieldData> fieldData, List<FactValuePair> facts,
-			List<UserGroupIbp> userGroups, List<Featured> featured, TaxonomicNames taxonomicNames) {
+			List<UserGroupIbp> userGroups, List<Featured> featured, TaxonomicNames taxonomicNames,
+			Map<String, Long> temporalData) {
 		super();
 		this.species = species;
 		this.breadCrumbs = breadCrumbs;
@@ -62,6 +66,7 @@ public class ShowSpeciesPage {
 		this.userGroups = userGroups;
 		this.featured = featured;
 		this.taxonomicNames = taxonomicNames;
+		this.temporalData = temporalData;
 	}
 
 	public Species getSpecies() {
@@ -134,6 +139,14 @@ public class ShowSpeciesPage {
 
 	public void setTaxonomicNames(TaxonomicNames taxonomicNames) {
 		this.taxonomicNames = taxonomicNames;
+	}
+
+	public Map<String, Long> getTemporalData() {
+		return temporalData;
+	}
+
+	public void setTemporalData(Map<String, Long> temporalData) {
+		this.temporalData = temporalData;
 	}
 
 //	public List<DocumentMeta> getDocumentMetaList() {

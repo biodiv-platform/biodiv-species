@@ -12,6 +12,8 @@ import com.strandls.species.pojo.ShowSpeciesPage;
 import com.strandls.species.pojo.SpeciesFieldData;
 import com.strandls.species.pojo.SpeciesFieldUpdateData;
 import com.strandls.species.pojo.SpeciesTrait;
+import com.strandls.taxonomy.pojo.CommonNames;
+import com.strandls.taxonomy.pojo.CommonNamesData;
 import com.strandls.traits.pojo.FactValuePair;
 import com.strandls.traits.pojo.FactsUpdateData;
 import com.strandls.userGroup.pojo.Featured;
@@ -52,5 +54,9 @@ public interface SpeciesServices {
 			SpeciesFieldUpdateData sfUpdatedata);
 
 	public Boolean removeSpeciesField(HttpServletRequest request, Long speciesfield);
+
+	public List<CommonNames> updateAddCommonName(HttpServletRequest request, CommonNamesData commonNamesData);
+
+	public Boolean removeCommonName(HttpServletRequest request, String commonNameId);
 
 }

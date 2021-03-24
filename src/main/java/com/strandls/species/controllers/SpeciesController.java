@@ -25,6 +25,8 @@ import com.strandls.species.pojo.SpeciesFieldData;
 import com.strandls.species.pojo.SpeciesFieldUpdateData;
 import com.strandls.species.pojo.SpeciesTrait;
 import com.strandls.species.service.SpeciesServices;
+import com.strandls.taxonomy.pojo.CommonNames;
+import com.strandls.taxonomy.pojo.CommonNamesData;
 import com.strandls.traits.pojo.FactValuePair;
 import com.strandls.traits.pojo.FactsUpdateData;
 import com.strandls.userGroup.pojo.Featured;
@@ -270,6 +272,48 @@ public class SpeciesController {
 			Boolean result = speciesService.removeSpeciesField(request, sfId);
 			if (result)
 				return Response.status(Status.OK).entity("DELETED").build();
+			return Response.status(Status.NOT_MODIFIED).build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+	}
+
+	@PUT
+	@Path(ApiConstants.UPDATE + ApiConstants.COMMONNAME)
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+
+	@ValidateUser
+
+	@ApiOperation(value = "update and add common Names", notes = "return common Names list", response = CommonNames.class, responseContainer = "List")
+	@ApiResponses(value = {
+			@ApiResponse(code = 404, message = "unable to update the common Names", response = String.class) })
+
+	public Response updateAddCommonName(@Context HttpServletRequest request,
+			@ApiParam(name = "commonNamesData") CommonNamesData commonNamesData) {
+		try {
+			List<CommonNames> result = speciesService.updateAddCommonName(request, commonNamesData);
+			if (result != null)
+				return Response.status(Status.OK).entity(result).build();
+			return Response.status(Status.NOT_ACCEPTABLE).build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+	}
+
+	@DELETE
+	@Path(ApiConstants.REMOVE + ApiConstants.COMMONNAME + "/{commonNameId}")
+	@Consumes(MediaType.TEXT_PLAIN)
+	@Produces(MediaType.APPLICATION_JSON)
+
+	@ValidateUser
+
+	public Response removeCommonName(@Context HttpServletRequest request,
+			@PathParam("commonNameId") String commonNameId) {
+		try {
+			Boolean result = speciesService.removeCommonName(request, commonNameId);
+			if (result)
+				return Response.status(Status.OK).entity(result).build();
 			return Response.status(Status.NOT_MODIFIED).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();

@@ -20,6 +20,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.strandls.authentication_utility.util.AuthUtil;
+import com.strandls.esmodule.controllers.EsServicesApi;
+import com.strandls.esmodule.pojo.ObservationInfo;
 import com.strandls.resource.controllers.ResourceServicesApi;
 import com.strandls.resource.pojo.License;
 import com.strandls.resource.pojo.Resource;
@@ -57,6 +59,8 @@ import com.strandls.species.pojo.SpeciesTrait;
 import com.strandls.species.service.SpeciesServices;
 import com.strandls.taxonomy.controllers.TaxonomyServicesApi;
 import com.strandls.taxonomy.pojo.BreadCrumb;
+import com.strandls.taxonomy.pojo.CommonNames;
+import com.strandls.taxonomy.pojo.CommonNamesData;
 import com.strandls.taxonomy.pojo.TaxonomicNames;
 import com.strandls.taxonomy.pojo.TaxonomyDefinition;
 import com.strandls.traits.controller.TraitsServiceApi;
@@ -124,6 +128,9 @@ public class SpeciesServiceImpl implements SpeciesServices {
 
 //	injection of services
 
+	@Inject
+	private EsServicesApi esService;
+
 //	@Inject
 //	private DocumentServiceApi documentService;
 
@@ -188,8 +195,15 @@ public class SpeciesServiceImpl implements SpeciesServices {
 //				common name and synonyms
 				TaxonomicNames names = taxonomyService.getNames(species.getTaxonConceptId().toString());
 
+//				temporal data
+
+				ObservationInfo observationInfo = esService.getObservationInfo("extended_observations", "_doc",
+						taxonomyDefinition.getId().toString(), false);
+
+				Map<String, Long> temporalData = observationInfo.getMonthAggregation();
+
 				ShowSpeciesPage showSpeciesPage = new ShowSpeciesPage(species, breadCrumbs, taxonomyDefinition,
-						resourceData, fieldData, facts, userGroupList, featured, names);
+						resourceData, fieldData, facts, userGroupList, featured, names, temporalData);
 
 //				ShowSpeciesPage showSpeciesPage = new ShowSpeciesPage(species, breadCrumbs, taxonomyDefinition,
 //						resourceData, fieldData, facts, userGroupList, featured, documentMetaList);
@@ -715,6 +729,30 @@ public class SpeciesServiceImpl implements SpeciesServices {
 			return true;
 		}
 
+		return false;
+	}
+
+	@Override
+	public List<CommonNames> updateAddCommonName(HttpServletRequest request, CommonNamesData commonNamesData) {
+		try {
+			taxonomyService = headers.addTaxonomyHeader(taxonomyService, request.getHeader(HttpHeaders.AUTHORIZATION));
+			List<CommonNames> result = taxonomyService.updateAddCommonNames(commonNamesData);
+			return result;
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return null;
+	}
+
+	@Override
+	public Boolean removeCommonName(HttpServletRequest request, String commonNameId) {
+		try {
+			taxonomyService = headers.addTaxonomyHeader(taxonomyService, request.getHeader(HttpHeaders.AUTHORIZATION));
+			Boolean result = taxonomyService.removeCommonName(commonNameId);
+			return result;
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
 		return false;
 	}
 }

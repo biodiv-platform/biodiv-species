@@ -7,6 +7,7 @@ import javax.ws.rs.core.HttpHeaders;
 
 import com.strandls.file.api.UploadApi;
 import com.strandls.resource.controllers.ResourceServicesApi;
+import com.strandls.taxonomy.controllers.TaxonomyServicesApi;
 import com.strandls.traits.controller.TraitsServiceApi;
 import com.strandls.userGroup.controller.UserGroupSerivceApi;
 
@@ -35,6 +36,11 @@ public class Headers {
 	public ResourceServicesApi addResourceHeaders(ResourceServicesApi resourceService, String authHeader) {
 		resourceService.getApiClient().addDefaultHeader(HttpHeaders.AUTHORIZATION, authHeader);
 		return resourceService;
+	}
+
+	public TaxonomyServicesApi addTaxonomyHeader(TaxonomyServicesApi taxonomyServices, String authHeader) {
+		taxonomyServices.getApiClient().addDefaultHeader(HttpHeaders.AUTHORIZATION, authHeader);
+		return taxonomyServices;
 	}
 
 }
