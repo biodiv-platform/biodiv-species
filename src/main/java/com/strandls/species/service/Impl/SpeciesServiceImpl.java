@@ -197,10 +197,16 @@ public class SpeciesServiceImpl implements SpeciesServices {
 
 //				temporal data
 
+				System.out.println("reached es service");
+				
 				ObservationInfo observationInfo = esService.getObservationInfo("extended_observation", "_doc",
-						taxonomyDefinition.getId().toString(), false);
+						species.getTaxonConceptId().toString(), false);
+				
+				System.out.println("got esresponse");
 
 				Map<String, Long> temporalData = observationInfo.getMonthAggregation();
+				
+				System.out.println("got temporal data");
 
 				ShowSpeciesPage showSpeciesPage = new ShowSpeciesPage(species, breadCrumbs, taxonomyDefinition,
 						resourceData, fieldData, facts, userGroupList, featured, names, temporalData);
