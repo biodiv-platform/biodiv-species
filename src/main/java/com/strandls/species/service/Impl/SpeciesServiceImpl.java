@@ -197,7 +197,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 
 //				temporal data
 
-				ObservationInfo observationInfo = esService.getObservationInfo("extended_observations", "_doc",
+				ObservationInfo observationInfo = esService.getObservationInfo("extended_observation", "_doc",
 						taxonomyDefinition.getId().toString(), false);
 
 				Map<String, Long> temporalData = observationInfo.getMonthAggregation();
