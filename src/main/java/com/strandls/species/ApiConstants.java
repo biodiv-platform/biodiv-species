@@ -20,9 +20,12 @@ public class ApiConstants {
 	public static final String FEATURED = "/featured";
 	public static final String FIELDS = "/fields";
 	public static final String MIGRATEFIELD = "/migrateField";
+	public static final String OBSERVATION = "/observation";
 	public static final String PING = "/ping";
+	public static final String PULL = "/pull";
 	public static final String REMOVE = "/remove";
 	public static final String RENDER = "/render";
+	public static final String RESOURCE = "/resource";
 	public static final String SHOW = "/show";
 	public static final String SPECIES = "/species";
 	public static final String SPECIESFIELD = "/speciesField";

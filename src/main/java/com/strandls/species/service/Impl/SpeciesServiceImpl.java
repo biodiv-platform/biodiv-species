@@ -6,9 +6,11 @@ package com.strandls.species.service.Impl;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.TreeMap;
 
 import javax.inject.Inject;
@@ -22,10 +24,14 @@ import org.slf4j.LoggerFactory;
 import com.strandls.authentication_utility.util.AuthUtil;
 import com.strandls.esmodule.controllers.EsServicesApi;
 import com.strandls.esmodule.pojo.ObservationInfo;
+import com.strandls.esmodule.pojo.ObservationMapInfo;
+import com.strandls.observation.controller.ObservationServiceApi;
 import com.strandls.resource.controllers.ResourceServicesApi;
 import com.strandls.resource.pojo.License;
 import com.strandls.resource.pojo.Resource;
 import com.strandls.resource.pojo.ResourceData;
+import com.strandls.resource.pojo.SpeciesPull;
+import com.strandls.resource.pojo.SpeciesResourcePulling;
 import com.strandls.species.Headers;
 import com.strandls.species.dao.ContributorDao;
 import com.strandls.species.dao.FieldDao;
@@ -54,6 +60,7 @@ import com.strandls.species.pojo.SpeciesFieldData;
 import com.strandls.species.pojo.SpeciesFieldLicense;
 import com.strandls.species.pojo.SpeciesFieldUpdateData;
 import com.strandls.species.pojo.SpeciesFieldUser;
+import com.strandls.species.pojo.SpeciesPullData;
 import com.strandls.species.pojo.SpeciesResourceData;
 import com.strandls.species.pojo.SpeciesTrait;
 import com.strandls.species.service.SpeciesServices;
@@ -135,6 +142,9 @@ public class SpeciesServiceImpl implements SpeciesServices {
 //	private DocumentServiceApi documentService;
 
 	@Inject
+	private ObservationServiceApi observationService;
+
+	@Inject
 	private ResourceServicesApi resourceServices;
 
 	@Inject
@@ -198,14 +208,14 @@ public class SpeciesServiceImpl implements SpeciesServices {
 //				temporal data
 
 				System.out.println("reached es service");
-				
+
 				ObservationInfo observationInfo = esService.getObservationInfo("extended_observation", "_doc",
 						species.getTaxonConceptId().toString(), false);
-				
+
 				System.out.println("got esresponse");
 
 				Map<String, Long> temporalData = observationInfo.getMonthAggregation();
-				
+
 				System.out.println("got temporal data");
 
 				ShowSpeciesPage showSpeciesPage = new ShowSpeciesPage(species, breadCrumbs, taxonomyDefinition,
@@ -751,14 +761,75 @@ public class SpeciesServiceImpl implements SpeciesServices {
 	}
 
 	@Override
-	public Boolean removeCommonName(HttpServletRequest request, String commonNameId) {
+	public List<CommonNames> removeCommonName(HttpServletRequest request, String commonNameId) {
 		try {
 			taxonomyService = headers.addTaxonomyHeader(taxonomyService, request.getHeader(HttpHeaders.AUTHORIZATION));
-			Boolean result = taxonomyService.removeCommonName(commonNameId);
+			List<CommonNames> result = taxonomyService.removeCommonName(commonNameId);
 			return result;
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 		}
-		return false;
+		return null;
+	}
+
+	@Override
+	public List<SpeciesPull> getObservationResource(HttpServletRequest request, Long speciesId, Long offset) {
+		try {
+			Species species = speciesDao.findById(speciesId);
+			ObservationInfo observationInfo = esService.getObservationInfo("extended_observation", "_doc",
+					species.getTaxonConceptId().toString(), false);
+			List<ObservationMapInfo> observations = observationInfo.getLatlon();
+			List<Long> objectIds = new ArrayList<Long>();
+			int counter = (int) (0 + offset);
+			while (counter < (10 + offset)) {
+				objectIds.add(observations.get(counter).getId());
+			}
+
+			List<SpeciesPull> resources = resourceServices.getBulkResources("spcies", objectIds);
+			return resources;
+
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return null;
+	}
+
+	@Override
+	public List<ResourceData> pullResource(HttpServletRequest request, Long speciesId,
+			List<SpeciesPullData> speciesPullData) {
+
+		try {
+
+			Species species = speciesDao.findById(speciesId);
+			Set<Long> observationIds = new HashSet<Long>();
+			List<Long> resourcesIds = new ArrayList<Long>();
+
+			for (SpeciesPullData speciesPull : speciesPullData) {
+				resourcesIds.add(speciesPull.getResourceId());
+				observationIds.add(speciesPull.getObservationId());
+			}
+			SpeciesResourcePulling resourcePulling = new SpeciesResourcePulling();
+			resourcePulling.setSpeciesId(speciesId);
+			resourcePulling.setResourcesIds(resourcesIds);
+
+			resourceServices = headers.addResourceHeaders(resourceServices,
+					request.getHeader(HttpHeaders.AUTHORIZATION));
+			List<ResourceData> resourceResult = resourceServices.pullResource(resourcePulling);
+
+//			validate the observation
+
+			List<Long> observationIdsList = new ArrayList<Long>(observationIds);
+			observationService = headers.addObservationHeader(observationService,
+					request.getHeader(HttpHeaders.AUTHORIZATION));
+			observationService.speciesPullObservationValidation(species.getTaxonConceptId().toString(),
+					observationIdsList);
+
+			return resourceResult;
+
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+
+		return null;
 	}
 }

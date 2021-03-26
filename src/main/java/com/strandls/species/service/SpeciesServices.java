@@ -7,10 +7,13 @@ import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 
+import com.strandls.resource.pojo.ResourceData;
+import com.strandls.resource.pojo.SpeciesPull;
 import com.strandls.species.pojo.FieldRender;
 import com.strandls.species.pojo.ShowSpeciesPage;
 import com.strandls.species.pojo.SpeciesFieldData;
 import com.strandls.species.pojo.SpeciesFieldUpdateData;
+import com.strandls.species.pojo.SpeciesPullData;
 import com.strandls.species.pojo.SpeciesTrait;
 import com.strandls.taxonomy.pojo.CommonNames;
 import com.strandls.taxonomy.pojo.CommonNamesData;
@@ -57,6 +60,11 @@ public interface SpeciesServices {
 
 	public List<CommonNames> updateAddCommonName(HttpServletRequest request, CommonNamesData commonNamesData);
 
-	public Boolean removeCommonName(HttpServletRequest request, String commonNameId);
+	public List<CommonNames> removeCommonName(HttpServletRequest request, String commonNameId);
+
+	public List<SpeciesPull> getObservationResource(HttpServletRequest request, Long speciesId, Long offset);
+
+	public List<ResourceData> pullResource(HttpServletRequest request, Long speciesId,
+			List<SpeciesPullData> speciesPullData);
 
 }

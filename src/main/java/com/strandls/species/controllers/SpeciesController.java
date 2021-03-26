@@ -6,18 +6,21 @@ import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import com.strandls.authentication_utility.filter.ValidateUser;
+import com.strandls.resource.pojo.SpeciesPull;
 import com.strandls.species.ApiConstants;
 import com.strandls.species.pojo.FieldRender;
 import com.strandls.species.pojo.ShowSpeciesPage;
@@ -308,13 +311,40 @@ public class SpeciesController {
 
 	@ValidateUser
 
+	@ApiOperation(value = "delete common Names", notes = "return common Names list", response = CommonNames.class, responseContainer = "List")
+	@ApiResponses(value = {
+			@ApiResponse(code = 404, message = "unable to update the common Names", response = String.class) })
+
 	public Response removeCommonName(@Context HttpServletRequest request,
 			@PathParam("commonNameId") String commonNameId) {
 		try {
-			Boolean result = speciesService.removeCommonName(request, commonNameId);
-			if (result)
-				return Response.status(Status.OK).entity(result).build();
-			return Response.status(Status.NOT_MODIFIED).build();
+			List<CommonNames> result = speciesService.removeCommonName(request, commonNameId);
+			return Response.status(Status.OK).entity(result).build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+	}
+
+	@GET
+	@Path(ApiConstants.PULL + ApiConstants.OBSERVATION + ApiConstants.RESOURCE + "/{speciesId}")
+	@Consumes(MediaType.TEXT_PLAIN)
+	@Produces(MediaType.APPLICATION_JSON)
+
+	@ValidateUser
+
+	@ApiOperation(value = "get all the observation resources", notes = "Returns the observation resources", response = SpeciesPull.class, responseContainer = "List")
+	@ApiResponses(value = {
+			@ApiResponse(code = 400, message = "unable to get the resources", response = String.class) })
+
+	public Response getObservationResources(@Context HttpServletRequest request,
+			@PathParam("speciesId") String speciesId, @DefaultValue("0") @QueryParam("offset") String offset) {
+		try {
+
+			Long sId = Long.parseLong(speciesId);
+			Long offSet = Long.parseLong(offset);
+			List<SpeciesPull> result = speciesService.getObservationResource(request, sId, offSet);
+			return Response.status(Status.OK).entity(result).build();
+
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
