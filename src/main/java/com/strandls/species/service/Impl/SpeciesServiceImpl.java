@@ -64,9 +64,11 @@ import com.strandls.species.pojo.SpeciesPullData;
 import com.strandls.species.pojo.SpeciesResourceData;
 import com.strandls.species.pojo.SpeciesTrait;
 import com.strandls.species.service.SpeciesServices;
+import com.strandls.taxonomy.controllers.CommonNameServicesApi;
 import com.strandls.taxonomy.controllers.TaxonomyServicesApi;
+import com.strandls.taxonomy.controllers.TaxonomyTreeServicesApi;
 import com.strandls.taxonomy.pojo.BreadCrumb;
-import com.strandls.taxonomy.pojo.CommonNames;
+import com.strandls.taxonomy.pojo.CommonName;
 import com.strandls.taxonomy.pojo.CommonNamesData;
 import com.strandls.taxonomy.pojo.TaxonomicNames;
 import com.strandls.taxonomy.pojo.TaxonomyDefinition;
@@ -142,6 +144,9 @@ public class SpeciesServiceImpl implements SpeciesServices {
 //	private DocumentServiceApi documentService;
 
 	@Inject
+	private CommonNameServicesApi commonNameService;
+
+	@Inject
 	private ObservationServiceApi observationService;
 
 	@Inject
@@ -158,6 +163,9 @@ public class SpeciesServiceImpl implements SpeciesServices {
 
 	@Inject
 	private TaxonomyServicesApi taxonomyService;
+
+	@Inject
+	private TaxonomyTreeServicesApi taxonomyTreeServices;
 
 	@Inject
 	private TraitsServiceApi traitService;
@@ -190,7 +198,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 
 				}
 
-				List<BreadCrumb> breadCrumbs = taxonomyService
+				List<BreadCrumb> breadCrumbs = taxonomyTreeServices
 						.getTaxonomyBreadCrumb(species.getTaxonConceptId().toString());
 
 				TaxonomyDefinition taxonomyDefinition = taxonomyService
@@ -749,10 +757,10 @@ public class SpeciesServiceImpl implements SpeciesServices {
 	}
 
 	@Override
-	public List<CommonNames> updateAddCommonName(HttpServletRequest request, CommonNamesData commonNamesData) {
+	public List<CommonName> updateAddCommonName(HttpServletRequest request, CommonNamesData commonNamesData) {
 		try {
 			taxonomyService = headers.addTaxonomyHeader(taxonomyService, request.getHeader(HttpHeaders.AUTHORIZATION));
-			List<CommonNames> result = taxonomyService.updateAddCommonNames(commonNamesData);
+			List<CommonName> result = commonNameService.updateAddCommonNames(commonNamesData);
 			return result;
 		} catch (Exception e) {
 			logger.error(e.getMessage());
@@ -761,10 +769,10 @@ public class SpeciesServiceImpl implements SpeciesServices {
 	}
 
 	@Override
-	public List<CommonNames> removeCommonName(HttpServletRequest request, String commonNameId) {
+	public List<CommonName> removeCommonName(HttpServletRequest request, String commonNameId) {
 		try {
 			taxonomyService = headers.addTaxonomyHeader(taxonomyService, request.getHeader(HttpHeaders.AUTHORIZATION));
-			List<CommonNames> result = taxonomyService.removeCommonName(commonNameId);
+			List<CommonName> result = commonNameService.removeCommonName(commonNameId);
 			return result;
 		} catch (Exception e) {
 			logger.error(e.getMessage());
@@ -783,6 +791,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 			int counter = (int) (0 + offset);
 			while (counter < (10 + offset)) {
 				objectIds.add(observations.get(counter).getId());
+				counter++;
 			}
 
 			List<SpeciesPull> resources = resourceServices.getBulkResources("species", objectIds);
