@@ -786,7 +786,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 				counter++;
 			}
 
-			List<SpeciesPull> resources = resourceServices.getBulkResources("species", objectIds);
+			List<SpeciesPull> resources = resourceServices.getBulkResources("observation", objectIds);
 			return resources;
 
 		} catch (Exception e) {
