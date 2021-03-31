@@ -14,6 +14,7 @@ import com.strandls.species.pojo.ShowSpeciesPage;
 import com.strandls.species.pojo.SpeciesFieldData;
 import com.strandls.species.pojo.SpeciesFieldUpdateData;
 import com.strandls.species.pojo.SpeciesPullData;
+import com.strandls.species.pojo.SpeciesResourcesPreData;
 import com.strandls.species.pojo.SpeciesTrait;
 import com.strandls.taxonomy.pojo.CommonNames;
 import com.strandls.taxonomy.pojo.CommonNamesData;
@@ -66,5 +67,10 @@ public interface SpeciesServices {
 
 	public List<ResourceData> pullResource(HttpServletRequest request, Long speciesId,
 			List<SpeciesPullData> speciesPullData);
+
+	public List<ResourceData> getSpeciesResources(HttpServletRequest request, Long speciesId);
+
+	public List<ResourceData> updateSpciesResources(HttpServletRequest request, Long speciesId,
+			List<SpeciesResourcesPreData> preDataList);
 
 }

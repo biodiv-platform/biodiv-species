@@ -41,7 +41,7 @@ public class SpeciesHelper {
 	private Headers headers;
 
 	@SuppressWarnings("unchecked")
-	public List<Resource> createResourceMapping(HttpServletRequest request,
+	public List<Resource> createResourceMapping(HttpServletRequest request, String context,
 			List<SpeciesResourceData> resourceDataList) {
 
 		CommonProfile profile = AuthUtil.getProfileFromRequest(request);
@@ -101,7 +101,7 @@ public class SpeciesHelper {
 				resource.setRating(resourceData.getRating());
 				resource.setUploadTime(new Date());
 				resource.setUploaderId(userId);
-				resource.setContext("OBSERVATION");
+				resource.setContext(context.toUpperCase());
 				resource.setLanguageId(205L);
 				resource.setAccessRights(null);
 				resource.setAnnotations(null);

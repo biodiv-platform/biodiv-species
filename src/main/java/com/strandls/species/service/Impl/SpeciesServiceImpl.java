@@ -62,6 +62,7 @@ import com.strandls.species.pojo.SpeciesFieldUpdateData;
 import com.strandls.species.pojo.SpeciesFieldUser;
 import com.strandls.species.pojo.SpeciesPullData;
 import com.strandls.species.pojo.SpeciesResourceData;
+import com.strandls.species.pojo.SpeciesResourcesPreData;
 import com.strandls.species.pojo.SpeciesTrait;
 import com.strandls.species.service.SpeciesServices;
 import com.strandls.taxonomy.controllers.TaxonomyServicesApi;
@@ -688,7 +689,8 @@ public class SpeciesServiceImpl implements SpeciesServices {
 
 		try {
 			if (speciesResourceData != null && !speciesResourceData.isEmpty()) {
-				List<Resource> resources = speciesHelper.createResourceMapping(request, speciesResourceData);
+				List<Resource> resources = speciesHelper.createResourceMapping(request, objectType,
+						speciesResourceData);
 
 				if (resources != null && !resources.isEmpty()) {
 					resourceServices = headers.addResourceHeaders(resourceServices,
@@ -831,6 +833,55 @@ public class SpeciesServiceImpl implements SpeciesServices {
 			logger.error(e.getMessage());
 		}
 
+		return null;
+	}
+
+	@Override
+	public List<ResourceData> getSpeciesResources(HttpServletRequest request, Long speciesId) {
+		try {
+			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
+			JSONArray userRoles = (JSONArray) profile.getAttribute("roles");
+
+			if (userRoles.contains("ROLE_ADMIN")) {
+				List<ResourceData> resourceData = resourceServices.getImageResource("SPECIES", speciesId.toString());
+				return resourceData;
+			}
+
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+
+		return null;
+	}
+
+	@Override
+	public List<ResourceData> updateSpciesResources(HttpServletRequest request, Long speciesId,
+			List<SpeciesResourcesPreData> preDataList) {
+
+		try {
+			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
+			JSONArray userRoles = (JSONArray) profile.getAttribute("roles");
+
+			if (userRoles.contains("ROLE_ADMIN")) {
+				List<SpeciesPullData> speciesPullDatas = new ArrayList<SpeciesPullData>();
+				List<SpeciesResourceData> speciesResourceData = new ArrayList<SpeciesResourceData>();
+				for (SpeciesResourcesPreData preData : preDataList) {
+					if (preData.getObservationId() != null) {
+						speciesPullDatas.add(new SpeciesPullData(preData.getObservationId(), preData.getResourcesId()));
+					} else {
+						speciesResourceData.add(new SpeciesResourceData(preData.getPath(), preData.getUrl(),
+								preData.getType(), preData.getCaption(), preData.getRating(), preData.getLicenceId()));
+					}
+				}
+				pullResource(request, speciesId, speciesPullDatas);
+				updateCreateSpeciesResource(request, "SPECIES", speciesId.toString(), true, speciesResourceData);
+
+				return getSpeciesResources(request, speciesId);
+			}
+
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
 		return null;
 	}
 }

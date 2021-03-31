@@ -27,7 +27,7 @@ import com.strandls.species.pojo.FieldRender;
 import com.strandls.species.pojo.ShowSpeciesPage;
 import com.strandls.species.pojo.SpeciesFieldData;
 import com.strandls.species.pojo.SpeciesFieldUpdateData;
-import com.strandls.species.pojo.SpeciesPullData;
+import com.strandls.species.pojo.SpeciesResourcesPreData;
 import com.strandls.species.pojo.SpeciesTrait;
 import com.strandls.species.service.SpeciesServices;
 import com.strandls.taxonomy.pojo.CommonNames;
@@ -352,23 +352,46 @@ public class SpeciesController {
 		}
 	}
 
-	@POST
-	@Path(ApiConstants.PULL + ApiConstants.RESOURCE + "/{speciesId}")
+	@GET
+	@Path(ApiConstants.EDIT + ApiConstants.RESOURCE + "/{speciesId}")
+	@Consumes(MediaType.TEXT_PLAIN)
+	@Produces(MediaType.APPLICATION_JSON)
+
+	@ValidateUser
+
+	@ApiOperation(value = "get all the species resources", notes = "Returns the spcies resources", response = ResourceData.class, responseContainer = "List")
+	@ApiResponses(value = {
+			@ApiResponse(code = 400, message = "unable to get the resources", response = String.class) })
+
+	public Response getEditSpeciesResource(@Context HttpServletRequest request,
+			@PathParam("speciesId") String speciesId) {
+		try {
+			Long sId = Long.parseLong(speciesId);
+			List<ResourceData> result = speciesService.getSpeciesResources(request, sId);
+			return Response.status(Status.OK).entity(result).build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+	}
+
+	@PUT
+	@Path(ApiConstants.UPDATE + ApiConstants.RESOURCE + "/{speciesId}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 
 	@ValidateUser
 
-	@ApiOperation(value = "pull all the observation resources", notes = "Returns the resources", response = ResourceData.class, responseContainer = "List")
+	@ApiOperation(value = "update the species resources", notes = "Returns the species resources", response = ResourceData.class, responseContainer = "List")
 	@ApiResponses(value = {
-			@ApiResponse(code = 400, message = "unable to get the resources", response = String.class) })
+			@ApiResponse(code = 400, message = "unable to update the resources", response = String.class) })
 
-	public Response pullResources(@Context HttpServletRequest request, @PathParam("speciesId") String speciesId,
-			@ApiParam(name = "speciesPullData") List<SpeciesPullData> speciesPullData) {
+	public Response updateSpeciesResource(@Context HttpServletRequest request, @PathParam("speciesId") String speciesId,
+			@ApiParam(name = "") List<SpeciesResourcesPreData> preDataList) {
 		try {
 			Long sId = Long.parseLong(speciesId);
-			List<ResourceData> result = speciesService.pullResource(request, sId, speciesPullData);
+			List<ResourceData> result = speciesService.updateSpciesResources(request, sId, preDataList);
 			return Response.status(Status.OK).entity(result).build();
+
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
