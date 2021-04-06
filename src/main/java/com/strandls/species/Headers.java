@@ -5,6 +5,7 @@ package com.strandls.species;
 
 import javax.ws.rs.core.HttpHeaders;
 
+import com.strandls.activity.controller.ActivitySerivceApi;
 import com.strandls.file.api.UploadApi;
 import com.strandls.observation.controller.ObservationServiceApi;
 import com.strandls.resource.controllers.ResourceServicesApi;
@@ -47,6 +48,11 @@ public class Headers {
 	public ObservationServiceApi addObservationHeader(ObservationServiceApi observationService, String authHeader) {
 		observationService.getApiClient().addDefaultHeader(HttpHeaders.AUTHORIZATION, authHeader);
 		return observationService;
+	}
+
+	public ActivitySerivceApi addActivityHeader(ActivitySerivceApi activityService, String authHeaders) {
+		activityService.getApiClient().addDefaultHeader(HttpHeaders.AUTHORIZATION, authHeaders);
+		return activityService;
 	}
 
 }

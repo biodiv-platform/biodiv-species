@@ -18,5 +18,6 @@ public class SpeciesServiceModule extends AbstractModule {
 	protected void configure() {
 		bind(SpeciesServices.class).to(SpeciesServiceImpl.class).in(Scopes.SINGLETON);
 		bind(SpeciesHelper.class).in(Scopes.SINGLETON);
+		bind(LogActivities.class).in(Scopes.SINGLETON);
 	}
 }

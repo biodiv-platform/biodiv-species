@@ -21,6 +21,9 @@ import org.pac4j.core.profile.CommonProfile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.strandls.activity.controller.ActivitySerivceApi;
+import com.strandls.activity.pojo.Activity;
+import com.strandls.activity.pojo.CommentLoggingData;
 import com.strandls.authentication_utility.util.AuthUtil;
 import com.strandls.esmodule.controllers.EsServicesApi;
 import com.strandls.esmodule.pojo.ObservationInfo;
@@ -137,10 +140,16 @@ public class SpeciesServiceImpl implements SpeciesServices {
 //	injection of services
 
 	@Inject
+	private ActivitySerivceApi activityService;
+
+	@Inject
 	private EsServicesApi esService;
 
 //	@Inject
 //	private DocumentServiceApi documentService;
+
+	@Inject
+	private LogActivities logActivity;
 
 	@Inject
 	private ObservationServiceApi observationService;
@@ -207,17 +216,10 @@ public class SpeciesServiceImpl implements SpeciesServices {
 				TaxonomicNames names = taxonomyService.getNames(species.getTaxonConceptId().toString());
 
 //				temporal data
-
-				System.out.println("reached es service");
-
 				ObservationInfo observationInfo = esService.getObservationInfo("extended_observation", "_doc",
 						species.getTaxonConceptId().toString(), false);
 
-				System.out.println("got esresponse");
-
 				Map<String, Long> temporalData = observationInfo.getMonthAggregation();
-
-				System.out.println("got temporal data");
 
 				ShowSpeciesPage showSpeciesPage = new ShowSpeciesPage(species, breadCrumbs, taxonomyDefinition,
 						resourceData, fieldData, facts, userGroupList, featured, names, temporalData);
@@ -477,15 +479,8 @@ public class SpeciesServiceImpl implements SpeciesServices {
 
 		for (TraitsValuePair traitsValuePair : traitValuePairList) {
 			String name = "";
-			FieldNew fieldNew = null;
 			Long fieldId = traitsValuePair.getTraits().getFieldId();
-			do {
-				fieldNew = fieldNewDao.findById(fieldId);
-				name = fieldHeaderDao.findByFieldId(fieldNew.getId(), 205L).getHeader() + " > " + name;
-				fieldId = fieldNew.getParentId();
-
-			} while (fieldNew.getParentId() != null);
-			name = name.substring(0, name.length() - 3);
+			name = fieldHierarchyString(fieldId);
 			System.out.println(name);
 			if (arrangedPair.containsKey(name)) {
 				List<TraitsValuePair> pairList = arrangedPair.get(name);
@@ -506,6 +501,19 @@ public class SpeciesServiceImpl implements SpeciesServices {
 
 		return result;
 
+	}
+
+	private String fieldHierarchyString(Long fieldId) {
+		FieldNew fieldNew = null;
+		String name = "";
+		do {
+			fieldNew = fieldNewDao.findById(fieldId);
+			name = fieldHeaderDao.findByFieldId(fieldNew.getId(), 205L).getHeader() + " > " + name;
+			fieldId = fieldNew.getParentId();
+
+		} while (fieldNew.getParentId() != null);
+		name = name.substring(0, name.length() - 3);
+		return name;
 	}
 
 	@Override
@@ -582,6 +590,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 			traitService = headers.addTraitsHeader(traitService, request.getHeader(HttpHeaders.AUTHORIZATION));
 			List<FactValuePair> result = traitService.updateTraits("species.Species", speciesId, traitId,
 					factsUpdateData);
+			updateLastRevised(Long.parseLong(speciesId));
 			return result;
 		} catch (Exception e) {
 			logger.error(e.getMessage());
@@ -610,28 +619,27 @@ public class SpeciesServiceImpl implements SpeciesServices {
 
 //				speciesField core update
 				SpeciesField speciesField = updateCreateSpeciesField(speciesId, userId, sfdata);
+				if (speciesField == null)
+					return null;
 
 //				attribution update
-//				this is actually the attribution of speciesField and a String 
-				if (sfdata.getIsEdit()) {
-					SpeciesFieldContributor sfAttribution = sfContributorDao.findBySpeciesFieldId(speciesField.getId());
-					Contributor attribution = contributorDao.findById(sfAttribution.getContributorId());
-					if (sfdata.getAttributions() == null || sfdata.getAttributions().isEmpty()) {
-//							remove attributions
-						contributorDao.delete(attribution);
-						sfContributorDao.delete(sfAttribution);
-					} else {
-//							update attributions
-						attribution.setName(sfdata.getAttributions());
-						contributorDao.update(attribution);
-					}
+//				this is actually the attribution of speciesField and a String
+				SpeciesFieldContributor sfAttribution = sfContributorDao.findBySpeciesFieldId(speciesField.getId());
+				Contributor attribution = null;
+				if (sfAttribution != null) {
+					attribution = contributorDao.findById(sfAttribution.getContributorId());
+				}
+				if (attribution != null && sfdata.getIsEdit()) {
+//					update attributions
+					attribution.setName(sfdata.getAttributions());
+					contributorDao.update(attribution);
+
 				} else {
 //						create new attributions
 					Contributor contributor = new Contributor(null, sfdata.getAttributions(), null);
 					contributor = contributorDao.save(contributor);
 
-					SpeciesFieldContributor sfAttribution = new SpeciesFieldContributor(sfdata.getSpeciesFieldId(),
-							contributor.getId(), null);
+					sfAttribution = new SpeciesFieldContributor(sfdata.getSpeciesFieldId(), contributor.getId(), null);
 					sfContributorDao.save(sfAttribution);
 				}
 
@@ -676,6 +684,19 @@ public class SpeciesServiceImpl implements SpeciesServices {
 					sfLicenseDao.save(sfLicense);
 				}
 
+				String fieldHierarchy = fieldHierarchyString(sfdata.getFieldId());
+
+				if (sfdata.getIsEdit()) {
+					updateLastRevised(speciesId);
+					String desc = "Updated species field : " + fieldHierarchy;
+					logActivity.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), desc, speciesId, speciesId,
+							"species", speciesField.getId(), "Updated species field", null);
+				} else {
+					String desc = "Added species field : " + fieldHierarchy;
+					logActivity.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), desc, speciesId, speciesId,
+							"species", speciesField.getId(), "Added species field", null);
+				}
+
 				return getSpeciesFieldData(speciesField);
 			}
 		} catch (Exception e) {
@@ -718,16 +739,19 @@ public class SpeciesServiceImpl implements SpeciesServices {
 		if (sfData.getIsEdit()) {
 //			update the species field
 			field = speciesFieldDao.findById(sfData.getSpeciesFieldId());
+			if (field.getIsDeleted())
+				return null;
 			field.setDescription(sfData.getSfDescription());
 			field.setStatus(sfData.getSfStatus());
 			field.setLastUpdated(new Date());
 
 			speciesFieldDao.update(field);
+
 		} else {
 //			create the species field
 			field = new SpeciesField(null, 0L, sfData.getSfDescription(), sfData.getFieldId(), speciesId,
 					sfData.getSfStatus(), "species.SpeciesField", null, new Date(), new Date(), new Date(), uploaderId,
-					205L, null);
+					205L, null, false);
 			field = speciesFieldDao.save(field);
 		}
 
@@ -742,8 +766,19 @@ public class SpeciesServiceImpl implements SpeciesServices {
 		List<Long> sfUserList = sfUserDao.findBySpeciesFieldId(speciesfieldId);
 
 		if (userRoles.contains("ROLE_ADMIN") || sfUserList.contains(userId)) {
+
 			SpeciesField speciesfield = speciesFieldDao.findById(speciesfieldId);
-			speciesFieldDao.delete(speciesfield);
+			speciesfield.setIsDeleted(true);
+			speciesFieldDao.update(speciesfield);
+
+			updateLastRevised(speciesfield.getSpeciesId());
+
+			String fieldHierarchy = fieldHierarchyString(speciesfield.getFieldId());
+
+			String desc = "Deleted species field : " + fieldHierarchy;
+			logActivity.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), desc, speciesfield.getSpeciesId(),
+					speciesfield.getSpeciesId(), "species", speciesfield.getId(), "Deleted species field", null);
+
 			return true;
 		}
 
@@ -751,10 +786,12 @@ public class SpeciesServiceImpl implements SpeciesServices {
 	}
 
 	@Override
-	public List<CommonNames> updateAddCommonName(HttpServletRequest request, CommonNamesData commonNamesData) {
+	public List<CommonNames> updateAddCommonName(HttpServletRequest request, Long speciesId,
+			CommonNamesData commonNamesData) {
 		try {
 			taxonomyService = headers.addTaxonomyHeader(taxonomyService, request.getHeader(HttpHeaders.AUTHORIZATION));
 			List<CommonNames> result = taxonomyService.updateAddCommonNames(commonNamesData);
+			updateLastRevised(speciesId);
 			return result;
 		} catch (Exception e) {
 			logger.error(e.getMessage());
@@ -763,10 +800,11 @@ public class SpeciesServiceImpl implements SpeciesServices {
 	}
 
 	@Override
-	public List<CommonNames> removeCommonName(HttpServletRequest request, String commonNameId) {
+	public List<CommonNames> removeCommonName(HttpServletRequest request, Long speciesId, String commonNameId) {
 		try {
 			taxonomyService = headers.addTaxonomyHeader(taxonomyService, request.getHeader(HttpHeaders.AUTHORIZATION));
 			List<CommonNames> result = taxonomyService.removeCommonName(commonNameId);
+			updateLastRevised(speciesId);
 			return result;
 		} catch (Exception e) {
 			logger.error(e.getMessage());
@@ -775,7 +813,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 	}
 
 	@Override
-	public List<SpeciesPull> getObservationResource(HttpServletRequest request, Long speciesId, Long offset) {
+	public List<SpeciesPull> getObservationResource(Long speciesId, Long offset) {
 		try {
 			Species species = speciesDao.findById(speciesId);
 			ObservationInfo observationInfo = esService.getObservationInfo("extended_observation", "_doc",
@@ -875,6 +913,9 @@ public class SpeciesServiceImpl implements SpeciesServices {
 				}
 				pullResource(request, speciesId, speciesPullDatas);
 				updateCreateSpeciesResource(request, "SPECIES", speciesId.toString(), true, speciesResourceData);
+				updateLastRevised(speciesId);
+				logActivity.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), null, speciesId, speciesId,
+						"species", speciesId, "Updated species gallery", null);
 
 				return getSpeciesResources(request, speciesId);
 			}
@@ -884,4 +925,18 @@ public class SpeciesServiceImpl implements SpeciesServices {
 		}
 		return null;
 	}
+
+	@Override
+	public Activity addSpeciesComment(HttpServletRequest request, CommentLoggingData loggingData) {
+		try {
+			activityService = headers.addActivityHeader(activityService, request.getHeader(HttpHeaders.AUTHORIZATION));
+			Activity result = activityService.addComment("species", loggingData);
+			updateLastRevised(loggingData.getRootHolderId());
+			return result;
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return null;
+	}
+
 }

@@ -19,6 +19,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import com.strandls.activity.pojo.Activity;
+import com.strandls.activity.pojo.CommentLoggingData;
 import com.strandls.authentication_utility.filter.ValidateUser;
 import com.strandls.resource.pojo.ResourceData;
 import com.strandls.resource.pojo.SpeciesPull;
@@ -284,7 +286,7 @@ public class SpeciesController {
 	}
 
 	@PUT
-	@Path(ApiConstants.UPDATE + ApiConstants.COMMONNAME)
+	@Path(ApiConstants.UPDATE + ApiConstants.COMMONNAME + "/{speciesId}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 
@@ -294,10 +296,11 @@ public class SpeciesController {
 	@ApiResponses(value = {
 			@ApiResponse(code = 404, message = "unable to update the common Names", response = String.class) })
 
-	public Response updateAddCommonName(@Context HttpServletRequest request,
+	public Response updateAddCommonName(@Context HttpServletRequest request, @PathParam("speciesId") String speciesId,
 			@ApiParam(name = "commonNamesData") CommonNamesData commonNamesData) {
 		try {
-			List<CommonNames> result = speciesService.updateAddCommonName(request, commonNamesData);
+			Long sId = Long.parseLong(speciesId);
+			List<CommonNames> result = speciesService.updateAddCommonName(request, sId, commonNamesData);
 			if (result != null)
 				return Response.status(Status.OK).entity(result).build();
 			return Response.status(Status.NOT_ACCEPTABLE).build();
@@ -307,7 +310,7 @@ public class SpeciesController {
 	}
 
 	@DELETE
-	@Path(ApiConstants.REMOVE + ApiConstants.COMMONNAME + "/{commonNameId}")
+	@Path(ApiConstants.REMOVE + ApiConstants.COMMONNAME + "/{speciesId}/{commonNameId}")
 	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces(MediaType.APPLICATION_JSON)
 
@@ -317,10 +320,11 @@ public class SpeciesController {
 	@ApiResponses(value = {
 			@ApiResponse(code = 404, message = "unable to update the common Names", response = String.class) })
 
-	public Response removeCommonName(@Context HttpServletRequest request,
+	public Response removeCommonName(@Context HttpServletRequest request, @PathParam("speciesId") String speciesId,
 			@PathParam("commonNameId") String commonNameId) {
 		try {
-			List<CommonNames> result = speciesService.removeCommonName(request, commonNameId);
+			Long sId = Long.parseLong(speciesId);
+			List<CommonNames> result = speciesService.removeCommonName(request, sId, commonNameId);
 			return Response.status(Status.OK).entity(result).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
@@ -332,19 +336,17 @@ public class SpeciesController {
 	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces(MediaType.APPLICATION_JSON)
 
-	@ValidateUser
-
 	@ApiOperation(value = "get all the observation resources", notes = "Returns the observation resources", response = SpeciesPull.class, responseContainer = "List")
 	@ApiResponses(value = {
 			@ApiResponse(code = 400, message = "unable to get the resources", response = String.class) })
 
-	public Response getObservationResources(@Context HttpServletRequest request,
-			@PathParam("speciesId") String speciesId, @DefaultValue("0") @QueryParam("offset") String offset) {
+	public Response getObservationResources(@PathParam("speciesId") String speciesId,
+			@DefaultValue("0") @QueryParam("offset") String offset) {
 		try {
 
 			Long sId = Long.parseLong(speciesId);
 			Long offSet = Long.parseLong(offset);
-			List<SpeciesPull> result = speciesService.getObservationResource(request, sId, offSet);
+			List<SpeciesPull> result = speciesService.getObservationResource(sId, offSet);
 			return Response.status(Status.OK).entity(result).build();
 
 		} catch (Exception e) {
@@ -392,6 +394,28 @@ public class SpeciesController {
 			List<ResourceData> result = speciesService.updateSpciesResources(request, sId, preDataList);
 			return Response.status(Status.OK).entity(result).build();
 
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+	}
+
+	@POST
+	@Path(ApiConstants.ADD + ApiConstants.COMMENT)
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+
+	@ValidateUser
+
+	@ApiOperation(value = "Add species Comment", notes = "Return the comment activity", response = Activity.class)
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "unable to log the comment", response = String.class) })
+
+	public Response addSpeciesComment(@Context HttpServletRequest request,
+			@ApiParam(name = "commentData") CommentLoggingData loggingData) {
+		try {
+			Activity result = speciesService.addSpeciesComment(request, loggingData);
+			if (result != null)
+				return Response.status(Status.OK).entity(result).build();
+			return Response.status(Status.NOT_ACCEPTABLE).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}

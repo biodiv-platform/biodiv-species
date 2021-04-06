@@ -49,7 +49,7 @@ public class SpeciesFieldDao extends AbstractDAO<SpeciesField, Long> {
 
 	@SuppressWarnings("unchecked")
 	public List<SpeciesField> findBySpeciesId(Long speciesId) {
-		String qry = "from SpeciesField where speciesId = :speciesId";
+		String qry = "from SpeciesField where speciesId = :speciesId and isDeleted = false";
 		Session session = sessionFactory.openSession();
 		List<SpeciesField> result = null;
 		try {

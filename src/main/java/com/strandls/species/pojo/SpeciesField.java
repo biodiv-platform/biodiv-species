@@ -44,14 +44,35 @@ public class SpeciesField implements Serializable {
 	private Long uploaderId;
 	private Long languageId;
 	private Long dataTableId;
+	private Boolean isDeleted;
 
+	/**
+	 * 
+	 */
 	public SpeciesField() {
 		super();
 	}
 
+	/**
+	 * @param id
+	 * @param version
+	 * @param description
+	 * @param fieldId
+	 * @param speciesId
+	 * @param status
+	 * @param classes
+	 * @param countryId
+	 * @param dateCreated
+	 * @param lastUpdated
+	 * @param uploadedTime
+	 * @param uploaderId
+	 * @param languageId
+	 * @param dataTableId
+	 * @param isDeleted
+	 */
 	public SpeciesField(Long id, Long version, String description, Long fieldId, Long speciesId, String status,
 			String classes, Long countryId, Date dateCreated, Date lastUpdated, Date uploadedTime, Long uploaderId,
-			Long languageId, Long dataTableId) {
+			Long languageId, Long dataTableId, Boolean isDeleted) {
 		super();
 		this.id = id;
 		this.version = version;
@@ -67,6 +88,7 @@ public class SpeciesField implements Serializable {
 		this.uploaderId = uploaderId;
 		this.languageId = languageId;
 		this.dataTableId = dataTableId;
+		this.isDeleted = isDeleted;
 	}
 
 	@Id
@@ -195,6 +217,15 @@ public class SpeciesField implements Serializable {
 
 	public void setDataTableId(Long dataTableId) {
 		this.dataTableId = dataTableId;
+	}
+
+	@Column(name = "is_deleted", columnDefinition = "boolean default false")
+	public Boolean getIsDeleted() {
+		return isDeleted;
+	}
+
+	public void setIsDeleted(Boolean isDeleted) {
+		this.isDeleted = isDeleted;
 	}
 
 }

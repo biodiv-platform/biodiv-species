@@ -15,7 +15,9 @@ public class ApiConstants {
 
 //	<----- Species controller------>
 
+	public static final String ADD = "/add";
 	public static final String ALL = "/all";
+	public static final String COMMENT = "/comment";
 	public static final String COMMONNAME = "/commonname";
 	public static final String EDIT = "/edit";
 	public static final String FEATURED = "/featured";

@@ -7,6 +7,8 @@ import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 
+import com.strandls.activity.pojo.Activity;
+import com.strandls.activity.pojo.CommentLoggingData;
 import com.strandls.resource.pojo.ResourceData;
 import com.strandls.resource.pojo.SpeciesPull;
 import com.strandls.species.pojo.FieldRender;
@@ -59,11 +61,12 @@ public interface SpeciesServices {
 
 	public Boolean removeSpeciesField(HttpServletRequest request, Long speciesfield);
 
-	public List<CommonNames> updateAddCommonName(HttpServletRequest request, CommonNamesData commonNamesData);
+	public List<CommonNames> updateAddCommonName(HttpServletRequest request, Long speciesId,
+			CommonNamesData commonNamesData);
 
-	public List<CommonNames> removeCommonName(HttpServletRequest request, String commonNameId);
+	public List<CommonNames> removeCommonName(HttpServletRequest request, Long speciesId, String commonNameId);
 
-	public List<SpeciesPull> getObservationResource(HttpServletRequest request, Long speciesId, Long offset);
+	public List<SpeciesPull> getObservationResource(Long speciesId, Long offset);
 
 	public List<ResourceData> pullResource(HttpServletRequest request, Long speciesId,
 			List<SpeciesPullData> speciesPullData);
@@ -72,5 +75,7 @@ public interface SpeciesServices {
 
 	public List<ResourceData> updateSpciesResources(HttpServletRequest request, Long speciesId,
 			List<SpeciesResourcesPreData> preDataList);
+
+	public Activity addSpeciesComment(HttpServletRequest request, CommentLoggingData loggingData);
 
 }
