@@ -61,7 +61,7 @@ public class SpeciesHelper {
 
 				FilesDTO filesDTO = new FilesDTO();
 				filesDTO.setFiles(fileList);
-				filesDTO.setFolder("species");
+				filesDTO.setFolder("img");
 				fileMap = fileUploadService.moveFiles(filesDTO);
 			}
 
