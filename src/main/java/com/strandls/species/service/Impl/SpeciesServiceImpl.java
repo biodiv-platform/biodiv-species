@@ -820,13 +820,12 @@ public class SpeciesServiceImpl implements SpeciesServices {
 					species.getTaxonConceptId().toString(), false);
 			List<ObservationMapInfo> observations = observationInfo.getLatlon();
 			List<Long> objectIds = new ArrayList<Long>();
-			int counter = (int) (0 + offset);
-			while (counter < (10 + offset)) {
-				objectIds.add(observations.get(counter).getId());
-				counter++;
+			for (ObservationMapInfo obs : observations) {
+				objectIds.add(obs.getId());
 			}
 
-			List<SpeciesPull> resources = resourceServices.getBulkResources("observation", objectIds);
+			List<SpeciesPull> resources = resourceServices.getBulkResources("observation", offset.toString(),
+					objectIds);
 			return resources;
 
 		} catch (Exception e) {
