@@ -7,16 +7,22 @@ import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 
+import com.strandls.activity.pojo.Activity;
+import com.strandls.activity.pojo.CommentLoggingData;
 import com.strandls.resource.pojo.ResourceData;
 import com.strandls.resource.pojo.SpeciesPull;
 import com.strandls.species.pojo.FieldRender;
 import com.strandls.species.pojo.ShowSpeciesPage;
+import com.strandls.species.pojo.SpeciesCreateData;
 import com.strandls.species.pojo.SpeciesFieldData;
 import com.strandls.species.pojo.SpeciesFieldUpdateData;
 import com.strandls.species.pojo.SpeciesPullData;
+import com.strandls.species.pojo.SpeciesResourcesPreData;
 import com.strandls.species.pojo.SpeciesTrait;
 import com.strandls.taxonomy.pojo.CommonName;
 import com.strandls.taxonomy.pojo.CommonNamesData;
+import com.strandls.taxonomy.pojo.TaxonomyDefinition;
+import com.strandls.taxonomy.pojo.TaxonomySave;
 import com.strandls.traits.pojo.FactValuePair;
 import com.strandls.traits.pojo.FactsUpdateData;
 import com.strandls.userGroup.pojo.Featured;
@@ -58,13 +64,29 @@ public interface SpeciesServices {
 
 	public Boolean removeSpeciesField(HttpServletRequest request, Long speciesfield);
 
-	public List<CommonName> updateAddCommonName(HttpServletRequest request, CommonNamesData commonNamesData);
+	public List<CommonName> updateAddCommonName(HttpServletRequest request, Long speciesId,
+			CommonNamesData commonNamesData);
 
-	public List<CommonName> removeCommonName(HttpServletRequest request, String commonNameId);
+	public List<CommonName> removeCommonName(HttpServletRequest request, Long speciesId, String commonNameId);
 
-	public List<SpeciesPull> getObservationResource(HttpServletRequest request, Long speciesId, Long offset);
+	public List<SpeciesPull> getObservationResource(Long speciesId, Long offset);
 
 	public List<ResourceData> pullResource(HttpServletRequest request, Long speciesId,
 			List<SpeciesPullData> speciesPullData);
+
+	public List<ResourceData> getSpeciesResources(HttpServletRequest request, Long speciesId);
+
+	public List<ResourceData> updateSpciesResources(HttpServletRequest request, Long speciesId,
+			List<SpeciesResourcesPreData> preDataList);
+
+	public Activity addSpeciesComment(HttpServletRequest request, CommentLoggingData loggingData);
+
+	public List<TaxonomyDefinition> checkTaxonomyExist(HttpServletRequest request, String speciesName, String rank);
+
+	public Long checkSpeciesPageExist(HttpServletRequest request, Long taxonId);
+
+	public ShowSpeciesPage createSpeciesPage(HttpServletRequest request, SpeciesCreateData speciesCreateData);
+
+	public TaxonomyDefinition createTaxonomy(HttpServletRequest request, TaxonomySave taxonomySave);
 
 }

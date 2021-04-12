@@ -5,9 +5,11 @@ package com.strandls.species;
 
 import javax.ws.rs.core.HttpHeaders;
 
+import com.strandls.activity.controller.ActivitySerivceApi;
 import com.strandls.file.api.UploadApi;
 import com.strandls.observation.controller.ObservationServiceApi;
 import com.strandls.resource.controllers.ResourceServicesApi;
+import com.strandls.taxonomy.controllers.CommonNameServicesApi;
 import com.strandls.taxonomy.controllers.TaxonomyServicesApi;
 import com.strandls.traits.controller.TraitsServiceApi;
 import com.strandls.userGroup.controller.UserGroupSerivceApi;
@@ -44,9 +46,19 @@ public class Headers {
 		return taxonomyServices;
 	}
 
+	public CommonNameServicesApi addCommonNameHeader(CommonNameServicesApi commonNameService, String authHeader) {
+		commonNameService.getApiClient().addDefaultHeader(HttpHeaders.AUTHORIZATION, authHeader);
+		return commonNameService;
+	}
+
 	public ObservationServiceApi addObservationHeader(ObservationServiceApi observationService, String authHeader) {
 		observationService.getApiClient().addDefaultHeader(HttpHeaders.AUTHORIZATION, authHeader);
 		return observationService;
+	}
+
+	public ActivitySerivceApi addActivityHeader(ActivitySerivceApi activityService, String authHeaders) {
+		activityService.getApiClient().addDefaultHeader(HttpHeaders.AUTHORIZATION, authHeaders);
+		return activityService;
 	}
 
 }

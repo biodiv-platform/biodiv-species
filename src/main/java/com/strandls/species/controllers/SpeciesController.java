@@ -19,6 +19,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import com.strandls.activity.pojo.Activity;
+import com.strandls.activity.pojo.CommentLoggingData;
 import com.strandls.authentication_utility.filter.ValidateUser;
 import com.strandls.resource.pojo.ResourceData;
 import com.strandls.resource.pojo.SpeciesPull;
@@ -27,11 +29,13 @@ import com.strandls.species.pojo.FieldRender;
 import com.strandls.species.pojo.ShowSpeciesPage;
 import com.strandls.species.pojo.SpeciesFieldData;
 import com.strandls.species.pojo.SpeciesFieldUpdateData;
-import com.strandls.species.pojo.SpeciesPullData;
+import com.strandls.species.pojo.SpeciesResourcesPreData;
 import com.strandls.species.pojo.SpeciesTrait;
 import com.strandls.species.service.SpeciesServices;
 import com.strandls.taxonomy.pojo.CommonName;
 import com.strandls.taxonomy.pojo.CommonNamesData;
+import com.strandls.taxonomy.pojo.TaxonomyDefinition;
+import com.strandls.taxonomy.pojo.TaxonomySave;
 import com.strandls.traits.pojo.FactValuePair;
 import com.strandls.traits.pojo.FactsUpdateData;
 import com.strandls.userGroup.pojo.Featured;
@@ -284,7 +288,7 @@ public class SpeciesController {
 	}
 
 	@PUT
-	@Path(ApiConstants.UPDATE + ApiConstants.COMMONNAME)
+	@Path(ApiConstants.UPDATE + ApiConstants.COMMONNAME + "/{speciesId}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 
@@ -294,10 +298,12 @@ public class SpeciesController {
 	@ApiResponses(value = {
 			@ApiResponse(code = 404, message = "unable to update the common Names", response = String.class) })
 
-	public Response updateAddCommonName(@Context HttpServletRequest request,
-			@ApiParam(name = "CommonNameData") CommonNamesData CommonNameData) {
+	public Response updateAddCommonName(@Context HttpServletRequest request, @PathParam("speciesId") String speciesId,
+			@ApiParam(name = "commonNamesData") CommonNamesData commonNamesData) {
 		try {
-			List<CommonName> result = speciesService.updateAddCommonName(request, CommonNameData);
+			Long sId = Long.parseLong(speciesId);
+			List<CommonName> result = speciesService.updateAddCommonName(request, sId, commonNamesData);
+
 			if (result != null)
 				return Response.status(Status.OK).entity(result).build();
 			return Response.status(Status.NOT_ACCEPTABLE).build();
@@ -307,7 +313,7 @@ public class SpeciesController {
 	}
 
 	@DELETE
-	@Path(ApiConstants.REMOVE + ApiConstants.COMMONNAME + "/{commonNameId}")
+	@Path(ApiConstants.REMOVE + ApiConstants.COMMONNAME + "/{speciesId}/{commonNameId}")
 	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces(MediaType.APPLICATION_JSON)
 
@@ -317,10 +323,12 @@ public class SpeciesController {
 	@ApiResponses(value = {
 			@ApiResponse(code = 404, message = "unable to update the common Names", response = String.class) })
 
-	public Response removeCommonName(@Context HttpServletRequest request,
+	public Response removeCommonName(@Context HttpServletRequest request, @PathParam("speciesId") String speciesId,
 			@PathParam("commonNameId") String commonNameId) {
 		try {
-			List<CommonName> result = speciesService.removeCommonName(request, commonNameId);
+
+			Long sId = Long.parseLong(speciesId);
+			List<CommonName> result = speciesService.removeCommonName(request, sId, commonNameId);
 			return Response.status(Status.OK).entity(result).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
@@ -332,19 +340,62 @@ public class SpeciesController {
 	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces(MediaType.APPLICATION_JSON)
 
-	@ValidateUser
-
 	@ApiOperation(value = "get all the observation resources", notes = "Returns the observation resources", response = SpeciesPull.class, responseContainer = "List")
 	@ApiResponses(value = {
 			@ApiResponse(code = 400, message = "unable to get the resources", response = String.class) })
 
-	public Response getObservationResources(@Context HttpServletRequest request,
-			@PathParam("speciesId") String speciesId, @DefaultValue("0") @QueryParam("offset") String offset) {
+	public Response getObservationResources(@PathParam("speciesId") String speciesId,
+			@DefaultValue("0") @QueryParam("offset") String offset) {
 		try {
 
 			Long sId = Long.parseLong(speciesId);
 			Long offSet = Long.parseLong(offset);
-			List<SpeciesPull> result = speciesService.getObservationResource(request, sId, offSet);
+			List<SpeciesPull> result = speciesService.getObservationResource(sId, offSet);
+			return Response.status(Status.OK).entity(result).build();
+
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+	}
+
+	@GET
+	@Path(ApiConstants.EDIT + ApiConstants.RESOURCE + "/{speciesId}")
+	@Consumes(MediaType.TEXT_PLAIN)
+	@Produces(MediaType.APPLICATION_JSON)
+
+	@ValidateUser
+
+	@ApiOperation(value = "get all the species resources", notes = "Returns the spcies resources", response = ResourceData.class, responseContainer = "List")
+	@ApiResponses(value = {
+			@ApiResponse(code = 400, message = "unable to get the resources", response = String.class) })
+
+	public Response getEditSpeciesResource(@Context HttpServletRequest request,
+			@PathParam("speciesId") String speciesId) {
+		try {
+			Long sId = Long.parseLong(speciesId);
+			List<ResourceData> result = speciesService.getSpeciesResources(request, sId);
+			return Response.status(Status.OK).entity(result).build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+	}
+
+	@PUT
+	@Path(ApiConstants.UPDATE + ApiConstants.RESOURCE + "/{speciesId}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+
+	@ValidateUser
+
+	@ApiOperation(value = "update the species resources", notes = "Returns the species resources", response = ResourceData.class, responseContainer = "List")
+	@ApiResponses(value = {
+			@ApiResponse(code = 400, message = "unable to update the resources", response = String.class) })
+
+	public Response updateSpeciesResource(@Context HttpServletRequest request, @PathParam("speciesId") String speciesId,
+			@ApiParam(name = "") List<SpeciesResourcesPreData> preDataList) {
+		try {
+			Long sId = Long.parseLong(speciesId);
+			List<ResourceData> result = speciesService.updateSpciesResources(request, sId, preDataList);
 			return Response.status(Status.OK).entity(result).build();
 
 		} catch (Exception e) {
@@ -353,22 +404,90 @@ public class SpeciesController {
 	}
 
 	@POST
-	@Path(ApiConstants.PULL + ApiConstants.RESOURCE + "/{speciesId}")
+	@Path(ApiConstants.ADD + ApiConstants.COMMENT)
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 
 	@ValidateUser
 
-	@ApiOperation(value = "pull all the observation resources", notes = "Returns the resources", response = ResourceData.class, responseContainer = "List")
-	@ApiResponses(value = {
-			@ApiResponse(code = 400, message = "unable to get the resources", response = String.class) })
+	@ApiOperation(value = "Add species Comment", notes = "Return the comment activity", response = Activity.class)
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "unable to log the comment", response = String.class) })
 
-	public Response pullResources(@Context HttpServletRequest request, @PathParam("speciesId") String speciesId,
-			@ApiParam(name = "speciesPullData") List<SpeciesPullData> speciesPullData) {
+	public Response addSpeciesComment(@Context HttpServletRequest request,
+			@ApiParam(name = "commentData") CommentLoggingData loggingData) {
 		try {
-			Long sId = Long.parseLong(speciesId);
-			List<ResourceData> result = speciesService.pullResource(request, sId, speciesPullData);
+			Activity result = speciesService.addSpeciesComment(request, loggingData);
+			if (result != null)
+				return Response.status(Status.OK).entity(result).build();
+			return Response.status(Status.NOT_ACCEPTABLE).build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+	}
+
+	@GET
+	@Path(ApiConstants.CHECK + ApiConstants.TAXONOMY)
+	@Consumes(MediaType.TEXT_PLAIN)
+	@Produces(MediaType.APPLICATION_JSON)
+
+	@ValidateUser
+
+	@ApiOperation(value = "checks if taxonomy exist", notes = "Returns list of taxonomy", response = TaxonomyDefinition.class, responseContainer = "List")
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "unable to check the result", response = String.class) })
+
+	public Response checkTaxonExist(@Context HttpServletRequest request, @QueryParam("speciesName") String speciesName,
+			@QueryParam("rank") String rank) {
+		try {
+			List<TaxonomyDefinition> result = speciesService.checkTaxonomyExist(request, speciesName, rank);
 			return Response.status(Status.OK).entity(result).build();
+
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+	}
+
+	@GET
+	@Path(ApiConstants.CHECK + ApiConstants.SPECIES)
+	@Consumes(MediaType.TEXT_PLAIN)
+	@Produces(MediaType.APPLICATION_JSON)
+
+	@ValidateUser
+
+	@ApiOperation(value = "check using taxonId if species page is present", notes = "Returns the species Page Id", response = Long.class)
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "unable to fetch the data ", response = String.class) })
+
+	public Response checkSpeciesPageExist(@Context HttpServletRequest request, @QueryParam("taxonId") String taxonId) {
+		try {
+			Long taxonomyId = Long.parseLong(taxonId);
+			Long result = speciesService.checkSpeciesPageExist(request, taxonomyId);
+			if (result != null)
+				return Response.status(Status.OK).entity(result).build();
+			return Response.status(Status.NO_CONTENT).build();
+
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+	}
+
+	@POST
+	@Path(ApiConstants.SAVE + ApiConstants.TAXONOMY)
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+
+	@ValidateUser
+
+	@ApiOperation(value = "create taxonomy", notes = "Returns the taxonmyDefination", response = TaxonomyDefinition.class)
+	@ApiResponses(value = {
+			@ApiResponse(code = 400, message = "unable to create the taxonomy", response = String.class) })
+
+	public Response createTaxonomy(@Context HttpServletRequest request,
+			@ApiParam("taxonomySave") TaxonomySave taxonomySave) {
+		try {
+			TaxonomyDefinition result = speciesService.createTaxonomy(request, taxonomySave);
+			if (result != null)
+				return Response.status(Status.OK).entity(result).build();
+			return Response.status(Status.NOT_IMPLEMENTED).build();
+
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}

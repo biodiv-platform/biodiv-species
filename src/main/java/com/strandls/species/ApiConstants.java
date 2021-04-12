@@ -15,8 +15,12 @@ public class ApiConstants {
 
 //	<----- Species controller------>
 
+	public static final String ADD = "/add";
 	public static final String ALL = "/all";
+	public static final String CHECK = "/check";
+	public static final String COMMENT = "/comment";
 	public static final String COMMONNAME = "/commonname";
+	public static final String EDIT = "/edit";
 	public static final String FEATURED = "/featured";
 	public static final String FIELDS = "/fields";
 	public static final String MIGRATEFIELD = "/migrateField";
@@ -26,6 +30,7 @@ public class ApiConstants {
 	public static final String REMOVE = "/remove";
 	public static final String RENDER = "/render";
 	public static final String RESOURCE = "/resource";
+	public static final String SAVE = "/save";
 	public static final String SHOW = "/show";
 	public static final String SPECIES = "/species";
 	public static final String SPECIESFIELD = "/speciesField";

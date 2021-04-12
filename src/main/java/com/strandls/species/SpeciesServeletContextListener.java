@@ -34,6 +34,8 @@ import com.google.inject.Injector;
 import com.google.inject.Scopes;
 import com.google.inject.servlet.GuiceServletContextListener;
 import com.google.inject.servlet.ServletModule;
+import com.strandls.activity.controller.ActivitySerivceApi;
+import com.strandls.document.controllers.DocumentServiceApi;
 import com.strandls.esmodule.controllers.EsServicesApi;
 import com.strandls.file.api.UploadApi;
 import com.strandls.observation.controller.ObservationServiceApi;
@@ -47,6 +49,7 @@ import com.strandls.taxonomy.controllers.TaxonomyTreeServicesApi;
 import com.strandls.traits.controller.TraitsServiceApi;
 import com.strandls.user.controller.UserServiceApi;
 import com.strandls.userGroup.controller.UserGroupSerivceApi;
+import com.strandls.utility.controller.UtilityServiceApi;
 
 /**
  * @author Abhishek Rudra
@@ -89,7 +92,7 @@ public class SpeciesServeletContextListener extends GuiceServletContextListener 
 
 				bind(Headers.class).in(Scopes.SINGLETON);
 
-//				bind(DocumentServiceApi.class).in(Scopes.SINGLETON);
+				bind(DocumentServiceApi.class).in(Scopes.SINGLETON);
 				bind(UploadApi.class).in(Scopes.SINGLETON);
 				bind(ResourceServicesApi.class).in(Scopes.SINGLETON);
 				bind(TraitsServiceApi.class).in(Scopes.SINGLETON);
@@ -100,6 +103,8 @@ public class SpeciesServeletContextListener extends GuiceServletContextListener 
 				bind(CommonNameServicesApi.class).in(Scopes.SINGLETON);
 				bind(EsServicesApi.class).in(Scopes.SINGLETON);
 				bind(ObservationServiceApi.class).in(Scopes.SINGLETON);
+				bind(ActivitySerivceApi.class).in(Scopes.SINGLETON);
+				bind(UtilityServiceApi.class).in(Scopes.SINGLETON);
 
 				bind(ServletContainer.class).in(Scopes.SINGLETON);
 				serve("/api/*").with(ServletContainer.class, props);

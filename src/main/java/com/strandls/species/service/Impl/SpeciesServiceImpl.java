@@ -21,7 +21,12 @@ import org.pac4j.core.profile.CommonProfile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.strandls.activity.controller.ActivitySerivceApi;
+import com.strandls.activity.pojo.Activity;
+import com.strandls.activity.pojo.CommentLoggingData;
 import com.strandls.authentication_utility.util.AuthUtil;
+import com.strandls.document.controllers.DocumentServiceApi;
+import com.strandls.document.pojo.DocumentMeta;
 import com.strandls.esmodule.controllers.EsServicesApi;
 import com.strandls.esmodule.pojo.ObservationInfo;
 import com.strandls.esmodule.pojo.ObservationMapInfo;
@@ -53,6 +58,7 @@ import com.strandls.species.pojo.FieldRender;
 import com.strandls.species.pojo.Reference;
 import com.strandls.species.pojo.ShowSpeciesPage;
 import com.strandls.species.pojo.Species;
+import com.strandls.species.pojo.SpeciesCreateData;
 import com.strandls.species.pojo.SpeciesField;
 import com.strandls.species.pojo.SpeciesFieldAudienceType;
 import com.strandls.species.pojo.SpeciesFieldContributor;
@@ -62,6 +68,7 @@ import com.strandls.species.pojo.SpeciesFieldUpdateData;
 import com.strandls.species.pojo.SpeciesFieldUser;
 import com.strandls.species.pojo.SpeciesPullData;
 import com.strandls.species.pojo.SpeciesResourceData;
+import com.strandls.species.pojo.SpeciesResourcesPreData;
 import com.strandls.species.pojo.SpeciesTrait;
 import com.strandls.species.service.SpeciesServices;
 import com.strandls.taxonomy.controllers.CommonNameServicesApi;
@@ -72,6 +79,7 @@ import com.strandls.taxonomy.pojo.CommonName;
 import com.strandls.taxonomy.pojo.CommonNamesData;
 import com.strandls.taxonomy.pojo.TaxonomicNames;
 import com.strandls.taxonomy.pojo.TaxonomyDefinition;
+import com.strandls.taxonomy.pojo.TaxonomySave;
 import com.strandls.traits.controller.TraitsServiceApi;
 import com.strandls.traits.pojo.FactValuePair;
 import com.strandls.traits.pojo.FactsUpdateData;
@@ -85,6 +93,8 @@ import com.strandls.userGroup.pojo.FeaturedCreateData;
 import com.strandls.userGroup.pojo.UserGroupIbp;
 import com.strandls.userGroup.pojo.UserGroupMappingCreateData;
 import com.strandls.userGroup.pojo.UserGroupSpeciesCreateData;
+import com.strandls.utility.controller.UtilityServiceApi;
+import com.strandls.utility.pojo.ParsedName;
 
 import net.minidev.json.JSONArray;
 
@@ -138,13 +148,19 @@ public class SpeciesServiceImpl implements SpeciesServices {
 //	injection of services
 
 	@Inject
+	private ActivitySerivceApi activityService;
+
+	@Inject
 	private EsServicesApi esService;
 
-//	@Inject
-//	private DocumentServiceApi documentService;
+	@Inject
+	private DocumentServiceApi documentService;
 
 	@Inject
 	private CommonNameServicesApi commonNameService;
+
+	@Inject
+	private LogActivities logActivity;
 
 	@Inject
 	private ObservationServiceApi observationService;
@@ -169,6 +185,9 @@ public class SpeciesServiceImpl implements SpeciesServices {
 
 	@Inject
 	private TraitsServiceApi traitService;
+
+	@Inject
+	private UtilityServiceApi utilityService;
 
 	@Override
 	public ShowSpeciesPage showSpeciesPage(Long speciesId) {
@@ -204,8 +223,8 @@ public class SpeciesServiceImpl implements SpeciesServices {
 				TaxonomyDefinition taxonomyDefinition = taxonomyService
 						.getTaxonomyConceptName(species.getTaxonConceptId().toString());
 
-//				List<DocumentMeta> documentMetaList = documentService
-//						.getDocumentByTaxonConceptId(species.getTaxonConceptId().toString());
+				List<DocumentMeta> documentMetaList = documentService
+						.getDocumentByTaxonConceptId(species.getTaxonConceptId().toString());
 
 				List<UserGroupIbp> userGroupList = ugService.getSpeciesUserGroup(speciesId.toString());
 				List<Featured> featured = ugService.getAllFeatured("species.Species", speciesId.toString());
@@ -214,20 +233,13 @@ public class SpeciesServiceImpl implements SpeciesServices {
 				TaxonomicNames names = taxonomyService.getNames(species.getTaxonConceptId().toString());
 
 //				temporal data
-
-				System.out.println("reached es service");
-
 				ObservationInfo observationInfo = esService.getObservationInfo("extended_observation", "_doc",
 						species.getTaxonConceptId().toString(), false);
 
-				System.out.println("got esresponse");
-
 				Map<String, Long> temporalData = observationInfo.getMonthAggregation();
 
-				System.out.println("got temporal data");
-
 				ShowSpeciesPage showSpeciesPage = new ShowSpeciesPage(species, breadCrumbs, taxonomyDefinition,
-						resourceData, fieldData, facts, userGroupList, featured, names, temporalData);
+						resourceData, fieldData, facts, userGroupList, featured, names, temporalData, documentMetaList);
 
 //				ShowSpeciesPage showSpeciesPage = new ShowSpeciesPage(species, breadCrumbs, taxonomyDefinition,
 //						resourceData, fieldData, facts, userGroupList, featured, documentMetaList);
@@ -484,15 +496,8 @@ public class SpeciesServiceImpl implements SpeciesServices {
 
 		for (TraitsValuePair traitsValuePair : traitValuePairList) {
 			String name = "";
-			FieldNew fieldNew = null;
 			Long fieldId = traitsValuePair.getTraits().getFieldId();
-			do {
-				fieldNew = fieldNewDao.findById(fieldId);
-				name = fieldHeaderDao.findByFieldId(fieldNew.getId(), 205L).getHeader() + " > " + name;
-				fieldId = fieldNew.getParentId();
-
-			} while (fieldNew.getParentId() != null);
-			name = name.substring(0, name.length() - 3);
+			name = fieldHierarchyString(fieldId);
 			System.out.println(name);
 			if (arrangedPair.containsKey(name)) {
 				List<TraitsValuePair> pairList = arrangedPair.get(name);
@@ -513,6 +518,19 @@ public class SpeciesServiceImpl implements SpeciesServices {
 
 		return result;
 
+	}
+
+	private String fieldHierarchyString(Long fieldId) {
+		FieldNew fieldNew = null;
+		String name = "";
+		do {
+			fieldNew = fieldNewDao.findById(fieldId);
+			name = fieldHeaderDao.findByFieldId(fieldNew.getId(), 205L).getHeader() + " > " + name;
+			fieldId = fieldNew.getParentId();
+
+		} while (fieldNew.getParentId() != null);
+		name = name.substring(0, name.length() - 3);
+		return name;
 	}
 
 	@Override
@@ -589,6 +607,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 			traitService = headers.addTraitsHeader(traitService, request.getHeader(HttpHeaders.AUTHORIZATION));
 			List<FactValuePair> result = traitService.updateTraits("species.Species", speciesId, traitId,
 					factsUpdateData);
+			updateLastRevised(Long.parseLong(speciesId));
 			return result;
 		} catch (Exception e) {
 			logger.error(e.getMessage());
@@ -617,28 +636,27 @@ public class SpeciesServiceImpl implements SpeciesServices {
 
 //				speciesField core update
 				SpeciesField speciesField = updateCreateSpeciesField(speciesId, userId, sfdata);
+				if (speciesField == null)
+					return null;
 
 //				attribution update
-//				this is actually the attribution of speciesField and a String 
-				if (sfdata.getIsEdit()) {
-					SpeciesFieldContributor sfAttribution = sfContributorDao.findBySpeciesFieldId(speciesField.getId());
-					Contributor attribution = contributorDao.findById(sfAttribution.getContributorId());
-					if (sfdata.getAttributions() == null || sfdata.getAttributions().isEmpty()) {
-//							remove attributions
-						contributorDao.delete(attribution);
-						sfContributorDao.delete(sfAttribution);
-					} else {
-//							update attributions
-						attribution.setName(sfdata.getAttributions());
-						contributorDao.update(attribution);
-					}
+//				this is actually the attribution of speciesField and a String
+				SpeciesFieldContributor sfAttribution = sfContributorDao.findBySpeciesFieldId(speciesField.getId());
+				Contributor attribution = null;
+				if (sfAttribution != null) {
+					attribution = contributorDao.findById(sfAttribution.getContributorId());
+				}
+				if (attribution != null && sfdata.getIsEdit()) {
+//					update attributions
+					attribution.setName(sfdata.getAttributions());
+					contributorDao.update(attribution);
+
 				} else {
 //						create new attributions
 					Contributor contributor = new Contributor(null, sfdata.getAttributions(), null);
 					contributor = contributorDao.save(contributor);
 
-					SpeciesFieldContributor sfAttribution = new SpeciesFieldContributor(sfdata.getSpeciesFieldId(),
-							contributor.getId(), null);
+					sfAttribution = new SpeciesFieldContributor(sfdata.getSpeciesFieldId(), contributor.getId(), null);
 					sfContributorDao.save(sfAttribution);
 				}
 
@@ -683,6 +701,19 @@ public class SpeciesServiceImpl implements SpeciesServices {
 					sfLicenseDao.save(sfLicense);
 				}
 
+				String fieldHierarchy = fieldHierarchyString(sfdata.getFieldId());
+
+				if (sfdata.getIsEdit()) {
+					updateLastRevised(speciesId);
+					String desc = "Updated species field : " + fieldHierarchy;
+					logActivity.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), desc, speciesId, speciesId,
+							"species", speciesField.getId(), "Updated species field", null);
+				} else {
+					String desc = "Added species field : " + fieldHierarchy;
+					logActivity.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), desc, speciesId, speciesId,
+							"species", speciesField.getId(), "Added species field", null);
+				}
+
 				return getSpeciesFieldData(speciesField);
 			}
 		} catch (Exception e) {
@@ -696,7 +727,8 @@ public class SpeciesServiceImpl implements SpeciesServices {
 
 		try {
 			if (speciesResourceData != null && !speciesResourceData.isEmpty()) {
-				List<Resource> resources = speciesHelper.createResourceMapping(request, speciesResourceData);
+				List<Resource> resources = speciesHelper.createResourceMapping(request, objectType,
+						speciesResourceData);
 
 				if (resources != null && !resources.isEmpty()) {
 					resourceServices = headers.addResourceHeaders(resourceServices,
@@ -724,16 +756,19 @@ public class SpeciesServiceImpl implements SpeciesServices {
 		if (sfData.getIsEdit()) {
 //			update the species field
 			field = speciesFieldDao.findById(sfData.getSpeciesFieldId());
+			if (field.getIsDeleted())
+				return null;
 			field.setDescription(sfData.getSfDescription());
 			field.setStatus(sfData.getSfStatus());
 			field.setLastUpdated(new Date());
 
 			speciesFieldDao.update(field);
+
 		} else {
 //			create the species field
 			field = new SpeciesField(null, 0L, sfData.getSfDescription(), sfData.getFieldId(), speciesId,
 					sfData.getSfStatus(), "species.SpeciesField", null, new Date(), new Date(), new Date(), uploaderId,
-					205L, null);
+					205L, null, false);
 			field = speciesFieldDao.save(field);
 		}
 
@@ -748,8 +783,19 @@ public class SpeciesServiceImpl implements SpeciesServices {
 		List<Long> sfUserList = sfUserDao.findBySpeciesFieldId(speciesfieldId);
 
 		if (userRoles.contains("ROLE_ADMIN") || sfUserList.contains(userId)) {
+
 			SpeciesField speciesfield = speciesFieldDao.findById(speciesfieldId);
-			speciesFieldDao.delete(speciesfield);
+			speciesfield.setIsDeleted(true);
+			speciesFieldDao.update(speciesfield);
+
+			updateLastRevised(speciesfield.getSpeciesId());
+
+			String fieldHierarchy = fieldHierarchyString(speciesfield.getFieldId());
+
+			String desc = "Deleted species field : " + fieldHierarchy;
+			logActivity.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), desc, speciesfield.getSpeciesId(),
+					speciesfield.getSpeciesId(), "species", speciesfield.getId(), "Deleted species field", null);
+
 			return true;
 		}
 
@@ -757,10 +803,15 @@ public class SpeciesServiceImpl implements SpeciesServices {
 	}
 
 	@Override
-	public List<CommonName> updateAddCommonName(HttpServletRequest request, CommonNamesData commonNamesData) {
+
+	public List<CommonName> updateAddCommonName(HttpServletRequest request, Long speciesId,
+			CommonNamesData commonNamesData) {
 		try {
-			taxonomyService = headers.addTaxonomyHeader(taxonomyService, request.getHeader(HttpHeaders.AUTHORIZATION));
-			List<CommonName> result = commonNameService.updateAddCommonNames(commonNamesData);
+			commonNameService = headers.addCommonNameHeader(commonNameService,
+					request.getHeader(HttpHeaders.AUTHORIZATION));
+			List<CommonName> result = commonNameService.updateAddCommonNames(speciesId.toString(), commonNamesData);
+			updateLastRevised(speciesId);
+
 			return result;
 		} catch (Exception e) {
 			logger.error(e.getMessage());
@@ -769,10 +820,12 @@ public class SpeciesServiceImpl implements SpeciesServices {
 	}
 
 	@Override
-	public List<CommonName> removeCommonName(HttpServletRequest request, String commonNameId) {
+	public List<CommonName> removeCommonName(HttpServletRequest request, Long speciesId, String commonNameId) {
 		try {
-			taxonomyService = headers.addTaxonomyHeader(taxonomyService, request.getHeader(HttpHeaders.AUTHORIZATION));
-			List<CommonName> result = commonNameService.removeCommonName(commonNameId);
+			commonNameService = headers.addCommonNameHeader(commonNameService,
+					request.getHeader(HttpHeaders.AUTHORIZATION));
+			List<CommonName> result = commonNameService.removeCommonName(speciesId.toString(), commonNameId);
+			updateLastRevised(speciesId);
 			return result;
 		} catch (Exception e) {
 			logger.error(e.getMessage());
@@ -781,19 +834,20 @@ public class SpeciesServiceImpl implements SpeciesServices {
 	}
 
 	@Override
-	public List<SpeciesPull> getObservationResource(HttpServletRequest request, Long speciesId, Long offset) {
+	public List<SpeciesPull> getObservationResource(Long speciesId, Long offset) {
 		try {
 			Species species = speciesDao.findById(speciesId);
 			ObservationInfo observationInfo = esService.getObservationInfo("extended_observation", "_doc",
 					species.getTaxonConceptId().toString(), false);
 			List<ObservationMapInfo> observations = observationInfo.getLatlon();
 			List<Long> objectIds = new ArrayList<Long>();
-			int counter = (int) (0 + offset);
-			while (counter < (10 + offset)) {
-				objectIds.add(observations.get(counter).getId());
+			for (ObservationMapInfo obs : observations) {
+				objectIds.add(obs.getId());
 			}
 
-			List<SpeciesPull> resources = resourceServices.getBulkResources("species", objectIds);
+			List<SpeciesPull> resources = resourceServices.getBulkResources("observation", offset.toString(),
+					objectIds);
+
 			return resources;
 
 		} catch (Exception e) {
@@ -840,4 +894,150 @@ public class SpeciesServiceImpl implements SpeciesServices {
 
 		return null;
 	}
+
+	@Override
+	public List<ResourceData> getSpeciesResources(HttpServletRequest request, Long speciesId) {
+		try {
+			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
+			JSONArray userRoles = (JSONArray) profile.getAttribute("roles");
+
+			if (userRoles.contains("ROLE_ADMIN")) {
+				List<ResourceData> resourceData = resourceServices.getImageResource("SPECIES", speciesId.toString());
+				return resourceData;
+			}
+
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+
+		return null;
+	}
+
+	@Override
+	public List<ResourceData> updateSpciesResources(HttpServletRequest request, Long speciesId,
+			List<SpeciesResourcesPreData> preDataList) {
+
+		try {
+			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
+			JSONArray userRoles = (JSONArray) profile.getAttribute("roles");
+
+			if (userRoles.contains("ROLE_ADMIN")) {
+				List<SpeciesPullData> speciesPullDatas = new ArrayList<SpeciesPullData>();
+				List<SpeciesResourceData> speciesResourceData = new ArrayList<SpeciesResourceData>();
+				for (SpeciesResourcesPreData preData : preDataList) {
+					if (preData.getObservationId() != null) {
+						speciesPullDatas.add(new SpeciesPullData(preData.getObservationId(), preData.getResourcesId()));
+					} else {
+						speciesResourceData.add(new SpeciesResourceData(preData.getPath(), preData.getUrl(),
+								preData.getType(), preData.getCaption(), preData.getRating(), preData.getLicenceId()));
+					}
+				}
+				pullResource(request, speciesId, speciesPullDatas);
+				updateCreateSpeciesResource(request, "SPECIES", speciesId.toString(), true, speciesResourceData);
+				List<ResourceData> resource = getSpeciesResources(request, speciesId);
+				updateReprImage(speciesId, resource);
+				updateLastRevised(speciesId);
+				logActivity.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), null, speciesId, speciesId,
+						"species", speciesId, "Updated species gallery", null);
+
+				return resource;
+			}
+
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return null;
+	}
+
+	private void updateReprImage(Long speciesId, List<ResourceData> resourcesData) {
+		Long reprImage = null;
+		int rating = 0;
+		Boolean hasMedia = false;
+		Resource res;
+		if (resourcesData != null && !resourcesData.isEmpty()) {
+			for (ResourceData resData : resourcesData) {
+				res = resData.getResource();
+				if (res.getType().equals("IMAGE")) {
+					if (reprImage == null)
+						reprImage = res.getId();
+					if (res.getRating() != null && res.getRating() > rating) {
+						reprImage = res.getId();
+						rating = res.getRating();
+					}
+				}
+			}
+		}
+
+		Species species = speciesDao.findById(speciesId);
+		species.setHasMedia(hasMedia);
+		species.setReprImageId(reprImage);
+		speciesDao.update(species);
+
+	}
+
+	@Override
+	public Activity addSpeciesComment(HttpServletRequest request, CommentLoggingData loggingData) {
+		try {
+			activityService = headers.addActivityHeader(activityService, request.getHeader(HttpHeaders.AUTHORIZATION));
+			Activity result = activityService.addComment("species", loggingData);
+			updateLastRevised(loggingData.getRootHolderId());
+			return result;
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return null;
+	}
+
+	@Override
+	public List<TaxonomyDefinition> checkTaxonomyExist(HttpServletRequest request, String speciesName, String rank) {
+		try {
+
+			ParsedName parsedName = utilityService.getNameParsed(speciesName);
+			List<TaxonomyDefinition> taxonomyList = taxonomyService
+					.getByCanonicalForm(parsedName.getCanonicalName().getSimple(), rank);
+
+			return taxonomyList;
+
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return null;
+
+	}
+
+	@Override
+	public Long checkSpeciesPageExist(HttpServletRequest request, Long taxonId) {
+		Species species = speciesDao.findByTaxonId(taxonId);
+		if (species != null) {
+			return species.getId();
+		}
+		return null;
+
+	}
+
+	@Override
+	public ShowSpeciesPage createSpeciesPage(HttpServletRequest request, SpeciesCreateData speciesCreateData) {
+
+		Species species = new Species(null, 0L, 0, speciesCreateData.getTaxonConceptId(), speciesCreateData.getTitle(),
+				new Date(), new Date(), 0, speciesCreateData.getHabitatId(), false, null, false, null);
+		species = speciesDao.save(species);
+
+		logActivity.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), null, species.getId(), species.getId(),
+				"species", null, "Created species", null);
+
+		return showSpeciesPage(species.getId());
+	}
+
+	@Override
+	public TaxonomyDefinition createTaxonomy(HttpServletRequest request, TaxonomySave taxonomySave) {
+		try {
+			taxonomyService = headers.addTaxonomyHeader(taxonomyService, request.getHeader(HttpHeaders.AUTHORIZATION));
+			TaxonomyDefinition result = taxonomyService.saveTaxonomy(taxonomySave);
+			return result;
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return null;
+	}
+
 }
