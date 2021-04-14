@@ -21,6 +21,7 @@ import com.strandls.species.pojo.SpeciesResourcesPreData;
 import com.strandls.species.pojo.SpeciesTrait;
 import com.strandls.taxonomy.pojo.CommonName;
 import com.strandls.taxonomy.pojo.CommonNamesData;
+import com.strandls.taxonomy.pojo.SynonymData;
 import com.strandls.taxonomy.pojo.TaxonomyDefinition;
 import com.strandls.taxonomy.pojo.TaxonomySave;
 import com.strandls.traits.pojo.FactValuePair;
@@ -85,8 +86,13 @@ public interface SpeciesServices {
 
 	public Long checkSpeciesPageExist(HttpServletRequest request, Long taxonId);
 
-	public ShowSpeciesPage createSpeciesPage(HttpServletRequest request, SpeciesCreateData speciesCreateData);
+	public Long createSpeciesPage(HttpServletRequest request, SpeciesCreateData speciesCreateData);
 
 	public TaxonomyDefinition createTaxonomy(HttpServletRequest request, TaxonomySave taxonomySave);
+
+	public List<TaxonomyDefinition> updateAddSynonyms(HttpServletRequest request, String speciesId,
+			SynonymData synonymData);
+
+	public Boolean removeSynonyms(HttpServletRequest request, String speciesId, String synonymId);
 
 }

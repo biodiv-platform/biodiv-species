@@ -27,6 +27,7 @@ import com.strandls.resource.pojo.SpeciesPull;
 import com.strandls.species.ApiConstants;
 import com.strandls.species.pojo.FieldRender;
 import com.strandls.species.pojo.ShowSpeciesPage;
+import com.strandls.species.pojo.SpeciesCreateData;
 import com.strandls.species.pojo.SpeciesFieldData;
 import com.strandls.species.pojo.SpeciesFieldUpdateData;
 import com.strandls.species.pojo.SpeciesResourcesPreData;
@@ -34,6 +35,7 @@ import com.strandls.species.pojo.SpeciesTrait;
 import com.strandls.species.service.SpeciesServices;
 import com.strandls.taxonomy.pojo.CommonName;
 import com.strandls.taxonomy.pojo.CommonNamesData;
+import com.strandls.taxonomy.pojo.SynonymData;
 import com.strandls.taxonomy.pojo.TaxonomyDefinition;
 import com.strandls.taxonomy.pojo.TaxonomySave;
 import com.strandls.traits.pojo.FactValuePair;
@@ -487,6 +489,73 @@ public class SpeciesController {
 			if (result != null)
 				return Response.status(Status.OK).entity(result).build();
 			return Response.status(Status.NOT_IMPLEMENTED).build();
+
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+	}
+
+	@POST
+	@Path(ApiConstants.ADD)
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+
+	@ValidateUser
+	@ApiOperation(value = "create species", notes = "Returns the speciesId", response = Long.class)
+	@ApiResponses(value = {
+			@ApiResponse(code = 400, message = "unable to create the species", response = String.class) })
+
+	public Response createSpecies(@Context HttpServletRequest request,
+			@ApiParam(name = "createData") SpeciesCreateData createData) {
+		try {
+			Long result = speciesService.createSpeciesPage(request, createData);
+			return Response.status(Status.OK).entity(result).build();
+
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+	}
+
+	@POST
+	@Path(ApiConstants.UPDATE + ApiConstants.SYNONYMS + "/{speciesId}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+
+	@ValidateUser
+
+	@ApiOperation(value = "add and update synonyms", notes = "Returns the synonyms list", response = TaxonomyDefinition.class, responseContainer = "List")
+	@ApiResponses(value = {
+			@ApiResponse(code = 400, message = "unable to add and update the synonyms", response = String.class) })
+
+	public Response addUpdateSynonyms(@Context HttpServletRequest request, @PathParam("speciesId") String speciesId,
+			@ApiParam(name = "synonymData") SynonymData synonymData) {
+		try {
+			List<TaxonomyDefinition> result = speciesService.updateAddSynonyms(request, speciesId, synonymData);
+			if (result != null)
+				return Response.status(Status.OK).entity(result).build();
+			return Response.status(Status.NOT_MODIFIED).build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+	}
+
+	@DELETE
+	@Path(ApiConstants.REMOVE + ApiConstants.SYNONYMS + "/{speciesId}/{synonymId}")
+	@Consumes(MediaType.TEXT_PLAIN)
+	@Produces(MediaType.APPLICATION_JSON)
+
+	@ValidateUser
+	@ApiOperation(value = "remove synonyms", notes = "Returns the Boolean data", response = Boolean.class)
+	@ApiResponses(value = {
+			@ApiResponse(code = 400, message = "unable to remove the synonyms", response = String.class) })
+
+	public Response removeSynonyms(@Context HttpServletRequest request, @QueryParam("speciesId") String speciesId,
+			@QueryParam("synonymId") String synonymId) {
+		try {
+			Boolean result = speciesService.removeSynonyms(request, speciesId, synonymId);
+			if (result)
+				return Response.status(Status.OK).entity(result).build();
+			return Response.status(Status.NOT_MODIFIED).build();
 
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();

@@ -34,6 +34,7 @@ public class ApiConstants {
 	public static final String SHOW = "/show";
 	public static final String SPECIES = "/species";
 	public static final String SPECIESFIELD = "/speciesField";
+	public static final String SYNONYMS = "/synonyms";
 	public static final String TAXONOMY = "/taxonomy";
 	public static final String TRAITS = "/traits";
 	public static final String UNFEATURED = "/unfeatured";

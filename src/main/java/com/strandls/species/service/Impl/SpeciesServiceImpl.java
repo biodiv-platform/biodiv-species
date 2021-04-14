@@ -77,6 +77,7 @@ import com.strandls.taxonomy.controllers.TaxonomyTreeServicesApi;
 import com.strandls.taxonomy.pojo.BreadCrumb;
 import com.strandls.taxonomy.pojo.CommonName;
 import com.strandls.taxonomy.pojo.CommonNamesData;
+import com.strandls.taxonomy.pojo.SynonymData;
 import com.strandls.taxonomy.pojo.TaxonomicNames;
 import com.strandls.taxonomy.pojo.TaxonomyDefinition;
 import com.strandls.taxonomy.pojo.TaxonomySave;
@@ -1016,16 +1017,21 @@ public class SpeciesServiceImpl implements SpeciesServices {
 	}
 
 	@Override
-	public ShowSpeciesPage createSpeciesPage(HttpServletRequest request, SpeciesCreateData speciesCreateData) {
+	public Long createSpeciesPage(HttpServletRequest request, SpeciesCreateData speciesCreateData) {
 
-		Species species = new Species(null, 0L, 0, speciesCreateData.getTaxonConceptId(), speciesCreateData.getTitle(),
-				new Date(), new Date(), 0, speciesCreateData.getHabitatId(), false, null, false, null);
-		species = speciesDao.save(species);
+		Species species = speciesDao.findByTaxonId(speciesCreateData.getTaxonConceptId());
+		if (species == null) {
+			species = new Species(null, 0L, 0, speciesCreateData.getTaxonConceptId(), speciesCreateData.getTitle(),
+					new Date(), new Date(), 0, speciesCreateData.getHabitatId(), false, null, false, null);
+			species = speciesDao.save(species);
 
-		logActivity.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), null, species.getId(), species.getId(),
-				"species", null, "Created species", null);
+			logActivity.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), null, species.getId(),
+					species.getId(), "species", null, "Created species", null);
 
-		return showSpeciesPage(species.getId());
+			return species.getId();
+		}
+		return null;
+
 	}
 
 	@Override
@@ -1033,6 +1039,36 @@ public class SpeciesServiceImpl implements SpeciesServices {
 		try {
 			taxonomyService = headers.addTaxonomyHeader(taxonomyService, request.getHeader(HttpHeaders.AUTHORIZATION));
 			TaxonomyDefinition result = taxonomyService.saveTaxonomy(taxonomySave);
+			return result;
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return null;
+	}
+
+	@Override
+	public List<TaxonomyDefinition> updateAddSynonyms(HttpServletRequest request, String speciesId,
+			SynonymData synonymData) {
+		try {
+			Species species = speciesDao.findById(Long.parseLong(speciesId));
+			taxonomyService = headers.addTaxonomyHeader(taxonomyService, request.getHeader(HttpHeaders.AUTHORIZATION));
+			List<TaxonomyDefinition> result = taxonomyService.updateAddSynonym(speciesId,
+					species.getTaxonConceptId().toString(), synonymData);
+			return result;
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return null;
+	}
+
+	@Override
+	public Boolean removeSynonyms(HttpServletRequest request, String speciesId, String synonymId) {
+		try {
+
+			Species species = speciesDao.findById(Long.parseLong(speciesId));
+			taxonomyService = headers.addTaxonomyHeader(taxonomyService, request.getHeader(HttpHeaders.AUTHORIZATION));
+			Boolean result = taxonomyService.removeSynonyms(speciesId, species.getTaxonConceptId().toString(),
+					synonymId);
 			return result;
 		} catch (Exception e) {
 			logger.error(e.getMessage());
