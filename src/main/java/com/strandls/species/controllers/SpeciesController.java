@@ -562,4 +562,18 @@ public class SpeciesController {
 		}
 	}
 
+	@GET
+	@Path(ApiConstants.PERMISSION + "/{speciesId}")
+	@Consumes(MediaType.TEXT_PLAIN)
+	@Produces(MediaType.APPLICATION_JSON)
+
+	public Response getSpeciesPagePermission() {
+		try {
+
+			return null;
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+	}
+
 }

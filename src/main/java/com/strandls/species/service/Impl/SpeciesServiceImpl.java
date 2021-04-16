@@ -94,8 +94,6 @@ import com.strandls.userGroup.pojo.FeaturedCreateData;
 import com.strandls.userGroup.pojo.UserGroupIbp;
 import com.strandls.userGroup.pojo.UserGroupMappingCreateData;
 import com.strandls.userGroup.pojo.UserGroupSpeciesCreateData;
-import com.strandls.utility.controller.UtilityServiceApi;
-import com.strandls.utility.pojo.ParsedName;
 
 import net.minidev.json.JSONArray;
 
@@ -186,9 +184,6 @@ public class SpeciesServiceImpl implements SpeciesServices {
 
 	@Inject
 	private TraitsServiceApi traitService;
-
-	@Inject
-	private UtilityServiceApi utilityService;
 
 	@Override
 	public ShowSpeciesPage showSpeciesPage(Long speciesId) {
@@ -992,11 +987,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 	@Override
 	public List<TaxonomyDefinition> checkTaxonomyExist(HttpServletRequest request, String speciesName, String rank) {
 		try {
-
-			ParsedName parsedName = utilityService.getNameParsed(speciesName);
-			List<TaxonomyDefinition> taxonomyList = taxonomyService
-					.getByCanonicalForm(parsedName.getCanonicalName().getSimple(), rank);
-
+			List<TaxonomyDefinition> taxonomyList = taxonomyService.getByNameSearch(speciesName, rank);
 			return taxonomyList;
 
 		} catch (Exception e) {
