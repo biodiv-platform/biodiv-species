@@ -38,6 +38,7 @@ import com.strandls.taxonomy.pojo.CommonNamesData;
 import com.strandls.taxonomy.pojo.SynonymData;
 import com.strandls.taxonomy.pojo.TaxonomyDefinition;
 import com.strandls.taxonomy.pojo.TaxonomySave;
+import com.strandls.taxonomy.pojo.TaxonomySearch;
 import com.strandls.traits.pojo.FactValuePair;
 import com.strandls.traits.pojo.FactsUpdateData;
 import com.strandls.userGroup.pojo.Featured;
@@ -434,13 +435,13 @@ public class SpeciesController {
 
 	@ValidateUser
 
-	@ApiOperation(value = "checks if taxonomy exist", notes = "Returns list of taxonomy", response = TaxonomyDefinition.class, responseContainer = "List")
+	@ApiOperation(value = "checks if taxonomy exist", notes = "Returns list of taxonomy", response = TaxonomySearch.class)
 	@ApiResponses(value = { @ApiResponse(code = 400, message = "unable to check the result", response = String.class) })
 
 	public Response checkTaxonExist(@Context HttpServletRequest request, @QueryParam("speciesName") String speciesName,
 			@QueryParam("rank") String rank) {
 		try {
-			List<TaxonomyDefinition> result = speciesService.checkTaxonomyExist(request, speciesName, rank);
+			TaxonomySearch result = speciesService.checkTaxonomyExist(request, speciesName, rank);
 			return Response.status(Status.OK).entity(result).build();
 
 		} catch (Exception e) {

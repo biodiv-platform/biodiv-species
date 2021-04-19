@@ -81,6 +81,7 @@ import com.strandls.taxonomy.pojo.SynonymData;
 import com.strandls.taxonomy.pojo.TaxonomicNames;
 import com.strandls.taxonomy.pojo.TaxonomyDefinition;
 import com.strandls.taxonomy.pojo.TaxonomySave;
+import com.strandls.taxonomy.pojo.TaxonomySearch;
 import com.strandls.traits.controller.TraitsServiceApi;
 import com.strandls.traits.pojo.FactValuePair;
 import com.strandls.traits.pojo.FactsUpdateData;
@@ -985,9 +986,9 @@ public class SpeciesServiceImpl implements SpeciesServices {
 	}
 
 	@Override
-	public List<TaxonomyDefinition> checkTaxonomyExist(HttpServletRequest request, String speciesName, String rank) {
+	public TaxonomySearch checkTaxonomyExist(HttpServletRequest request, String speciesName, String rank) {
 		try {
-			List<TaxonomyDefinition> taxonomyList = taxonomyService.getByNameSearch(speciesName, rank);
+			TaxonomySearch taxonomyList = taxonomyService.getByNameSearch(speciesName, rank);
 			return taxonomyList;
 
 		} catch (Exception e) {

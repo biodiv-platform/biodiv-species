@@ -24,6 +24,7 @@ import com.strandls.taxonomy.pojo.CommonNamesData;
 import com.strandls.taxonomy.pojo.SynonymData;
 import com.strandls.taxonomy.pojo.TaxonomyDefinition;
 import com.strandls.taxonomy.pojo.TaxonomySave;
+import com.strandls.taxonomy.pojo.TaxonomySearch;
 import com.strandls.traits.pojo.FactValuePair;
 import com.strandls.traits.pojo.FactsUpdateData;
 import com.strandls.userGroup.pojo.Featured;
@@ -82,7 +83,7 @@ public interface SpeciesServices {
 
 	public Activity addSpeciesComment(HttpServletRequest request, CommentLoggingData loggingData);
 
-	public List<TaxonomyDefinition> checkTaxonomyExist(HttpServletRequest request, String speciesName, String rank);
+	public TaxonomySearch checkTaxonomyExist(HttpServletRequest request, String speciesName, String rank);
 
 	public Long checkSpeciesPageExist(HttpServletRequest request, Long taxonId);
 
