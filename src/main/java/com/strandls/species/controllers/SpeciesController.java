@@ -550,8 +550,8 @@ public class SpeciesController {
 	@ApiResponses(value = {
 			@ApiResponse(code = 400, message = "unable to remove the synonyms", response = String.class) })
 
-	public Response removeSynonyms(@Context HttpServletRequest request, @QueryParam("speciesId") String speciesId,
-			@QueryParam("synonymId") String synonymId) {
+	public Response removeSynonyms(@Context HttpServletRequest request, @PathParam("speciesId") String speciesId,
+			@PathParam("synonymId") String synonymId) {
 		try {
 			Boolean result = speciesService.removeSynonyms(request, speciesId, synonymId);
 			if (result)
