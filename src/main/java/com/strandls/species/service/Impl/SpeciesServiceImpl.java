@@ -601,11 +601,15 @@ public class SpeciesServiceImpl implements SpeciesServices {
 	public List<FactValuePair> updateTraits(HttpServletRequest request, String speciesId, String traitId,
 			FactsUpdateData factsUpdateData) {
 		try {
-			traitService = headers.addTraitsHeader(traitService, request.getHeader(HttpHeaders.AUTHORIZATION));
-			List<FactValuePair> result = traitService.updateTraits("species.Species", speciesId, traitId,
-					factsUpdateData);
-			updateLastRevised(Long.parseLong(speciesId));
-			return result;
+			Boolean isContributor = checkPermission(request, Long.parseLong(speciesId));
+			if (isContributor) {
+				traitService = headers.addTraitsHeader(traitService, request.getHeader(HttpHeaders.AUTHORIZATION));
+				List<FactValuePair> result = traitService.updateTraits("species.Species", speciesId, traitId,
+						factsUpdateData);
+				updateLastRevised(Long.parseLong(speciesId));
+				return result;
+			}
+
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 		}
@@ -624,12 +628,17 @@ public class SpeciesServiceImpl implements SpeciesServices {
 				return null;
 			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 			Long userId = Long.parseLong(profile.getId());
+			Boolean isContributor = checkPermission(request, speciesId);
 
-//			this needs to be checked
-			List<Long> sfUserList = sfUserDao.findBySpeciesFieldId(sfdata.getSpeciesFieldId());
-			JSONArray userRole = (JSONArray) profile.getAttribute("roles");
+//			check if edit is done by the same contributor
+			List<Long> sfUserList = new ArrayList<Long>();
+			if (sfdata.getIsEdit()) {
+				sfUserList = sfUserDao.findBySpeciesFieldId(sfdata.getSpeciesFieldId());
+				if (!sfUserList.contains(userId))
+					return null;
+			}
 
-			if (userRole.contains("ROLE_ADMIN") || sfUserList.contains(userId)) {
+			if (isContributor) {
 
 //				speciesField core update
 				SpeciesField speciesField = updateCreateSpeciesField(speciesId, userId, sfdata);
@@ -700,8 +709,8 @@ public class SpeciesServiceImpl implements SpeciesServices {
 
 				String fieldHierarchy = fieldHierarchyString(sfdata.getFieldId());
 
+				updateLastRevised(speciesId);
 				if (sfdata.getIsEdit()) {
-					updateLastRevised(speciesId);
 					String desc = "Updated species field : " + fieldHierarchy;
 					logActivity.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), desc, speciesId, speciesId,
 							"species", speciesField.getId(), "Updated species field", null);
@@ -778,10 +787,10 @@ public class SpeciesServiceImpl implements SpeciesServices {
 		JSONArray userRoles = (JSONArray) profile.getAttribute("roles");
 		Long userId = Long.parseLong(profile.getId());
 		List<Long> sfUserList = sfUserDao.findBySpeciesFieldId(speciesfieldId);
+		SpeciesField speciesfield = speciesFieldDao.findById(speciesfieldId);
+		Boolean isContributor = checkPermission(request, speciesfield.getSpeciesId());
 
-		if (userRoles.contains("ROLE_ADMIN") || sfUserList.contains(userId)) {
-
-			SpeciesField speciesfield = speciesFieldDao.findById(speciesfieldId);
+		if (userRoles.contains("ROLE_ADMIN") || (isContributor && sfUserList.contains(userId))) {
 			speciesfield.setIsDeleted(true);
 			speciesFieldDao.update(speciesfield);
 
@@ -804,12 +813,16 @@ public class SpeciesServiceImpl implements SpeciesServices {
 	public List<CommonName> updateAddCommonName(HttpServletRequest request, Long speciesId,
 			CommonNamesData commonNamesData) {
 		try {
-			commonNameService = headers.addCommonNameHeader(commonNameService,
-					request.getHeader(HttpHeaders.AUTHORIZATION));
-			List<CommonName> result = commonNameService.updateAddCommonNames(speciesId.toString(), commonNamesData);
-			updateLastRevised(speciesId);
+			Boolean isContributor = checkPermission(request, speciesId);
+			if (isContributor) {
+				commonNameService = headers.addCommonNameHeader(commonNameService,
+						request.getHeader(HttpHeaders.AUTHORIZATION));
+				List<CommonName> result = commonNameService.updateAddCommonNames(speciesId.toString(), commonNamesData);
+				updateLastRevised(speciesId);
 
-			return result;
+				return result;
+			}
+
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 		}
@@ -819,11 +832,15 @@ public class SpeciesServiceImpl implements SpeciesServices {
 	@Override
 	public List<CommonName> removeCommonName(HttpServletRequest request, Long speciesId, String commonNameId) {
 		try {
-			commonNameService = headers.addCommonNameHeader(commonNameService,
-					request.getHeader(HttpHeaders.AUTHORIZATION));
-			List<CommonName> result = commonNameService.removeCommonName(speciesId.toString(), commonNameId);
-			updateLastRevised(speciesId);
-			return result;
+			Boolean isContributor = checkPermission(request, speciesId);
+			if (isContributor) {
+				commonNameService = headers.addCommonNameHeader(commonNameService,
+						request.getHeader(HttpHeaders.AUTHORIZATION));
+				List<CommonName> result = commonNameService.removeCommonName(speciesId.toString(), commonNameId);
+				updateLastRevised(speciesId);
+				return result;
+			}
+
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 		}
@@ -856,34 +873,36 @@ public class SpeciesServiceImpl implements SpeciesServices {
 	@Override
 	public List<ResourceData> pullResource(HttpServletRequest request, Long speciesId,
 			List<SpeciesPullData> speciesPullData) {
-
 		try {
+			Boolean isContributor = checkPermission(request, speciesId);
+			if (isContributor) {
 
-			Species species = speciesDao.findById(speciesId);
-			Set<Long> observationIds = new HashSet<Long>();
-			List<Long> resourcesIds = new ArrayList<Long>();
+				Species species = speciesDao.findById(speciesId);
+				Set<Long> observationIds = new HashSet<Long>();
+				List<Long> resourcesIds = new ArrayList<Long>();
 
-			for (SpeciesPullData speciesPull : speciesPullData) {
-				resourcesIds.add(speciesPull.getResourceId());
-				observationIds.add(speciesPull.getObservationId());
+				for (SpeciesPullData speciesPull : speciesPullData) {
+					resourcesIds.add(speciesPull.getResourceId());
+					observationIds.add(speciesPull.getObservationId());
+				}
+				SpeciesResourcePulling resourcePulling = new SpeciesResourcePulling();
+				resourcePulling.setSpeciesId(speciesId);
+				resourcePulling.setResourcesIds(resourcesIds);
+
+				resourceServices = headers.addResourceHeaders(resourceServices,
+						request.getHeader(HttpHeaders.AUTHORIZATION));
+				List<ResourceData> resourceResult = resourceServices.pullResource(resourcePulling);
+
+//				validate the observation
+
+				List<Long> observationIdsList = new ArrayList<Long>(observationIds);
+				observationService = headers.addObservationHeader(observationService,
+						request.getHeader(HttpHeaders.AUTHORIZATION));
+				observationService.speciesPullObservationValidation(species.getTaxonConceptId().toString(),
+						observationIdsList);
+				updateLastRevised(speciesId);
+				return resourceResult;
 			}
-			SpeciesResourcePulling resourcePulling = new SpeciesResourcePulling();
-			resourcePulling.setSpeciesId(speciesId);
-			resourcePulling.setResourcesIds(resourcesIds);
-
-			resourceServices = headers.addResourceHeaders(resourceServices,
-					request.getHeader(HttpHeaders.AUTHORIZATION));
-			List<ResourceData> resourceResult = resourceServices.pullResource(resourcePulling);
-
-//			validate the observation
-
-			List<Long> observationIdsList = new ArrayList<Long>(observationIds);
-			observationService = headers.addObservationHeader(observationService,
-					request.getHeader(HttpHeaders.AUTHORIZATION));
-			observationService.speciesPullObservationValidation(species.getTaxonConceptId().toString(),
-					observationIdsList);
-
-			return resourceResult;
 
 		} catch (Exception e) {
 			logger.error(e.getMessage());
@@ -895,10 +914,8 @@ public class SpeciesServiceImpl implements SpeciesServices {
 	@Override
 	public List<ResourceData> getSpeciesResources(HttpServletRequest request, Long speciesId) {
 		try {
-			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
-			JSONArray userRoles = (JSONArray) profile.getAttribute("roles");
-
-			if (userRoles.contains("ROLE_ADMIN")) {
+			Boolean isContributor = checkPermission(request, speciesId);
+			if (isContributor) {
 				List<ResourceData> resourceData = resourceServices.getImageResource("SPECIES", speciesId.toString());
 				return resourceData;
 			}
@@ -915,10 +932,8 @@ public class SpeciesServiceImpl implements SpeciesServices {
 			List<SpeciesResourcesPreData> preDataList) {
 
 		try {
-			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
-			JSONArray userRoles = (JSONArray) profile.getAttribute("roles");
-
-			if (userRoles.contains("ROLE_ADMIN")) {
+			Boolean isContributor = checkPermission(request, speciesId);
+			if (isContributor) {
 				List<SpeciesPullData> speciesPullDatas = new ArrayList<SpeciesPullData>();
 				List<SpeciesResourceData> speciesResourceData = new ArrayList<SpeciesResourceData>();
 				for (SpeciesResourcesPreData preData : preDataList) {
@@ -1011,16 +1026,20 @@ public class SpeciesServiceImpl implements SpeciesServices {
 	@Override
 	public Long createSpeciesPage(HttpServletRequest request, SpeciesCreateData speciesCreateData) {
 
-		Species species = speciesDao.findByTaxonId(speciesCreateData.getTaxonConceptId());
-		if (species == null) {
-			species = new Species(null, 0L, 0, speciesCreateData.getTaxonConceptId(), speciesCreateData.getTitle(),
-					new Date(), new Date(), 0, speciesCreateData.getHabitatId(), false, null, false, null);
-			species = speciesDao.save(species);
+		Boolean isContributor = checkPermission(request, speciesCreateData.getTaxonConceptId());
+		if (isContributor) {
+			Species species = speciesDao.findByTaxonId(speciesCreateData.getTaxonConceptId());
+			if (species == null) {
+				species = new Species(null, 0L, 0, speciesCreateData.getTaxonConceptId(), speciesCreateData.getTitle(),
+						new Date(), new Date(), 0, speciesCreateData.getHabitatId(), false, null, false, null);
+				species = speciesDao.save(species);
 
-			logActivity.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), null, species.getId(),
-					species.getId(), "species", null, "Created species", null);
+				logActivity.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), null, species.getId(),
+						species.getId(), "species", null, "Created species", null);
 
-			return species.getId();
+				return species.getId();
+			}
+
 		}
 		return null;
 
@@ -1042,11 +1061,18 @@ public class SpeciesServiceImpl implements SpeciesServices {
 	public List<TaxonomyDefinition> updateAddSynonyms(HttpServletRequest request, String speciesId,
 			SynonymData synonymData) {
 		try {
-			Species species = speciesDao.findById(Long.parseLong(speciesId));
-			taxonomyService = headers.addTaxonomyHeader(taxonomyService, request.getHeader(HttpHeaders.AUTHORIZATION));
-			List<TaxonomyDefinition> result = taxonomyService.updateAddSynonym(speciesId,
-					species.getTaxonConceptId().toString(), synonymData);
-			return result;
+
+			Boolean isContributor = checkPermission(request, Long.parseLong(speciesId));
+			if (isContributor) {
+				Species species = speciesDao.findById(Long.parseLong(speciesId));
+				taxonomyService = headers.addTaxonomyHeader(taxonomyService,
+						request.getHeader(HttpHeaders.AUTHORIZATION));
+				List<TaxonomyDefinition> result = taxonomyService.updateAddSynonym(speciesId,
+						species.getTaxonConceptId().toString(), synonymData);
+				updateLastRevised(Long.parseLong(speciesId));
+				return result;
+			}
+
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 		}
@@ -1054,18 +1080,44 @@ public class SpeciesServiceImpl implements SpeciesServices {
 	}
 
 	@Override
-	public Boolean removeSynonyms(HttpServletRequest request, String speciesId, String synonymId) {
+	public List<TaxonomyDefinition> removeSynonyms(HttpServletRequest request, String speciesId, String synonymId) {
 		try {
+			Boolean isContributor = checkPermission(request, Long.parseLong(speciesId));
+			if (isContributor) {
+				Species species = speciesDao.findById(Long.parseLong(speciesId));
+				taxonomyService = headers.addTaxonomyHeader(taxonomyService,
+						request.getHeader(HttpHeaders.AUTHORIZATION));
+				List<TaxonomyDefinition> result = taxonomyService.removeSynonyms(speciesId,
+						species.getTaxonConceptId().toString(), synonymId);
+				updateLastRevised(Long.parseLong(speciesId));
+				return result;
+			}
 
-			Species species = speciesDao.findById(Long.parseLong(speciesId));
-			taxonomyService = headers.addTaxonomyHeader(taxonomyService, request.getHeader(HttpHeaders.AUTHORIZATION));
-			Boolean result = taxonomyService.removeSynonyms(speciesId, species.getTaxonConceptId().toString(),
-					synonymId);
-			return result;
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 		}
 		return null;
+	}
+
+	@Override
+	public Boolean checkPermission(HttpServletRequest request, Long speciesId) {
+		try {
+
+			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
+			JSONArray userRole = (JSONArray) profile.getAttribute("roles");
+			if (userRole.contains("ROLE_ADMIN"))
+				return true;
+
+			Species species = speciesDao.findById(speciesId);
+			taxonomyTreeServices = headers.addTaxonomyTreeHeader(taxonomyTreeServices,
+					request.getHeader(HttpHeaders.AUTHORIZATION));
+			Boolean result = taxonomyTreeServices.getPermissionSpeciesTree(species.getTaxonConceptId().toString());
+			return result;
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return false;
+
 	}
 
 }

@@ -546,17 +546,15 @@ public class SpeciesController {
 	@Produces(MediaType.APPLICATION_JSON)
 
 	@ValidateUser
-	@ApiOperation(value = "remove synonyms", notes = "Returns the Boolean data", response = Boolean.class)
+	@ApiOperation(value = "remove synonyms", notes = "Returns the Boolean data", response = TaxonomyDefinition.class, responseContainer = "List")
 	@ApiResponses(value = {
 			@ApiResponse(code = 400, message = "unable to remove the synonyms", response = String.class) })
 
 	public Response removeSynonyms(@Context HttpServletRequest request, @PathParam("speciesId") String speciesId,
 			@PathParam("synonymId") String synonymId) {
 		try {
-			Boolean result = speciesService.removeSynonyms(request, speciesId, synonymId);
-			if (result)
-				return Response.status(Status.OK).entity(result).build();
-			return Response.status(Status.NOT_MODIFIED).build();
+			List<TaxonomyDefinition> result = speciesService.removeSynonyms(request, speciesId, synonymId);
+			return Response.status(Status.OK).entity(result).build();
 
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
@@ -568,10 +566,17 @@ public class SpeciesController {
 	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces(MediaType.APPLICATION_JSON)
 
-	public Response getSpeciesPagePermission() {
-		try {
+	@ValidateUser
+	@ApiOperation(value = "Check the permission for species Page", notes = "Returns the Boolean value", response = Boolean.class)
+	@ApiResponses(value = {
+			@ApiResponse(code = 400, message = "unable to fetch the permission", response = String.class) })
 
-			return null;
+	public Response getSpeciesPagePermission(@Context HttpServletRequest request,
+			@PathParam("speciesId") String speciesId) {
+		try {
+			Long sId = Long.parseLong(speciesId);
+			Boolean result = speciesService.checkPermission(request, sId);
+			return Response.status(Status.OK).entity(result).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}

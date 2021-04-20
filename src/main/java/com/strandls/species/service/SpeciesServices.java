@@ -94,6 +94,8 @@ public interface SpeciesServices {
 	public List<TaxonomyDefinition> updateAddSynonyms(HttpServletRequest request, String speciesId,
 			SynonymData synonymData);
 
-	public Boolean removeSynonyms(HttpServletRequest request, String speciesId, String synonymId);
+	public List<TaxonomyDefinition> removeSynonyms(HttpServletRequest request, String speciesId, String synonymId);
+
+	public Boolean checkPermission(HttpServletRequest request, Long speciesId);
 
 }

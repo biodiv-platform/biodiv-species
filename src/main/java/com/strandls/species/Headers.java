@@ -11,6 +11,7 @@ import com.strandls.observation.controller.ObservationServiceApi;
 import com.strandls.resource.controllers.ResourceServicesApi;
 import com.strandls.taxonomy.controllers.CommonNameServicesApi;
 import com.strandls.taxonomy.controllers.TaxonomyServicesApi;
+import com.strandls.taxonomy.controllers.TaxonomyTreeServicesApi;
 import com.strandls.traits.controller.TraitsServiceApi;
 import com.strandls.userGroup.controller.UserGroupSerivceApi;
 
@@ -44,6 +45,11 @@ public class Headers {
 	public TaxonomyServicesApi addTaxonomyHeader(TaxonomyServicesApi taxonomyServices, String authHeader) {
 		taxonomyServices.getApiClient().addDefaultHeader(HttpHeaders.AUTHORIZATION, authHeader);
 		return taxonomyServices;
+	}
+
+	public TaxonomyTreeServicesApi addTaxonomyTreeHeader(TaxonomyTreeServicesApi treeServicesApi, String authHeader) {
+		treeServicesApi.getApiClient().addDefaultHeader(HttpHeaders.AUTHORIZATION, authHeader);
+		return treeServicesApi;
 	}
 
 	public CommonNameServicesApi addCommonNameHeader(CommonNameServicesApi commonNameService, String authHeader) {
