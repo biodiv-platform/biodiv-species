@@ -35,6 +35,7 @@ import com.strandls.species.pojo.SpeciesTrait;
 import com.strandls.species.service.SpeciesServices;
 import com.strandls.taxonomy.pojo.CommonName;
 import com.strandls.taxonomy.pojo.CommonNamesData;
+import com.strandls.taxonomy.pojo.PermissionData;
 import com.strandls.taxonomy.pojo.SynonymData;
 import com.strandls.taxonomy.pojo.TaxonomyDefinition;
 import com.strandls.taxonomy.pojo.TaxonomySave;
@@ -577,6 +578,55 @@ public class SpeciesController {
 			Long sId = Long.parseLong(speciesId);
 			Boolean result = speciesService.checkPermission(request, sId);
 			return Response.status(Status.OK).entity(result).build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+	}
+
+	@POST
+	@Path(ApiConstants.REQUEST)
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+
+	@ValidateUser
+	@ApiOperation(value = "Send request for permission over a taxonomyNode", notes = "sends mail to the permission", response = Boolean.class)
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "unable to send the req", response = String.class) })
+
+	public Response requestPermission(@Context HttpServletRequest request,
+			@ApiParam(name = "permissionData") PermissionData permissionData) {
+		try {
+			Boolean result = speciesService.sendPermissionRequest(request, permissionData);
+			if (result != null) {
+				if (result)
+					return Response.status(Status.OK).entity(result).build();
+				return Response.status(Status.NOT_MODIFIED).build();
+			}
+			return Response.status(Status.NOT_FOUND).build();
+
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+	}
+
+	@POST
+	@Path(ApiConstants.GRANT)
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+
+	@ValidateUser
+
+	@ApiOperation(value = "validate the request for permission over a taxonomyId", notes = "checks the grants the permission", response = Boolean.class)
+	@ApiResponses(value = {
+			@ApiResponse(code = 400, message = "uable to grant the permission", response = String.class) })
+
+	public Response grantPermissionrequest(@Context HttpServletRequest request,
+			@ApiParam(name = "encryptedKey") String encryptedKey) {
+		try {
+			Boolean result = speciesService.sendPermissionGrant(request, encryptedKey);
+			if (result)
+				return Response.status(Status.OK).entity(result).build();
+			return Response.status(Status.NOT_IMPLEMENTED).build();
+
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}

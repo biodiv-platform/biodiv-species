@@ -10,6 +10,7 @@ import com.strandls.file.api.UploadApi;
 import com.strandls.observation.controller.ObservationServiceApi;
 import com.strandls.resource.controllers.ResourceServicesApi;
 import com.strandls.taxonomy.controllers.CommonNameServicesApi;
+import com.strandls.taxonomy.controllers.TaxonomyPermissionServiceApi;
 import com.strandls.taxonomy.controllers.TaxonomyServicesApi;
 import com.strandls.taxonomy.controllers.TaxonomyTreeServicesApi;
 import com.strandls.traits.controller.TraitsServiceApi;
@@ -50,6 +51,12 @@ public class Headers {
 	public TaxonomyTreeServicesApi addTaxonomyTreeHeader(TaxonomyTreeServicesApi treeServicesApi, String authHeader) {
 		treeServicesApi.getApiClient().addDefaultHeader(HttpHeaders.AUTHORIZATION, authHeader);
 		return treeServicesApi;
+	}
+
+	public TaxonomyPermissionServiceApi addTaxonomyPermissionHeader(TaxonomyPermissionServiceApi permissionServiceApi,
+			String authHeader) {
+		permissionServiceApi.getApiClient().addDefaultHeader(HttpHeaders.AUTHORIZATION, authHeader);
+		return permissionServiceApi;
 	}
 
 	public CommonNameServicesApi addCommonNameHeader(CommonNameServicesApi commonNameService, String authHeader) {

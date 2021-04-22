@@ -72,11 +72,13 @@ import com.strandls.species.pojo.SpeciesResourcesPreData;
 import com.strandls.species.pojo.SpeciesTrait;
 import com.strandls.species.service.SpeciesServices;
 import com.strandls.taxonomy.controllers.CommonNameServicesApi;
+import com.strandls.taxonomy.controllers.TaxonomyPermissionServiceApi;
 import com.strandls.taxonomy.controllers.TaxonomyServicesApi;
 import com.strandls.taxonomy.controllers.TaxonomyTreeServicesApi;
 import com.strandls.taxonomy.pojo.BreadCrumb;
 import com.strandls.taxonomy.pojo.CommonName;
 import com.strandls.taxonomy.pojo.CommonNamesData;
+import com.strandls.taxonomy.pojo.PermissionData;
 import com.strandls.taxonomy.pojo.SynonymData;
 import com.strandls.taxonomy.pojo.TaxonomicNames;
 import com.strandls.taxonomy.pojo.TaxonomyDefinition;
@@ -176,6 +178,9 @@ public class SpeciesServiceImpl implements SpeciesServices {
 
 	@Inject
 	private UserGroupSerivceApi ugService;
+
+	@Inject
+	private TaxonomyPermissionServiceApi taxPermissionService;
 
 	@Inject
 	private TaxonomyServicesApi taxonomyService;
@@ -1109,14 +1114,42 @@ public class SpeciesServiceImpl implements SpeciesServices {
 				return true;
 
 			Species species = speciesDao.findById(speciesId);
-			taxonomyTreeServices = headers.addTaxonomyTreeHeader(taxonomyTreeServices,
+			taxPermissionService = headers.addTaxonomyPermissionHeader(taxPermissionService,
 					request.getHeader(HttpHeaders.AUTHORIZATION));
-			Boolean result = taxonomyTreeServices.getPermissionSpeciesTree(species.getTaxonConceptId().toString());
+			Boolean result = taxPermissionService.getPermissionSpeciesTree(species.getTaxonConceptId().toString());
 			return result;
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 		}
 		return false;
+
+	}
+
+	@Override
+	public Boolean sendPermissionRequest(HttpServletRequest request, PermissionData permissionData) {
+		try {
+			taxPermissionService = headers.addTaxonomyPermissionHeader(taxPermissionService,
+					request.getHeader(HttpHeaders.AUTHORIZATION));
+			Boolean result = taxPermissionService.requestPermission(permissionData);
+			return result;
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return null;
+	}
+
+	@Override
+	public Boolean sendPermissionGrant(HttpServletRequest request, String encryptedKey) {
+		try {
+			taxPermissionService = headers.addTaxonomyPermissionHeader(taxPermissionService,
+					request.getHeader(HttpHeaders.AUTHORIZATION));
+			Boolean result = taxPermissionService.grantPermissionrequest(encryptedKey);
+			return result;
+
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return null;
 
 	}
 

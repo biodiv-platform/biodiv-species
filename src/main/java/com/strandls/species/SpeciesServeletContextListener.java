@@ -44,6 +44,7 @@ import com.strandls.species.controllers.SpeciesControllerModule;
 import com.strandls.species.dao.SpeciesDaoModule;
 import com.strandls.species.service.Impl.SpeciesServiceModule;
 import com.strandls.taxonomy.controllers.CommonNameServicesApi;
+import com.strandls.taxonomy.controllers.TaxonomyPermissionServiceApi;
 import com.strandls.taxonomy.controllers.TaxonomyServicesApi;
 import com.strandls.taxonomy.controllers.TaxonomyTreeServicesApi;
 import com.strandls.traits.controller.TraitsServiceApi;
@@ -103,6 +104,7 @@ public class SpeciesServeletContextListener extends GuiceServletContextListener 
 				bind(EsServicesApi.class).in(Scopes.SINGLETON);
 				bind(ObservationServiceApi.class).in(Scopes.SINGLETON);
 				bind(ActivitySerivceApi.class).in(Scopes.SINGLETON);
+				bind(TaxonomyPermissionServiceApi.class).in(Scopes.SINGLETON);
 
 				bind(ServletContainer.class).in(Scopes.SINGLETON);
 				serve("/api/*").with(ServletContainer.class, props);

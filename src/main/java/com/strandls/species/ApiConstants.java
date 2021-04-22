@@ -23,6 +23,7 @@ public class ApiConstants {
 	public static final String EDIT = "/edit";
 	public static final String FEATURED = "/featured";
 	public static final String FIELDS = "/fields";
+	public static final String GRANT = "/grant";
 	public static final String MIGRATEFIELD = "/migrateField";
 	public static final String OBSERVATION = "/observation";
 	public static final String PERMISSION = "/permission";
@@ -30,6 +31,7 @@ public class ApiConstants {
 	public static final String PULL = "/pull";
 	public static final String REMOVE = "/remove";
 	public static final String RENDER = "/render";
+	public static final String REQUEST = "/request";
 	public static final String RESOURCE = "/resource";
 	public static final String SAVE = "/save";
 	public static final String SHOW = "/show";
