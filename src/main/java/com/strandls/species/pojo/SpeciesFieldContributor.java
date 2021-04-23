@@ -27,7 +27,6 @@ public class SpeciesFieldContributor implements Serializable {
 	private static final long serialVersionUID = 3622651953716416157L;
 	private Long speciesFieldId;
 	private Long contributorId;
-	private Long attributorsId;
 
 	/**
 	 * 
@@ -39,13 +38,11 @@ public class SpeciesFieldContributor implements Serializable {
 	/**
 	 * @param speciesFieldId
 	 * @param contributorId
-	 * @param attributorsId
 	 */
-	public SpeciesFieldContributor(Long speciesFieldId, Long contributorId, Long attributorsId) {
+	public SpeciesFieldContributor(Long speciesFieldId, Long contributorId) {
 		super();
 		this.speciesFieldId = speciesFieldId;
 		this.contributorId = contributorId;
-		this.attributorsId = attributorsId;
 	}
 
 	@Id
@@ -67,15 +64,4 @@ public class SpeciesFieldContributor implements Serializable {
 	public void setContributorId(Long contributorId) {
 		this.contributorId = contributorId;
 	}
-
-	@Id
-	@Column(name = "attributors_idx")
-	public Long getAttributorsId() {
-		return attributorsId;
-	}
-
-	public void setAttributorsId(Long attributorsId) {
-		this.attributorsId = attributorsId;
-	}
-
 }

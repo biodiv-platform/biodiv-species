@@ -667,7 +667,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 					Contributor contributor = new Contributor(null, sfdata.getAttributions(), null);
 					contributor = contributorDao.save(contributor);
 
-					sfAttribution = new SpeciesFieldContributor(sfdata.getSpeciesFieldId(), contributor.getId(), null);
+					sfAttribution = new SpeciesFieldContributor(sfdata.getSpeciesFieldId(), contributor.getId());
 					sfContributorDao.save(sfAttribution);
 				}
 
@@ -688,13 +688,13 @@ public class SpeciesServiceImpl implements SpeciesServices {
 //					adding new user contributors
 					for (Long newUserId : sfdata.getContributorIds()) {
 						if (!sfUserList.contains(newUserId)) {
-							SpeciesFieldUser sfUser = new SpeciesFieldUser(speciesField.getId(), newUserId, null);
+							SpeciesFieldUser sfUser = new SpeciesFieldUser(speciesField.getId(), newUserId);
 							sfUserDao.save(sfUser);
 						}
 					}
 				} else {
 					for (Long newUserId : sfdata.getContributorIds()) {
-						SpeciesFieldUser sfUser = new SpeciesFieldUser(speciesField.getId(), newUserId, null);
+						SpeciesFieldUser sfUser = new SpeciesFieldUser(speciesField.getId(), newUserId);
 						sfUserDao.save(sfUser);
 					}
 				}
