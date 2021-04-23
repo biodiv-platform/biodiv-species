@@ -33,6 +33,7 @@ public class ShowSpeciesPage {
 	private TaxonomicNames taxonomicNames;
 	private Map<String, Long> temporalData;
 	private List<DocumentMeta> documentMetaList;
+	private List<Reference> referencesListing;
 
 	/**
 	 * 
@@ -53,11 +54,12 @@ public class ShowSpeciesPage {
 	 * @param taxonomicNames
 	 * @param temporalData
 	 * @param documentMetaList
+	 * @param referencesListing
 	 */
 	public ShowSpeciesPage(Species species, List<BreadCrumb> breadCrumbs, TaxonomyDefinition taxonomyDefinition,
 			List<ResourceData> resourceData, List<SpeciesFieldData> fieldData, List<FactValuePair> facts,
 			List<UserGroupIbp> userGroups, List<Featured> featured, TaxonomicNames taxonomicNames,
-			Map<String, Long> temporalData, List<DocumentMeta> documentMetaList) {
+			Map<String, Long> temporalData, List<DocumentMeta> documentMetaList, List<Reference> referencesListing) {
 		super();
 		this.species = species;
 		this.breadCrumbs = breadCrumbs;
@@ -70,6 +72,7 @@ public class ShowSpeciesPage {
 		this.taxonomicNames = taxonomicNames;
 		this.temporalData = temporalData;
 		this.documentMetaList = documentMetaList;
+		this.referencesListing = referencesListing;
 	}
 
 	public Species getSpecies() {
@@ -158,6 +161,14 @@ public class ShowSpeciesPage {
 
 	public void setDocumentMetaList(List<DocumentMeta> documentMetaList) {
 		this.documentMetaList = documentMetaList;
+	}
+
+	public List<Reference> getReferencesListing() {
+		return referencesListing;
+	}
+
+	public void setReferencesListing(List<Reference> referencesListing) {
+		this.referencesListing = referencesListing;
 	}
 
 }

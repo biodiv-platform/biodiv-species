@@ -209,13 +209,21 @@ public class SpeciesServiceImpl implements SpeciesServices {
 
 				List<SpeciesFieldData> fieldData = new ArrayList<SpeciesFieldData>();
 
+				List<Reference> referencesList = new ArrayList<Reference>();
+
 //				segregating on the basis of multiple data
 				for (SpeciesField speciesField : speciesFields) {
 
-					SpeciesFieldData speciesFieldData = getSpeciesFieldData(speciesField);
+					if (speciesField.getFieldId().equals(81L)) {
+						List<Reference> references = referenceDao.findBySpeciesFieldId(speciesField.getId());
+						if (references != null && !references.isEmpty())
+							referencesList.addAll(references);
 
-					if (speciesFieldData != null)
-						fieldData.add(speciesFieldData);
+					} else {
+						SpeciesFieldData speciesFieldData = getSpeciesFieldData(speciesField);
+						if (speciesFieldData != null)
+							fieldData.add(speciesFieldData);
+					}
 
 				}
 
@@ -241,7 +249,8 @@ public class SpeciesServiceImpl implements SpeciesServices {
 				Map<String, Long> temporalData = observationInfo.getMonthAggregation();
 
 				ShowSpeciesPage showSpeciesPage = new ShowSpeciesPage(species, breadCrumbs, taxonomyDefinition,
-						resourceData, fieldData, facts, userGroupList, featured, names, temporalData, documentMetaList);
+						resourceData, fieldData, facts, userGroupList, featured, names, temporalData, documentMetaList,
+						referencesList);
 
 //				ShowSpeciesPage showSpeciesPage = new ShowSpeciesPage(species, breadCrumbs, taxonomyDefinition,
 //						resourceData, fieldData, facts, userGroupList, featured, documentMetaList);
@@ -712,6 +721,9 @@ public class SpeciesServiceImpl implements SpeciesServices {
 					sfLicenseDao.save(sfLicense);
 				}
 
+//				add / update references
+				updateCreateReferences(speciesField.getId(), sfdata.getReferences());
+
 				String fieldHierarchy = fieldHierarchyString(sfdata.getFieldId());
 
 				updateLastRevised(speciesId);
@@ -731,6 +743,37 @@ public class SpeciesServiceImpl implements SpeciesServices {
 			logger.error(e.getMessage());
 		}
 		return null;
+	}
+
+	private List<Reference> updateCreateReferences(Long speciesFieldId, List<Reference> referencesList) {
+		List<Long> newRefId = new ArrayList<Long>();
+		List<Reference> alredyExistingList = referenceDao.findBySpeciesFieldId(speciesFieldId);
+		for (Reference reference : referencesList) {
+			if (reference.getId() == null) {
+//				add new references
+				if (reference.getSpeciesFieldId() != null && reference.getTitle() != null) {
+					reference.setVersion(0L);
+					referenceDao.save(reference);
+				}
+
+			} else {
+
+//				update existing references
+				Reference ref = referenceDao.findById(reference.getId());
+				ref.setTitle(reference.getTitle());
+				ref.setUrl(reference.getUrl());
+				referenceDao.update(ref);
+				newRefId.add(ref.getId());
+			}
+		}
+//		delete older references
+		for (Reference alreadyExist : alredyExistingList) {
+			if (!newRefId.contains(alreadyExist.getId()))
+				referenceDao.delete(alreadyExist);
+		}
+
+		return referenceDao.findBySpeciesFieldId(speciesFieldId);
+
 	}
 
 	private List<Resource> updateCreateSpeciesResource(HttpServletRequest request, String objectType, String objectId,
