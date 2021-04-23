@@ -667,7 +667,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 					Contributor contributor = new Contributor(null, sfdata.getAttributions(), null);
 					contributor = contributorDao.save(contributor);
 
-					sfAttribution = new SpeciesFieldContributor(sfdata.getSpeciesFieldId(), contributor.getId());
+					sfAttribution = new SpeciesFieldContributor(speciesField.getId(), contributor.getId());
 					sfContributorDao.save(sfAttribution);
 				}
 
