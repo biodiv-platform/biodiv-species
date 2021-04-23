@@ -751,7 +751,8 @@ public class SpeciesServiceImpl implements SpeciesServices {
 		for (Reference reference : referencesList) {
 			if (reference.getId() == null) {
 //				add new references
-				if (reference.getSpeciesFieldId() != null && reference.getTitle() != null) {
+				if (reference.getTitle() != null) {
+					reference.setSpeciesFieldId(speciesFieldId);
 					reference.setVersion(0L);
 					referenceDao.save(reference);
 				}
