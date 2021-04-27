@@ -214,16 +214,20 @@ public class SpeciesServiceImpl implements SpeciesServices {
 //				segregating on the basis of multiple data
 				for (SpeciesField speciesField : speciesFields) {
 
-					if (speciesField.getFieldId().equals(81L)) {
-						List<Reference> references = referenceDao.findBySpeciesFieldId(speciesField.getId());
-						if (references != null && !references.isEmpty())
-							referencesList.addAll(references);
+//					if (speciesField.getFieldId().equals(81L)) {
+//						List<Reference> references = referenceDao.findBySpeciesFieldId(speciesField.getId());
+//						if (references != null && !references.isEmpty())
+//							referencesList.addAll(references);
+//
+//					} else {
+//						SpeciesFieldData speciesFieldData = getSpeciesFieldData(speciesField);
+//						if (speciesFieldData != null)
+//							fieldData.add(speciesFieldData);
+//					}
 
-					} else {
-						SpeciesFieldData speciesFieldData = getSpeciesFieldData(speciesField);
-						if (speciesFieldData != null)
-							fieldData.add(speciesFieldData);
-					}
+					SpeciesFieldData speciesFieldData = getSpeciesFieldData(speciesField);
+					if (speciesFieldData != null)
+						fieldData.add(speciesFieldData);
 
 				}
 
@@ -271,6 +275,8 @@ public class SpeciesServiceImpl implements SpeciesServices {
 
 		try {
 
+			System.out.println("speciesID : " + speciesField.getId());
+			System.out.println("field Id : " + speciesField.getFieldId());
 			FieldNew field = fieldNewDao.findById(speciesField.getFieldId());
 			FieldHeader fieldHeader = fieldHeaderDao.findByFieldId(field.getId(), 205L);
 

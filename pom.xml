@@ -85,7 +85,6 @@
 			<version>1.7.22</version>
 		</dependency>
 
-
 		<!-- https://mvnrepository.com/artifact/javax.ws.rs/javax.ws.rs-api -->
 		<dependency>
 			<groupId>javax.ws.rs</groupId>
