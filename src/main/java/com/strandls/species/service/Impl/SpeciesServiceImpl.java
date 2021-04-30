@@ -72,6 +72,7 @@ import com.strandls.species.pojo.SpeciesResourcesPreData;
 import com.strandls.species.pojo.SpeciesTrait;
 import com.strandls.species.service.SpeciesServices;
 import com.strandls.taxonomy.controllers.CommonNameServicesApi;
+import com.strandls.taxonomy.controllers.SpeciesServicesApi;
 import com.strandls.taxonomy.controllers.TaxonomyPermissionServiceApi;
 import com.strandls.taxonomy.controllers.TaxonomyServicesApi;
 import com.strandls.taxonomy.controllers.TaxonomyTreeServicesApi;
@@ -79,6 +80,7 @@ import com.strandls.taxonomy.pojo.BreadCrumb;
 import com.strandls.taxonomy.pojo.CommonName;
 import com.strandls.taxonomy.pojo.CommonNamesData;
 import com.strandls.taxonomy.pojo.PermissionData;
+import com.strandls.taxonomy.pojo.SpeciesGroup;
 import com.strandls.taxonomy.pojo.SynonymData;
 import com.strandls.taxonomy.pojo.TaxonomicNames;
 import com.strandls.taxonomy.pojo.TaxonomyDefinition;
@@ -174,6 +176,9 @@ public class SpeciesServiceImpl implements SpeciesServices {
 	private SpeciesHelper speciesHelper;
 
 	@Inject
+	private SpeciesServicesApi sgroupServices;
+
+	@Inject
 	private UserServiceApi userService;
 
 	@Inject
@@ -198,6 +203,13 @@ public class SpeciesServiceImpl implements SpeciesServices {
 
 			Species species = speciesDao.findById(speciesId);
 			if (!species.getIsDeleted()) {
+
+//				preffered Common name
+				CommonName prefferedCommonName = commonNameService.getPrefferedCommanName(species.getTaxonConceptId());
+
+//				species group
+				SpeciesGroup speciesGroup = sgroupServices.getGroupId(species.getTaxonConceptId());
+
 //				resource data
 				resourceData = resourceServices.getImageResource("SPECIES", species.getId().toString());
 
@@ -252,9 +264,9 @@ public class SpeciesServiceImpl implements SpeciesServices {
 
 				Map<String, Long> temporalData = observationInfo.getMonthAggregation();
 
-				ShowSpeciesPage showSpeciesPage = new ShowSpeciesPage(species, breadCrumbs, taxonomyDefinition,
-						resourceData, fieldData, facts, userGroupList, featured, names, temporalData, documentMetaList,
-						referencesList);
+				ShowSpeciesPage showSpeciesPage = new ShowSpeciesPage(species, prefferedCommonName, speciesGroup,
+						breadCrumbs, taxonomyDefinition, resourceData, fieldData, facts, userGroupList, featured, names,
+						temporalData, documentMetaList, referencesList);
 
 //				ShowSpeciesPage showSpeciesPage = new ShowSpeciesPage(species, breadCrumbs, taxonomyDefinition,
 //						resourceData, fieldData, facts, userGroupList, featured, documentMetaList);
