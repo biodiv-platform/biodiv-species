@@ -42,6 +42,7 @@ import com.strandls.taxonomy.pojo.TaxonomySave;
 import com.strandls.taxonomy.pojo.TaxonomySearch;
 import com.strandls.traits.pojo.FactValuePair;
 import com.strandls.traits.pojo.FactsUpdateData;
+import com.strandls.user.pojo.Follow;
 import com.strandls.userGroup.pojo.Featured;
 import com.strandls.userGroup.pojo.FeaturedCreate;
 import com.strandls.userGroup.pojo.UserGroupIbp;
@@ -626,6 +627,72 @@ public class SpeciesController {
 			if (result)
 				return Response.status(Status.OK).entity(result).build();
 			return Response.status(Status.NOT_IMPLEMENTED).build();
+
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+	}
+
+	@POST
+	@Path(ApiConstants.FOLLOW + "/{speciesId}")
+	@Consumes(MediaType.TEXT_PLAIN)
+	@Produces(MediaType.APPLICATION_JSON)
+
+	@ValidateUser
+
+	@ApiOperation(value = "Follow the species Page", notes = "Return the follow object", response = Follow.class)
+	@ApiResponses(value = {
+			@ApiResponse(code = 400, message = "uable to grant the permission", response = String.class) })
+
+	public Response followSpecies(@Context HttpServletRequest request, @PathParam("speciesId") String speciesId) {
+		try {
+			Long sId = Long.parseLong(speciesId);
+			Follow result = speciesService.followRequest(request, sId);
+			return Response.status(Status.OK).entity(result).build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+	}
+
+	@POST
+	@Path(ApiConstants.UNFOLLOW + "/{speciesId}")
+	@Consumes(MediaType.TEXT_PLAIN)
+	@Produces(MediaType.APPLICATION_JSON)
+
+	@ValidateUser
+
+	@ApiOperation(value = "unfollow the species Page", notes = "unfollow the species Page", response = Follow.class)
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "uable to unfollow", response = String.class) })
+
+	public Response unFollowSpecies(@Context HttpServletRequest request, @PathParam("speciesId") String speciesId) {
+		try {
+			Long sId = Long.parseLong(speciesId);
+			Follow result = speciesService.unFollowRequest(request, sId);
+			return Response.status(Status.OK).entity(result).build();
+
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+
+	}
+
+	@DELETE
+	@Path(ApiConstants.REMOVE + "/{speciesId}")
+	@Consumes(MediaType.TEXT_PLAIN)
+	@Produces(MediaType.APPLICATION_JSON)
+
+	@ValidateUser
+
+	@ApiOperation(value = "Remove the species page", notes = "return boolean", response = Boolean.class)
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "unable to remove the page", response = String.class) })
+
+	public Response removeSpeciesPage(@Context HttpServletRequest request, @PathParam("speciesId") String speciesId) {
+		try {
+			Long sId = Long.parseLong(speciesId);
+			Boolean result = speciesService.removeSpeciesPage(request, sId);
+			if (result)
+				return Response.status(Status.OK).build();
+			return Response.status(Status.NOT_MODIFIED).build();
 
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();

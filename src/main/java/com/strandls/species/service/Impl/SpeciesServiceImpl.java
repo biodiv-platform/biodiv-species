@@ -91,6 +91,7 @@ import com.strandls.traits.pojo.FactValuePair;
 import com.strandls.traits.pojo.FactsUpdateData;
 import com.strandls.traits.pojo.TraitsValuePair;
 import com.strandls.user.controller.UserServiceApi;
+import com.strandls.user.pojo.Follow;
 import com.strandls.user.pojo.UserIbp;
 import com.strandls.userGroup.controller.UserGroupSerivceApi;
 import com.strandls.userGroup.pojo.Featured;
@@ -1213,6 +1214,42 @@ public class SpeciesServiceImpl implements SpeciesServices {
 		}
 		return null;
 
+	}
+
+	@Override
+	public Follow followRequest(HttpServletRequest request, Long speciesId) {
+		try {
+			userService = headers.addUserHeader(userService, request.getHeader(HttpHeaders.AUTHORIZATION));
+			Follow follow = userService.updateFollow("species", speciesId.toString());
+			return follow;
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return null;
+	}
+
+	@Override
+	public Follow unFollowRequest(HttpServletRequest request, Long speciesId) {
+		try {
+			userService = headers.addUserHeader(userService, request.getHeader(HttpHeaders.AUTHORIZATION));
+			Follow unfollow = userService.unfollow("species", speciesId.toString());
+			return unfollow;
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return null;
+	}
+
+	@Override
+	public Boolean removeSpeciesPage(HttpServletRequest request, Long speciesId) {
+		Boolean isEligible = checkPermission(request, speciesId);
+		if (isEligible) {
+			Species species = speciesDao.findById(speciesId);
+			species.setIsDeleted(true);
+			speciesDao.update(species);
+			return true;
+		}
+		return false;
 	}
 
 }

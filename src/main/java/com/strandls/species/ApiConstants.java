@@ -23,6 +23,7 @@ public class ApiConstants {
 	public static final String EDIT = "/edit";
 	public static final String FEATURED = "/featured";
 	public static final String FIELDS = "/fields";
+	public static final String FOLLOW = "/follow";
 	public static final String GRANT = "/grant";
 	public static final String MIGRATEFIELD = "/migrateField";
 	public static final String OBSERVATION = "/observation";
@@ -41,6 +42,7 @@ public class ApiConstants {
 	public static final String TAXONOMY = "/taxonomy";
 	public static final String TRAITS = "/traits";
 	public static final String UNFEATURED = "/unfeatured";
+	public static final String UNFOLLOW = "/unfollow";
 	public static final String UPDATE = "/update";
 	public static final String USERGROUP = "/usergroup";
 

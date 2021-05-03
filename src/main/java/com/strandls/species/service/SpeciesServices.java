@@ -28,6 +28,7 @@ import com.strandls.taxonomy.pojo.TaxonomySave;
 import com.strandls.taxonomy.pojo.TaxonomySearch;
 import com.strandls.traits.pojo.FactValuePair;
 import com.strandls.traits.pojo.FactsUpdateData;
+import com.strandls.user.pojo.Follow;
 import com.strandls.userGroup.pojo.Featured;
 import com.strandls.userGroup.pojo.FeaturedCreate;
 import com.strandls.userGroup.pojo.UserGroupIbp;
@@ -102,5 +103,11 @@ public interface SpeciesServices {
 	public Boolean sendPermissionRequest(HttpServletRequest request, PermissionData permissionData);
 
 	public Boolean sendPermissionGrant(HttpServletRequest request, String encryptedKey);
+
+	public Follow followRequest(HttpServletRequest request, Long speciesId);
+
+	public Follow unFollowRequest(HttpServletRequest request, Long speciesId);
+
+	public Boolean removeSpeciesPage(HttpServletRequest request, Long speciesId);
 
 }
