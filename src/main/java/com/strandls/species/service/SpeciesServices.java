@@ -16,6 +16,7 @@ import com.strandls.species.pojo.ShowSpeciesPage;
 import com.strandls.species.pojo.SpeciesCreateData;
 import com.strandls.species.pojo.SpeciesFieldData;
 import com.strandls.species.pojo.SpeciesFieldUpdateData;
+import com.strandls.species.pojo.SpeciesPermission;
 import com.strandls.species.pojo.SpeciesPullData;
 import com.strandls.species.pojo.SpeciesResourcesPreData;
 import com.strandls.species.pojo.SpeciesTrait;
@@ -98,7 +99,7 @@ public interface SpeciesServices {
 
 	public List<TaxonomyDefinition> removeSynonyms(HttpServletRequest request, String speciesId, String synonymId);
 
-	public Boolean checkPermission(HttpServletRequest request, Long speciesId);
+	public SpeciesPermission checkPermission(HttpServletRequest request, Long speciesId);
 
 	public Boolean sendPermissionRequest(HttpServletRequest request, PermissionData permissionData);
 

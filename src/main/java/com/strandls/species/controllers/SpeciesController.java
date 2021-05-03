@@ -30,6 +30,7 @@ import com.strandls.species.pojo.ShowSpeciesPage;
 import com.strandls.species.pojo.SpeciesCreateData;
 import com.strandls.species.pojo.SpeciesFieldData;
 import com.strandls.species.pojo.SpeciesFieldUpdateData;
+import com.strandls.species.pojo.SpeciesPermission;
 import com.strandls.species.pojo.SpeciesResourcesPreData;
 import com.strandls.species.pojo.SpeciesTrait;
 import com.strandls.species.service.SpeciesServices;
@@ -569,7 +570,7 @@ public class SpeciesController {
 	@Produces(MediaType.APPLICATION_JSON)
 
 	@ValidateUser
-	@ApiOperation(value = "Check the permission for species Page", notes = "Returns the Boolean value", response = Boolean.class)
+	@ApiOperation(value = "Check the permission for species Page", notes = "Returns the Boolean value", response = SpeciesPermission.class)
 	@ApiResponses(value = {
 			@ApiResponse(code = 400, message = "unable to fetch the permission", response = String.class) })
 
@@ -577,7 +578,7 @@ public class SpeciesController {
 			@PathParam("speciesId") String speciesId) {
 		try {
 			Long sId = Long.parseLong(speciesId);
-			Boolean result = speciesService.checkPermission(request, sId);
+			SpeciesPermission result = speciesService.checkPermission(request, sId);
 			return Response.status(Status.OK).entity(result).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();

@@ -66,6 +66,7 @@ import com.strandls.species.pojo.SpeciesFieldData;
 import com.strandls.species.pojo.SpeciesFieldLicense;
 import com.strandls.species.pojo.SpeciesFieldUpdateData;
 import com.strandls.species.pojo.SpeciesFieldUser;
+import com.strandls.species.pojo.SpeciesPermission;
 import com.strandls.species.pojo.SpeciesPullData;
 import com.strandls.species.pojo.SpeciesResourceData;
 import com.strandls.species.pojo.SpeciesResourcesPreData;
@@ -634,7 +635,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 	public List<FactValuePair> updateTraits(HttpServletRequest request, String speciesId, String traitId,
 			FactsUpdateData factsUpdateData) {
 		try {
-			Boolean isContributor = checkPermission(request, Long.parseLong(speciesId));
+			Boolean isContributor = checkIsContributor(request, Long.parseLong(speciesId));
 			if (isContributor) {
 				traitService = headers.addTraitsHeader(traitService, request.getHeader(HttpHeaders.AUTHORIZATION));
 				List<FactValuePair> result = traitService.updateTraits("species.Species", speciesId, traitId,
@@ -661,7 +662,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 				return null;
 			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 			Long userId = Long.parseLong(profile.getId());
-			Boolean isContributor = checkPermission(request, speciesId);
+			Boolean isContributor = checkIsContributor(request, speciesId);
 
 //			check if edit is done by the same contributor
 			List<Long> sfUserList = new ArrayList<Long>();
@@ -856,7 +857,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 		Long userId = Long.parseLong(profile.getId());
 		List<Long> sfUserList = sfUserDao.findBySpeciesFieldId(speciesfieldId);
 		SpeciesField speciesfield = speciesFieldDao.findById(speciesfieldId);
-		Boolean isContributor = checkPermission(request, speciesfield.getSpeciesId());
+		Boolean isContributor = checkIsContributor(request, speciesfield.getSpeciesId());
 
 		if (userRoles.contains("ROLE_ADMIN") || (isContributor && sfUserList.contains(userId))) {
 			speciesfield.setIsDeleted(true);
@@ -881,7 +882,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 	public List<CommonName> updateAddCommonName(HttpServletRequest request, Long speciesId,
 			CommonNamesData commonNamesData) {
 		try {
-			Boolean isContributor = checkPermission(request, speciesId);
+			Boolean isContributor = checkIsContributor(request, speciesId);
 			if (isContributor) {
 				commonNameService = headers.addCommonNameHeader(commonNameService,
 						request.getHeader(HttpHeaders.AUTHORIZATION));
@@ -900,7 +901,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 	@Override
 	public List<CommonName> removeCommonName(HttpServletRequest request, Long speciesId, String commonNameId) {
 		try {
-			Boolean isContributor = checkPermission(request, speciesId);
+			Boolean isContributor = checkIsContributor(request, speciesId);
 			if (isContributor) {
 				commonNameService = headers.addCommonNameHeader(commonNameService,
 						request.getHeader(HttpHeaders.AUTHORIZATION));
@@ -942,7 +943,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 	public List<ResourceData> pullResource(HttpServletRequest request, Long speciesId,
 			List<SpeciesPullData> speciesPullData) {
 		try {
-			Boolean isContributor = checkPermission(request, speciesId);
+			Boolean isContributor = checkIsContributor(request, speciesId);
 			if (isContributor) {
 
 				Species species = speciesDao.findById(speciesId);
@@ -982,7 +983,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 	@Override
 	public List<ResourceData> getSpeciesResources(HttpServletRequest request, Long speciesId) {
 		try {
-			Boolean isContributor = checkPermission(request, speciesId);
+			Boolean isContributor = checkIsContributor(request, speciesId);
 			if (isContributor) {
 				List<ResourceData> resourceData = resourceServices.getImageResource("SPECIES", speciesId.toString());
 				return resourceData;
@@ -1000,7 +1001,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 			List<SpeciesResourcesPreData> preDataList) {
 
 		try {
-			Boolean isContributor = checkPermission(request, speciesId);
+			Boolean isContributor = checkIsContributor(request, speciesId);
 			if (isContributor) {
 				List<SpeciesPullData> speciesPullDatas = new ArrayList<SpeciesPullData>();
 				List<SpeciesResourceData> speciesResourceData = new ArrayList<SpeciesResourceData>();
@@ -1094,7 +1095,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 	@Override
 	public Long createSpeciesPage(HttpServletRequest request, SpeciesCreateData speciesCreateData) {
 
-		Boolean isContributor = checkPermission(request, speciesCreateData.getTaxonConceptId());
+		Boolean isContributor = checkIsContributor(request, speciesCreateData.getTaxonConceptId());
 		if (isContributor) {
 			Species species = speciesDao.findByTaxonId(speciesCreateData.getTaxonConceptId());
 			if (species == null) {
@@ -1130,7 +1131,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 			SynonymData synonymData) {
 		try {
 
-			Boolean isContributor = checkPermission(request, Long.parseLong(speciesId));
+			Boolean isContributor = checkIsContributor(request, Long.parseLong(speciesId));
 			if (isContributor) {
 				Species species = speciesDao.findById(Long.parseLong(speciesId));
 				taxonomyService = headers.addTaxonomyHeader(taxonomyService,
@@ -1150,7 +1151,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 	@Override
 	public List<TaxonomyDefinition> removeSynonyms(HttpServletRequest request, String speciesId, String synonymId) {
 		try {
-			Boolean isContributor = checkPermission(request, Long.parseLong(speciesId));
+			Boolean isContributor = checkIsContributor(request, Long.parseLong(speciesId));
 			if (isContributor) {
 				Species species = speciesDao.findById(Long.parseLong(speciesId));
 				taxonomyService = headers.addTaxonomyHeader(taxonomyService,
@@ -1168,24 +1169,42 @@ public class SpeciesServiceImpl implements SpeciesServices {
 	}
 
 	@Override
-	public Boolean checkPermission(HttpServletRequest request, Long speciesId) {
+	public SpeciesPermission checkPermission(HttpServletRequest request, Long speciesId) {
 		try {
+			Boolean isContributor = checkIsContributor(request, speciesId);
+			userService = headers.addUserHeader(userService, request.getHeader(HttpHeaders.AUTHORIZATION));
+			Follow follow = userService.getFollowByObject("species", speciesId.toString());
+			Boolean isFollower = false;
+			if (follow != null)
+				isFollower = true;
+			SpeciesPermission permisison = new SpeciesPermission(isContributor, isFollower);
+			return permisison;
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return null;
 
+	}
+
+	private Boolean checkIsContributor(HttpServletRequest request, Long speciesId) {
+
+		try {
 			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 			JSONArray userRole = (JSONArray) profile.getAttribute("roles");
-			if (userRole.contains("ROLE_ADMIN"))
-				return true;
-
-			Species species = speciesDao.findById(speciesId);
-			taxPermissionService = headers.addTaxonomyPermissionHeader(taxPermissionService,
-					request.getHeader(HttpHeaders.AUTHORIZATION));
-			Boolean result = taxPermissionService.getPermissionSpeciesTree(species.getTaxonConceptId().toString());
-			return result;
+			Boolean isContributor = false;
+			if (userRole.contains("ROLE_ADMIN")) {
+				isContributor = true;
+			} else {
+				Species species = speciesDao.findById(speciesId);
+				taxPermissionService = headers.addTaxonomyPermissionHeader(taxPermissionService,
+						request.getHeader(HttpHeaders.AUTHORIZATION));
+				isContributor = taxPermissionService.getPermissionSpeciesTree(species.getTaxonConceptId().toString());
+			}
+			return isContributor;
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 		}
 		return false;
-
 	}
 
 	@Override
@@ -1242,7 +1261,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 
 	@Override
 	public Boolean removeSpeciesPage(HttpServletRequest request, Long speciesId) {
-		Boolean isEligible = checkPermission(request, speciesId);
+		Boolean isEligible = checkIsContributor(request, speciesId);
 		if (isEligible) {
 			Species species = speciesDao.findById(speciesId);
 			species.setIsDeleted(true);
