@@ -75,7 +75,7 @@ public class SpeciesController {
 	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces(MediaType.APPLICATION_JSON)
 
-	@ApiOperation(value = "provide the show page of speices", notes = "Returns the species Show page")
+	@ApiOperation(value = "provide the show page of speices", notes = "Returns the species Show page", response = ShowSpeciesPage.class)
 	@ApiResponses(value = {
 			@ApiResponse(code = 400, message = "unable to fetch the show page", response = String.class) })
 
