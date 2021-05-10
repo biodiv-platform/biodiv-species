@@ -1010,7 +1010,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 						speciesPullDatas.add(new SpeciesPullData(preData.getObservationId(), preData.getResourcesId()));
 					} else {
 						speciesResourceData.add(new SpeciesResourceData(preData.getPath(), preData.getUrl(),
-								preData.getType(), preData.getCaption(), preData.getRating(), preData.getLicenceId()));
+								preData.getType(), preData.getCaption(), preData.getRating(), preData.getLicenseId()));
 					}
 				}
 				pullResource(request, speciesId, speciesPullDatas);
