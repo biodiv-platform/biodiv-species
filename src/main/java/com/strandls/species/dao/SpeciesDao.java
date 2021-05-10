@@ -93,7 +93,7 @@ public class SpeciesDao extends AbstractDAO<Species, Long> {
 		Long result = null;
 		try {
 			Query<Long> query = session.createNativeQuery(qry);
-			result = query.getSingleResult();
+			result = Long.parseLong(query.getSingleResult().toString());
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 		} finally {
