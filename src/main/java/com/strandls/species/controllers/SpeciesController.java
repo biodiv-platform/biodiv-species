@@ -713,7 +713,7 @@ public class SpeciesController {
 	@ApiOperation(value = "search the species for list page", notes = "return speceis list data", response = SpeciesListPageData.class)
 	@ApiResponses(value = { @ApiResponse(code = 400, message = "unable to search", response = String.class) })
 
-	public Response listSearch(@DefaultValue(value = "10") @QueryParam("offset") String offset,
+	public Response listSearch(@DefaultValue(value = "0") @QueryParam("offset") String offset,
 			@DefaultValue(value = "lastUpdated") @QueryParam("orderBy") String orderBy) {
 		try {
 			SpeciesListPageData result = listService.searchList(orderBy, offset);

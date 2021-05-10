@@ -47,16 +47,17 @@ public class SpeciesListServiceImpl implements SpeciesListService {
 		List<Species> speciesList = speciesDao.fetchInBatches(orderBy, offset);
 		Long totalCount = speciesDao.fetchCountOfSpeices();
 		List<SpeciesListTiles> tileData = new ArrayList<SpeciesListTiles>();
-
+		Resource resource = null;
 		try {
 			for (Species species : speciesList) {
 
-				Resource resource = resourcesService.getResourceDataById(species.getReprImageId().toString());
+				if (species.getReprImageId() != null)
+					resource = resourcesService.getResourceDataById(species.getReprImageId().toString());
 
 				TaxonomyDefinition taxonomyDefinition = taxonomyService
 						.getTaxonomyConceptName(species.getTaxonConceptId().toString());
 				tileData.add(new SpeciesListTiles(species.getId(), taxonomyDefinition.getItalicisedForm(),
-						resource.getFileName(), taxonomyDefinition.getStatus()));
+						resource != null ? resource.getFileName() : null, taxonomyDefinition.getStatus()));
 			}
 
 			SpeciesListPageData result = new SpeciesListPageData(totalCount, tileData);
