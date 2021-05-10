@@ -30,9 +30,11 @@ import com.strandls.species.pojo.ShowSpeciesPage;
 import com.strandls.species.pojo.SpeciesCreateData;
 import com.strandls.species.pojo.SpeciesFieldData;
 import com.strandls.species.pojo.SpeciesFieldUpdateData;
+import com.strandls.species.pojo.SpeciesListPageData;
 import com.strandls.species.pojo.SpeciesPermission;
 import com.strandls.species.pojo.SpeciesResourcesPreData;
 import com.strandls.species.pojo.SpeciesTrait;
+import com.strandls.species.service.SpeciesListService;
 import com.strandls.species.service.SpeciesServices;
 import com.strandls.taxonomy.pojo.CommonName;
 import com.strandls.taxonomy.pojo.CommonNamesData;
@@ -61,6 +63,9 @@ public class SpeciesController {
 
 	@Inject
 	private SpeciesServices speciesService;
+
+	@Inject
+	private SpeciesListService listService;
 
 	@GET
 	@Path(ApiConstants.PING)
@@ -695,6 +700,24 @@ public class SpeciesController {
 				return Response.status(Status.OK).build();
 			return Response.status(Status.NOT_MODIFIED).build();
 
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+	}
+
+	@GET
+	@Path(ApiConstants.LIST)
+	@Consumes(MediaType.TEXT_PLAIN)
+	@Produces(MediaType.APPLICATION_JSON)
+
+	@ApiOperation(value = "search the species for list page", notes = "return speceis list data", response = SpeciesListPageData.class)
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "unable to search", response = String.class) })
+
+	public Response listSearch(@DefaultValue(value = "10") @QueryParam("offset") String offset,
+			@DefaultValue(value = "lastUpdated") @QueryParam("orderBy") String orderBy) {
+		try {
+			SpeciesListPageData result = listService.searchList(orderBy, offset);
+			return Response.status(Status.OK).entity(result).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}

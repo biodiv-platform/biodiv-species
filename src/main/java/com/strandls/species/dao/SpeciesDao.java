@@ -3,6 +3,8 @@
  */
 package com.strandls.species.dao;
 
+import java.util.List;
+
 import javax.inject.Inject;
 
 import org.hibernate.Session;
@@ -60,6 +62,45 @@ public class SpeciesDao extends AbstractDAO<Species, Long> {
 			session.close();
 		}
 		return result;
+	}
+
+	@SuppressWarnings("unchecked")
+	public List<Species> fetchInBatches(String orderBy, String offset) {
+		String qry = "from Species";
+		if (orderBy.equalsIgnoreCase("lastUpdated"))
+			qry = qry + " order by lastUpdated DESC";
+		else
+			qry = qry + " order by dateCreated ASC";
+		List<Species> result = null;
+		Session session = sessionFactory.openSession();
+		try {
+			Query<Species> query = session.createQuery(qry);
+			query.setFirstResult(Integer.parseInt(offset));
+			query.setMaxResults(10);
+			result = query.getResultList();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		} finally {
+			session.close();
+		}
+		return result;
+	}
+
+	@SuppressWarnings("unchecked")
+	public Long fetchCountOfSpeices() {
+		String qry = "select count(id) from Species";
+		Session session = sessionFactory.openSession();
+		Long result = null;
+		try {
+			Query<Long> query = session.createNativeQuery(qry);
+			result = query.getSingleResult();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		} finally {
+			session.close();
+		}
+		return result;
+
 	}
 
 }

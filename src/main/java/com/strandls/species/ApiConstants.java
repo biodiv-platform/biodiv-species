@@ -25,6 +25,7 @@ public class ApiConstants {
 	public static final String FIELDS = "/fields";
 	public static final String FOLLOW = "/follow";
 	public static final String GRANT = "/grant";
+	public static final String LIST = "/list";
 	public static final String MIGRATEFIELD = "/migrateField";
 	public static final String OBSERVATION = "/observation";
 	public static final String PERMISSION = "/permission";
