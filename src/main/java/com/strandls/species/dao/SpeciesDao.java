@@ -67,7 +67,7 @@ public class SpeciesDao extends AbstractDAO<Species, Long> {
 
 	@SuppressWarnings("unchecked")
 	public List<Species> fetchInBatches(String orderBy, String offset) {
-		String qry = "from Species";
+		String qry = "from Species where isDeleted = false ";
 		if (orderBy.equalsIgnoreCase("lastUpdated"))
 			qry = qry + " order by lastUpdated DESC";
 		else
