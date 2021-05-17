@@ -57,6 +57,7 @@ public class SpeciesListServiceImpl implements SpeciesListService {
 				TaxonomyDefinition taxonomyDefinition = taxonomyService
 						.getTaxonomyConceptName(species.getTaxonConceptId().toString());
 				tileData.add(new SpeciesListTiles(species.getId(), taxonomyDefinition.getItalicisedForm(),
+						resource != null ? resource.getContext() : null,
 						resource != null ? resource.getFileName() : null, taxonomyDefinition.getStatus()));
 			}
 
