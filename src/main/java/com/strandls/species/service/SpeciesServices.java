@@ -11,6 +11,7 @@ import com.strandls.activity.pojo.Activity;
 import com.strandls.activity.pojo.CommentLoggingData;
 import com.strandls.resource.pojo.ResourceData;
 import com.strandls.resource.pojo.SpeciesPull;
+import com.strandls.species.pojo.EncryptedKey;
 import com.strandls.species.pojo.FieldRender;
 import com.strandls.species.pojo.ShowSpeciesPage;
 import com.strandls.species.pojo.SpeciesCreateData;
@@ -103,7 +104,7 @@ public interface SpeciesServices {
 
 	public Boolean sendPermissionRequest(HttpServletRequest request, PermissionData permissionData);
 
-	public Boolean sendPermissionGrant(HttpServletRequest request, String encryptedKey);
+	public Boolean sendPermissionGrant(HttpServletRequest request, EncryptedKey encryptedKey);
 
 	public Follow followRequest(HttpServletRequest request, Long speciesId);
 

@@ -50,6 +50,7 @@ import com.strandls.species.dao.SpeciesFieldDao;
 import com.strandls.species.dao.SpeciesFieldLicenseDao;
 import com.strandls.species.dao.SpeciesFieldUserDao;
 import com.strandls.species.pojo.Contributor;
+import com.strandls.species.pojo.EncryptedKey;
 import com.strandls.species.pojo.Field;
 import com.strandls.species.pojo.FieldDisplay;
 import com.strandls.species.pojo.FieldHeader;
@@ -1221,11 +1222,11 @@ public class SpeciesServiceImpl implements SpeciesServices {
 	}
 
 	@Override
-	public Boolean sendPermissionGrant(HttpServletRequest request, String encryptedKey) {
+	public Boolean sendPermissionGrant(HttpServletRequest request, EncryptedKey encryptedKey) {
 		try {
 			taxPermissionService = headers.addTaxonomyPermissionHeader(taxPermissionService,
 					request.getHeader(HttpHeaders.AUTHORIZATION));
-			Boolean result = taxPermissionService.grantPermissionrequest(encryptedKey);
+			Boolean result = taxPermissionService.grantPermissionrequest(encryptedKey.getToken());
 			return result;
 
 		} catch (Exception e) {

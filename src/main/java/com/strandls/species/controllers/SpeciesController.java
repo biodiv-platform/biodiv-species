@@ -25,6 +25,7 @@ import com.strandls.authentication_utility.filter.ValidateUser;
 import com.strandls.resource.pojo.ResourceData;
 import com.strandls.resource.pojo.SpeciesPull;
 import com.strandls.species.ApiConstants;
+import com.strandls.species.pojo.EncryptedKey;
 import com.strandls.species.pojo.FieldRender;
 import com.strandls.species.pojo.ShowSpeciesPage;
 import com.strandls.species.pojo.SpeciesCreateData;
@@ -627,7 +628,7 @@ public class SpeciesController {
 			@ApiResponse(code = 400, message = "uable to grant the permission", response = String.class) })
 
 	public Response grantPermissionrequest(@Context HttpServletRequest request,
-			@ApiParam(name = "encryptedKey") String encryptedKey) {
+			@ApiParam(name = "encryptedKey") EncryptedKey encryptedKey) {
 		try {
 			Boolean result = speciesService.sendPermissionGrant(request, encryptedKey);
 			if (result)
