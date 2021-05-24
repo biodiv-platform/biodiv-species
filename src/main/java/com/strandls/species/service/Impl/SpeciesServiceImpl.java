@@ -50,7 +50,6 @@ import com.strandls.species.dao.SpeciesFieldDao;
 import com.strandls.species.dao.SpeciesFieldLicenseDao;
 import com.strandls.species.dao.SpeciesFieldUserDao;
 import com.strandls.species.pojo.Contributor;
-import com.strandls.species.pojo.EncryptedKey;
 import com.strandls.species.pojo.Field;
 import com.strandls.species.pojo.FieldDisplay;
 import com.strandls.species.pojo.FieldHeader;
@@ -81,6 +80,7 @@ import com.strandls.taxonomy.controllers.TaxonomyTreeServicesApi;
 import com.strandls.taxonomy.pojo.BreadCrumb;
 import com.strandls.taxonomy.pojo.CommonName;
 import com.strandls.taxonomy.pojo.CommonNamesData;
+import com.strandls.taxonomy.pojo.EncryptedKey;
 import com.strandls.taxonomy.pojo.PermissionData;
 import com.strandls.taxonomy.pojo.SpeciesGroup;
 import com.strandls.taxonomy.pojo.SynonymData;
@@ -1226,7 +1226,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 		try {
 			taxPermissionService = headers.addTaxonomyPermissionHeader(taxPermissionService,
 					request.getHeader(HttpHeaders.AUTHORIZATION));
-			Boolean result = taxPermissionService.grantPermissionrequest(encryptedKey.getToken());
+			Boolean result = taxPermissionService.grantPermissionrequest(encryptedKey);
 			return result;
 
 		} catch (Exception e) {
