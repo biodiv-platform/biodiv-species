@@ -4,6 +4,7 @@
 package com.strandls.species.service.Impl;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -12,6 +13,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
@@ -72,6 +74,7 @@ import com.strandls.species.pojo.SpeciesResourceData;
 import com.strandls.species.pojo.SpeciesResourcesPreData;
 import com.strandls.species.pojo.SpeciesTrait;
 import com.strandls.species.service.SpeciesServices;
+import com.strandls.species.util.PropertyFileUtil;
 import com.strandls.taxonomy.controllers.CommonNameServicesApi;
 import com.strandls.taxonomy.controllers.SpeciesServicesApi;
 import com.strandls.taxonomy.controllers.TaxonomyPermissionServiceApi;
@@ -199,6 +202,11 @@ public class SpeciesServiceImpl implements SpeciesServices {
 	@Inject
 	private TraitsServiceApi traitService;
 
+	private String blackList = PropertyFileUtil.fetchProperty("config.properties", "blackListSFId");
+
+	private List<Long> blackListSFId = Arrays.asList(blackList.split(",")).stream().map(s -> Long.parseLong(s.trim()))
+			.collect(Collectors.toList());
+
 	@Override
 	public ShowSpeciesPage showSpeciesPage(Long speciesId) {
 		try {
@@ -229,20 +237,12 @@ public class SpeciesServiceImpl implements SpeciesServices {
 //				segregating on the basis of multiple data
 				for (SpeciesField speciesField : speciesFields) {
 
-//					if (speciesField.getFieldId().equals(81L)) {
-//						List<Reference> references = referenceDao.findBySpeciesFieldId(speciesField.getId());
-//						if (references != null && !references.isEmpty())
-//							referencesList.addAll(references);
-//
-//					} else {
-//						SpeciesFieldData speciesFieldData = getSpeciesFieldData(speciesField);
-//						if (speciesFieldData != null)
-//							fieldData.add(speciesFieldData);
-//					}
+					if (!blackListSFId.contains(speciesField.getFieldId())) {
+						SpeciesFieldData speciesFieldData = getSpeciesFieldData(speciesField);
+						if (speciesFieldData != null)
+							fieldData.add(speciesFieldData);
 
-					SpeciesFieldData speciesFieldData = getSpeciesFieldData(speciesField);
-					if (speciesFieldData != null)
-						fieldData.add(speciesFieldData);
+					}
 
 				}
 
@@ -270,9 +270,6 @@ public class SpeciesServiceImpl implements SpeciesServices {
 				ShowSpeciesPage showSpeciesPage = new ShowSpeciesPage(species, prefferedCommonName, speciesGroup,
 						breadCrumbs, taxonomyDefinition, resourceData, fieldData, facts, userGroupList, featured, names,
 						temporalData, documentMetaList, referencesList);
-
-//				ShowSpeciesPage showSpeciesPage = new ShowSpeciesPage(species, breadCrumbs, taxonomyDefinition,
-//						resourceData, fieldData, facts, userGroupList, featured, documentMetaList);
 
 				return showSpeciesPage;
 
@@ -492,17 +489,36 @@ public class SpeciesServiceImpl implements SpeciesServices {
 
 		for (FieldNew concpetField : concpetFields) {
 
-			List<FieldDisplay> categorySubCat = new ArrayList<FieldDisplay>();
+//			check if the concept is itslef blacklisted
+			if (!blackListSFId.contains(concpetField.getId())) {
 
-//			extract all the category fields in display order
-			List<FieldNew> categoryFields = fieldNewDao.findByParentId(concpetField.getId());
-			for (FieldNew catField : categoryFields) {
-//				extract all the subCategory fields in display order
-				List<FieldNew> subCatField = fieldNewDao.findByParentId(catField.getId());
-				categorySubCat.add(new FieldDisplay(catField, subCatField));
+				List<FieldDisplay> categorySubCat = new ArrayList<FieldDisplay>();
+//				extract all the category fields in display order
+				List<FieldNew> categoryFields = fieldNewDao.findByParentId(concpetField.getId());
+
+				for (FieldNew catField : categoryFields) {
+
+//					check if category is blacklisted
+					if (!blackListSFId.contains(catField.getId())) {
+
+//						extract all the subCategory fields in display order
+						List<FieldNew> subCatField = fieldNewDao.findByParentId(catField.getId());
+						List<FieldNew> qualifiedsubCatField = new ArrayList<FieldNew>();
+						if (subCatField != null) {
+							for (FieldNew subCat : subCatField) {
+//								checking for blacklisted sub category
+								if (!blackListSFId.contains(subCat.getId()))
+									qualifiedsubCatField.add(subCat);
+							}
+						}
+						categorySubCat.add(new FieldDisplay(catField, qualifiedsubCatField));
+					}
+
+				}
+				renderList.add(new FieldRender(concpetField, categorySubCat));
+
 			}
 
-			renderList.add(new FieldRender(concpetField, categorySubCat));
 		}
 
 		return renderList;
