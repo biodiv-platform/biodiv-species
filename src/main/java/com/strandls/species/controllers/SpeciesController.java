@@ -150,20 +150,6 @@ public class SpeciesController {
 		}
 	}
 
-	@GET
-	@Path(ApiConstants.MIGRATEFIELD)
-	@Produces(MediaType.TEXT_PLAIN)
-
-	public Response migratefield() {
-		try {
-			speciesService.migrateField();
-			return Response.status(Status.OK).entity("done").build();
-
-		} catch (Exception e) {
-			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
-		}
-	}
-
 	@PUT
 	@Path(ApiConstants.UPDATE + ApiConstants.USERGROUP + "/{speciesId}")
 	@Consumes(MediaType.APPLICATION_JSON)

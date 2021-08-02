@@ -51,8 +51,6 @@ public interface SpeciesServices {
 
 	public List<SpeciesTrait> getAllSpeciesTraits();
 
-	public void migrateField();
-
 //	edits in speceis show page
 
 	public List<UserGroupIbp> updateUserGroup(HttpServletRequest request, String speciesId,
