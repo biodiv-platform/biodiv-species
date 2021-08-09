@@ -879,8 +879,11 @@ public class SpeciesServiceImpl implements SpeciesServices {
 								preData.getType(), preData.getCaption(), preData.getRating(), preData.getLicenseId()));
 					}
 				}
-				pullResource(request, speciesId, speciesPullDatas);
-				updateCreateSpeciesResource(request, "SPECIES", speciesId.toString(), true, speciesResourceData);
+
+				if (!speciesPullDatas.isEmpty())
+					pullResource(request, speciesId, speciesPullDatas);
+				if (!speciesResourceData.isEmpty())
+					updateCreateSpeciesResource(request, "SPECIES", speciesId.toString(), true, speciesResourceData);
 				List<ResourceData> resource = getSpeciesResources(request, speciesId);
 				updateReprImage(speciesId, resource);
 				updateLastRevised(speciesId);
