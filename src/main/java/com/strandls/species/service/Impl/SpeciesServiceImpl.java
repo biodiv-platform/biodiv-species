@@ -534,7 +534,8 @@ public class SpeciesServiceImpl implements SpeciesServices {
 			List<Long> sfUserList = new ArrayList<Long>();
 			if (sfdata.getIsEdit()) {
 				sfUserList = sfUserDao.findBySpeciesFieldId(sfdata.getSpeciesFieldId());
-				if (!sfUserList.contains(userId))
+				JSONArray userRole = (JSONArray) profile.getAttribute("roles");
+				if (!(sfUserList.contains(userId) || userRole.contains("ROLE_ADMIN")))
 					return null;
 			}
 
