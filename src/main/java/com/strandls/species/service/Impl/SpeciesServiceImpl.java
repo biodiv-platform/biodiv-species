@@ -772,7 +772,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 			if (isContributor) {
 				commonNameService = headers.addCommonNameHeader(commonNameService,
 						request.getHeader(HttpHeaders.AUTHORIZATION));
-				List<CommonName> result = commonNameService.removeCommonName(speciesId.toString(), commonNameId);
+				List<CommonName> result = commonNameService.removeCommonName(commonNameId, speciesId.toString());
 				updateLastRevised(speciesId);
 				return result;
 			}
@@ -1006,8 +1006,8 @@ public class SpeciesServiceImpl implements SpeciesServices {
 				Species species = speciesDao.findById(Long.parseLong(speciesId));
 				taxonomyService = headers.addTaxonomyHeader(taxonomyService,
 						request.getHeader(HttpHeaders.AUTHORIZATION));
-				List<TaxonomyDefinition> result = taxonomyService.updateAddSynonym(speciesId,
-						species.getTaxonConceptId().toString(), synonymData);
+				List<TaxonomyDefinition> result = taxonomyService
+						.updateAddSynonym(species.getTaxonConceptId().toString(), speciesId, synonymData);
 				updateLastRevised(Long.parseLong(speciesId));
 				return result;
 			}
@@ -1026,8 +1026,8 @@ public class SpeciesServiceImpl implements SpeciesServices {
 				Species species = speciesDao.findById(Long.parseLong(speciesId));
 				taxonomyService = headers.addTaxonomyHeader(taxonomyService,
 						request.getHeader(HttpHeaders.AUTHORIZATION));
-				List<TaxonomyDefinition> result = taxonomyService.removeSynonyms(speciesId,
-						species.getTaxonConceptId().toString(), synonymId);
+				List<TaxonomyDefinition> result = taxonomyService.removeSynonyms(species.getTaxonConceptId().toString(),
+						synonymId, speciesId);
 				updateLastRevised(Long.parseLong(speciesId));
 				return result;
 			}
