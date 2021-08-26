@@ -90,4 +90,59 @@ public class SpeciesResourceData {
 		this.licenseId = licenseId;
 	}
 
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((caption == null) ? 0 : caption.hashCode());
+		result = prime * result + ((licenseId == null) ? 0 : licenseId.hashCode());
+		result = prime * result + ((path == null) ? 0 : path.hashCode());
+		result = prime * result + ((rating == null) ? 0 : rating.hashCode());
+		result = prime * result + ((type == null) ? 0 : type.hashCode());
+		result = prime * result + ((url == null) ? 0 : url.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		SpeciesResourceData other = (SpeciesResourceData) obj;
+		if (caption == null) {
+			if (other.caption != null)
+				return false;
+		} else if (!caption.equals(other.caption))
+			return false;
+		if (licenseId == null) {
+			if (other.licenseId != null)
+				return false;
+		} else if (!licenseId.equals(other.licenseId))
+			return false;
+		if (path == null) {
+			if (other.path != null)
+				return false;
+		} else if (!path.equals(other.path))
+			return false;
+		if (rating == null) {
+			if (other.rating != null)
+				return false;
+		} else if (!rating.equals(other.rating))
+			return false;
+		if (type == null) {
+			if (other.type != null)
+				return false;
+		} else if (!type.equals(other.type))
+			return false;
+		if (url == null) {
+			if (other.url != null)
+				return false;
+		} else if (!url.equals(other.url))
+			return false;
+		return true;
+	}
+
 }

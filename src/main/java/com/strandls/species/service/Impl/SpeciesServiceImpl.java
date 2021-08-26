@@ -881,10 +881,27 @@ public class SpeciesServiceImpl implements SpeciesServices {
 					}
 				}
 
+				List<ResourceData> newResourceList = null;
 				if (!speciesPullDatas.isEmpty())
-					pullResource(request, speciesId, speciesPullDatas);
-				if (!speciesResourceData.isEmpty())
+					newResourceList = pullResource(request, speciesId, speciesPullDatas);
+				if (!speciesResourceData.isEmpty()) {
+//					if pull resource worked, we got extra resources attached which we dont want to remove so add them as well
+					if (newResourceList != null) {
+						for (ResourceData data : newResourceList) {
+							Resource resource = data.getResource();
+							
+							SpeciesResourceData sd = new SpeciesResourceData(resource.getFileName(), resource.getUrl(),
+									resource.getType(), resource.getDescription(), resource.getRating(),
+									resource.getLicenseId());
+							
+							if (!speciesResourceData.contains(sd))
+								speciesResourceData.add(sd);
+						}
+					}
+
 					updateCreateSpeciesResource(request, "SPECIES", speciesId.toString(), true, speciesResourceData);
+				}
+
 				List<ResourceData> resource = getSpeciesResources(request, speciesId);
 				updateReprImage(speciesId, resource);
 				updateLastRevised(speciesId);
