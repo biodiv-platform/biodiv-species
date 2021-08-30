@@ -568,8 +568,14 @@ public class SpeciesServiceImpl implements SpeciesServices {
 				}
 
 //				species field resource
-				updateCreateSpeciesResource(request, "SPECIES_FIELD", speciesField.getId().toString(),
-						sfdata.getIsEdit(), sfdata.getSpeciesFieldResource());
+				if (sfdata.getSpeciesFieldResource() == null || sfdata.getSpeciesFieldResource().isEmpty()) {
+					resourceServices = headers.addResourceHeaders(resourceServices,
+							request.getHeader(HttpHeaders.AUTHORIZATION));
+					resourceServices.removeSFMapping(speciesField.getId().toString());
+				} else {
+					updateCreateSpeciesResource(request, "SPECIES_FIELD", speciesField.getId().toString(),
+							sfdata.getIsEdit(), sfdata.getSpeciesFieldResource());
+				}
 
 //				sf user contributor
 				if (sfdata.getIsEdit()) {
@@ -683,6 +689,8 @@ public class SpeciesServiceImpl implements SpeciesServices {
 					}
 					return resources;
 				}
+			} else {
+
 			}
 
 		} catch (Exception e) {
@@ -889,11 +897,11 @@ public class SpeciesServiceImpl implements SpeciesServices {
 					if (newResourceList != null) {
 						for (ResourceData data : newResourceList) {
 							Resource resource = data.getResource();
-							
+
 							SpeciesResourceData sd = new SpeciesResourceData(resource.getFileName(), resource.getUrl(),
 									resource.getType(), resource.getDescription(), resource.getRating(),
 									resource.getLicenseId());
-							
+
 							if (!speciesResourceData.contains(sd))
 								speciesResourceData.add(sd);
 						}
