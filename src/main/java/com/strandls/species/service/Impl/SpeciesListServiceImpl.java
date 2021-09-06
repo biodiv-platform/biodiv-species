@@ -51,6 +51,7 @@ public class SpeciesListServiceImpl implements SpeciesListService {
 		try {
 			for (Species species : speciesList) {
 
+				resource = null;
 				if (species.getReprImageId() != null)
 					resource = resourcesService.getResourceDataById(species.getReprImageId().toString());
 
