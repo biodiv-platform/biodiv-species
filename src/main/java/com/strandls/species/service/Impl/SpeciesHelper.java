@@ -62,6 +62,7 @@ public class SpeciesHelper {
 				FilesDTO filesDTO = new FilesDTO();
 				filesDTO.setFiles(fileList);
 				filesDTO.setFolder("img");
+				filesDTO.setModule("SPECIES");
 				fileMap = fileUploadService.moveFiles(filesDTO);
 			}
 
@@ -106,7 +107,7 @@ public class SpeciesHelper {
 				resource.setAccessRights(null);
 				resource.setAnnotations(null);
 				resource.setGbifId(null);
-				resource.setLicenseId(resourceData.getLicenceId());
+				resource.setLicenseId(resourceData.getLicenseId());
 
 				resources.add(resource);
 			}

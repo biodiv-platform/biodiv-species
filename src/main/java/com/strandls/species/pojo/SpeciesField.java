@@ -111,7 +111,7 @@ public class SpeciesField implements Serializable {
 		this.version = version;
 	}
 
-	@Column(name = "description")
+	@Column(name = "description", columnDefinition = "TEXT")
 	public String getDescription() {
 		return description;
 	}

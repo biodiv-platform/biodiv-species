@@ -25,6 +25,7 @@ public class SpeciesFieldUpdateData {
 	private List<SpeciesResourceData> speciesFieldResource;
 //	-------COntributor Ids--------------
 	private List<Long> contributorIds;
+	private List<Reference> references;
 
 	/**
 	* 
@@ -43,10 +44,11 @@ public class SpeciesFieldUpdateData {
 	 * @param attributions
 	 * @param speciesFieldResource
 	 * @param contributorIds
+	 * @param references
 	 */
 	public SpeciesFieldUpdateData(Boolean isEdit, Long fieldId, Long speciesFieldId, Long licenseId,
 			String sfDescription, String sfStatus, String attributions, List<SpeciesResourceData> speciesFieldResource,
-			List<Long> contributorIds) {
+			List<Long> contributorIds, List<Reference> references) {
 		super();
 		this.isEdit = isEdit;
 		this.fieldId = fieldId;
@@ -57,6 +59,7 @@ public class SpeciesFieldUpdateData {
 		this.attributions = attributions;
 		this.speciesFieldResource = speciesFieldResource;
 		this.contributorIds = contributorIds;
+		this.references = references;
 	}
 
 	public Boolean getIsEdit() {
@@ -129,6 +132,14 @@ public class SpeciesFieldUpdateData {
 
 	public void setContributorIds(List<Long> contributorIds) {
 		this.contributorIds = contributorIds;
+	}
+
+	public List<Reference> getReferences() {
+		return references;
+	}
+
+	public void setReferences(List<Reference> references) {
+		this.references = references;
 	}
 
 }

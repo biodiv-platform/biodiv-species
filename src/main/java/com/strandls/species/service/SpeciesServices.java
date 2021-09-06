@@ -13,15 +13,24 @@ import com.strandls.resource.pojo.ResourceData;
 import com.strandls.resource.pojo.SpeciesPull;
 import com.strandls.species.pojo.FieldRender;
 import com.strandls.species.pojo.ShowSpeciesPage;
+import com.strandls.species.pojo.SpeciesCreateData;
 import com.strandls.species.pojo.SpeciesFieldData;
 import com.strandls.species.pojo.SpeciesFieldUpdateData;
+import com.strandls.species.pojo.SpeciesPermission;
 import com.strandls.species.pojo.SpeciesPullData;
 import com.strandls.species.pojo.SpeciesResourcesPreData;
 import com.strandls.species.pojo.SpeciesTrait;
-import com.strandls.taxonomy.pojo.CommonNames;
+import com.strandls.taxonomy.pojo.CommonName;
 import com.strandls.taxonomy.pojo.CommonNamesData;
+import com.strandls.taxonomy.pojo.EncryptedKey;
+import com.strandls.taxonomy.pojo.PermissionData;
+import com.strandls.taxonomy.pojo.SynonymData;
+import com.strandls.taxonomy.pojo.TaxonomyDefinition;
+import com.strandls.taxonomy.pojo.TaxonomySave;
+import com.strandls.taxonomy.pojo.TaxonomySearch;
 import com.strandls.traits.pojo.FactValuePair;
 import com.strandls.traits.pojo.FactsUpdateData;
+import com.strandls.user.pojo.Follow;
 import com.strandls.userGroup.pojo.Featured;
 import com.strandls.userGroup.pojo.FeaturedCreate;
 import com.strandls.userGroup.pojo.UserGroupIbp;
@@ -42,8 +51,6 @@ public interface SpeciesServices {
 
 	public List<SpeciesTrait> getAllSpeciesTraits();
 
-	public void migrateField();
-
 //	edits in speceis show page
 
 	public List<UserGroupIbp> updateUserGroup(HttpServletRequest request, String speciesId,
@@ -61,10 +68,10 @@ public interface SpeciesServices {
 
 	public Boolean removeSpeciesField(HttpServletRequest request, Long speciesfield);
 
-	public List<CommonNames> updateAddCommonName(HttpServletRequest request, Long speciesId,
+	public List<CommonName> updateAddCommonName(HttpServletRequest request, Long speciesId,
 			CommonNamesData commonNamesData);
 
-	public List<CommonNames> removeCommonName(HttpServletRequest request, Long speciesId, String commonNameId);
+	public List<CommonName> removeCommonName(HttpServletRequest request, Long speciesId, String commonNameId);
 
 	public List<SpeciesPull> getObservationResource(Long speciesId, Long offset);
 
@@ -77,5 +84,30 @@ public interface SpeciesServices {
 			List<SpeciesResourcesPreData> preDataList);
 
 	public Activity addSpeciesComment(HttpServletRequest request, CommentLoggingData loggingData);
+
+	public TaxonomySearch checkTaxonomyExist(HttpServletRequest request, String speciesName, String rank);
+
+	public Long checkSpeciesPageExist(HttpServletRequest request, Long taxonId);
+
+	public Long createSpeciesPage(HttpServletRequest request, SpeciesCreateData speciesCreateData);
+
+	public TaxonomyDefinition createTaxonomy(HttpServletRequest request, TaxonomySave taxonomySave);
+
+	public List<TaxonomyDefinition> updateAddSynonyms(HttpServletRequest request, String speciesId,
+			SynonymData synonymData);
+
+	public List<TaxonomyDefinition> removeSynonyms(HttpServletRequest request, String speciesId, String synonymId);
+
+	public SpeciesPermission checkPermission(HttpServletRequest request, Long speciesId);
+
+	public Boolean sendPermissionRequest(HttpServletRequest request, PermissionData permissionData);
+
+	public Boolean sendPermissionGrant(HttpServletRequest request, EncryptedKey encryptedKey);
+
+	public Follow followRequest(HttpServletRequest request, Long speciesId);
+
+	public Follow unFollowRequest(HttpServletRequest request, Long speciesId);
+
+	public Boolean removeSpeciesPage(HttpServletRequest request, Long speciesId);
 
 }

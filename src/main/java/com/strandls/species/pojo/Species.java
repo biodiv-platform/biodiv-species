@@ -28,12 +28,9 @@ public class Species implements Serializable {
 	private static final long serialVersionUID = -1440457930006685830L;
 	private Long id;
 	private Long version;
-	private String guid;
 	private Integer percentOfInfo;
 	private Long taxonConceptId;
 	private String title;
-	private Date createdOn;
-	private Date updatedOn;
 	private Date dateCreated;
 	private Date lastUpdated;
 	private Integer featureCount;
@@ -47,18 +44,30 @@ public class Species implements Serializable {
 		super();
 	}
 
-	public Species(Long id, Long version, String guid, Integer percentOfInfo, Long taxonConceptId, String title,
-			Date createdOn, Date updatedOn, Date dateCreated, Date lastUpdated, Integer featureCount, Long habitatId,
-			Boolean hasMedia, Long reprImageId, Boolean isDeleted, Long dataTableId) {
+	/**
+	 * @param id
+	 * @param version
+	 * @param percentOfInfo
+	 * @param taxonConceptId
+	 * @param title
+	 * @param dateCreated
+	 * @param lastUpdated
+	 * @param featureCount
+	 * @param habitatId
+	 * @param hasMedia
+	 * @param reprImageId
+	 * @param isDeleted
+	 * @param dataTableId
+	 */
+	public Species(Long id, Long version, Integer percentOfInfo, Long taxonConceptId, String title, Date dateCreated,
+			Date lastUpdated, Integer featureCount, Long habitatId, Boolean hasMedia, Long reprImageId,
+			Boolean isDeleted, Long dataTableId) {
 		super();
 		this.id = id;
 		this.version = version;
-		this.guid = guid;
 		this.percentOfInfo = percentOfInfo;
 		this.taxonConceptId = taxonConceptId;
 		this.title = title;
-		this.createdOn = createdOn;
-		this.updatedOn = updatedOn;
 		this.dateCreated = dateCreated;
 		this.lastUpdated = lastUpdated;
 		this.featureCount = featureCount;
@@ -89,15 +98,6 @@ public class Species implements Serializable {
 		this.version = version;
 	}
 
-	@Column(name = "guid", unique = true)
-	public String getGuid() {
-		return guid;
-	}
-
-	public void setGuid(String guid) {
-		this.guid = guid;
-	}
-
 	@Column(name = "percent_of_info")
 	public Integer getPercentOfInfo() {
 		return percentOfInfo;
@@ -123,24 +123,6 @@ public class Species implements Serializable {
 
 	public void setTitle(String title) {
 		this.title = title;
-	}
-
-	@Column(name = "created_on")
-	public Date getCreatedOn() {
-		return createdOn;
-	}
-
-	public void setCreatedOn(Date createdOn) {
-		this.createdOn = createdOn;
-	}
-
-	@Column(name = "updated_on")
-	public Date getUpdatedOn() {
-		return updatedOn;
-	}
-
-	public void setUpdatedOn(Date updatedOn) {
-		this.updatedOn = updatedOn;
 	}
 
 	@Column(name = "date_created")

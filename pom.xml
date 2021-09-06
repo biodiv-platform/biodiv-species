@@ -88,7 +88,6 @@
 			<version>1.7.22</version>
 		</dependency>
 
-
 		<!-- https://mvnrepository.com/artifact/javax.ws.rs/javax.ws.rs-api -->
 		<dependency>
 			<groupId>javax.ws.rs</groupId>
@@ -254,11 +253,11 @@
 			<version>1.0.0</version>
 		</dependency>
 		
-		<!-- <dependency>
+		<dependency>
 		    <groupId>com.strandls.biodiv</groupId>
 		    <artifactId>document-client</artifactId>
 		    <version>1.0.0</version>
-		</dependency> -->
+		</dependency>
 		
 		<dependency>
 		    <groupId>com.strandls.biodiv</groupId>
