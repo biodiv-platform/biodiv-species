@@ -1105,9 +1105,16 @@ public class SpeciesServiceImpl implements SpeciesServices {
 	@Override
 	public Boolean sendPermissionRequest(HttpServletRequest request, PermissionData permissionData) {
 		try {
+			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
+			JSONArray userRole = (JSONArray) profile.getAttribute("roles");
 			taxPermissionService = headers.addTaxonomyPermissionHeader(taxPermissionService,
 					request.getHeader(HttpHeaders.AUTHORIZATION));
-			Boolean result = taxPermissionService.requestPermission(permissionData);
+			Boolean result = null;
+			if (userRole.contains("ROLE_ADMIN")) {
+				result = taxPermissionService.assignDirectPermission(permissionData);
+			} else {
+				result = taxPermissionService.requestPermission(permissionData);
+			}
 			return result;
 		} catch (Exception e) {
 			logger.error(e.getMessage());
