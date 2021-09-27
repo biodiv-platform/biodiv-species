@@ -87,7 +87,6 @@ import com.strandls.taxonomy.pojo.SynonymData;
 import com.strandls.taxonomy.pojo.TaxonomicNames;
 import com.strandls.taxonomy.pojo.TaxonomyDefinition;
 import com.strandls.taxonomy.pojo.TaxonomySave;
-import com.strandls.taxonomy.pojo.TaxonomySearch;
 import com.strandls.traits.controller.TraitsServiceApi;
 import com.strandls.traits.pojo.FactValuePair;
 import com.strandls.traits.pojo.FactsUpdateData;
@@ -758,6 +757,8 @@ public class SpeciesServiceImpl implements SpeciesServices {
 			CommonNamesData commonNamesData) {
 		try {
 			Boolean isContributor = checkIsContributor(request, speciesId);
+			if (!isContributor)
+				isContributor = checkIsObservationCurator(request, speciesId);
 			if (isContributor) {
 				commonNameService = headers.addCommonNameHeader(commonNameService,
 						request.getHeader(HttpHeaders.AUTHORIZATION));
@@ -777,6 +778,8 @@ public class SpeciesServiceImpl implements SpeciesServices {
 	public List<CommonName> removeCommonName(HttpServletRequest request, Long speciesId, String commonNameId) {
 		try {
 			Boolean isContributor = checkIsContributor(request, speciesId);
+			if (!isContributor)
+				isContributor = checkIsObservationCurator(request, speciesId);
 			if (isContributor) {
 				commonNameService = headers.addCommonNameHeader(commonNameService,
 						request.getHeader(HttpHeaders.AUTHORIZATION));
@@ -819,6 +822,8 @@ public class SpeciesServiceImpl implements SpeciesServices {
 			List<SpeciesPullData> speciesPullData) {
 		try {
 			Boolean isContributor = checkIsContributor(request, speciesId);
+			if (!isContributor)
+				isContributor = checkIsObservationCurator(request, speciesId);
 			if (isContributor) {
 
 				Species species = speciesDao.findById(speciesId);
@@ -859,6 +864,8 @@ public class SpeciesServiceImpl implements SpeciesServices {
 	public List<ResourceData> getSpeciesResources(HttpServletRequest request, Long speciesId) {
 		try {
 			Boolean isContributor = checkIsContributor(request, speciesId);
+			if (!isContributor)
+				isContributor = checkIsObservationCurator(request, speciesId);
 			if (isContributor) {
 				List<ResourceData> resourceData = resourceServices.getImageResource("SPECIES", speciesId.toString());
 				return resourceData;
@@ -877,6 +884,8 @@ public class SpeciesServiceImpl implements SpeciesServices {
 
 		try {
 			Boolean isContributor = checkIsContributor(request, speciesId);
+			if (!isContributor)
+				isContributor = checkIsObservationCurator(request, speciesId);
 			if (isContributor) {
 				List<SpeciesPullData> speciesPullDatas = new ArrayList<SpeciesPullData>();
 				List<SpeciesResourceData> speciesResourceData = new ArrayList<SpeciesResourceData>();
@@ -962,19 +971,6 @@ public class SpeciesServiceImpl implements SpeciesServices {
 			logger.error(e.getMessage());
 		}
 		return null;
-	}
-
-	@Override
-	public TaxonomySearch checkTaxonomyExist(HttpServletRequest request, String speciesName, String rank) {
-		try {
-			TaxonomySearch taxonomyList = taxonomyService.getByNameSearch(speciesName, rank);
-			return taxonomyList;
-
-		} catch (Exception e) {
-			logger.error(e.getMessage());
-		}
-		return null;
-
 	}
 
 	@Override
@@ -1081,6 +1077,27 @@ public class SpeciesServiceImpl implements SpeciesServices {
 
 	}
 
+	private Boolean checkIsObservationCurator(HttpServletRequest request, Long speciesId) {
+		try {
+			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
+			JSONArray userRole = (JSONArray) profile.getAttribute("roles");
+			Boolean isContributor = false;
+			if (userRole.contains("ROLE_ADMIN")) {
+				isContributor = true;
+			} else {
+				Species species = speciesDao.findById(speciesId);
+				taxPermissionService = headers.addTaxonomyPermissionHeader(taxPermissionService,
+						request.getHeader(HttpHeaders.AUTHORIZATION));
+				isContributor = taxPermissionService.isObservationCurator(species.getTaxonConceptId().toString());
+
+			}
+			return isContributor;
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return false;
+	}
+
 	private Boolean checkIsContributor(HttpServletRequest request, Long speciesId) {
 
 		try {
@@ -1094,6 +1111,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 				taxPermissionService = headers.addTaxonomyPermissionHeader(taxPermissionService,
 						request.getHeader(HttpHeaders.AUTHORIZATION));
 				isContributor = taxPermissionService.getPermissionSpeciesTree(species.getTaxonConceptId().toString());
+
 			}
 			return isContributor;
 		} catch (Exception e) {
@@ -1105,9 +1123,16 @@ public class SpeciesServiceImpl implements SpeciesServices {
 	@Override
 	public Boolean sendPermissionRequest(HttpServletRequest request, PermissionData permissionData) {
 		try {
+			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
+			JSONArray userRole = (JSONArray) profile.getAttribute("roles");
 			taxPermissionService = headers.addTaxonomyPermissionHeader(taxPermissionService,
 					request.getHeader(HttpHeaders.AUTHORIZATION));
-			Boolean result = taxPermissionService.requestPermission(permissionData);
+			Boolean result = null;
+			if (userRole.contains("ROLE_ADMIN")) {
+				result = taxPermissionService.assignDirectPermission(permissionData);
+			} else {
+				result = taxPermissionService.requestPermission(permissionData);
+			}
 			return result;
 		} catch (Exception e) {
 			logger.error(e.getMessage());

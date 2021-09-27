@@ -43,7 +43,6 @@ import com.strandls.taxonomy.pojo.PermissionData;
 import com.strandls.taxonomy.pojo.SynonymData;
 import com.strandls.taxonomy.pojo.TaxonomyDefinition;
 import com.strandls.taxonomy.pojo.TaxonomySave;
-import com.strandls.taxonomy.pojo.TaxonomySearch;
 import com.strandls.traits.pojo.FactValuePair;
 import com.strandls.traits.pojo.FactsUpdateData;
 import com.strandls.user.pojo.Follow;
@@ -418,27 +417,6 @@ public class SpeciesController {
 			if (result != null)
 				return Response.status(Status.OK).entity(result).build();
 			return Response.status(Status.NOT_ACCEPTABLE).build();
-		} catch (Exception e) {
-			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
-		}
-	}
-
-	@GET
-	@Path(ApiConstants.CHECK + ApiConstants.TAXONOMY)
-	@Consumes(MediaType.TEXT_PLAIN)
-	@Produces(MediaType.APPLICATION_JSON)
-
-	@ValidateUser
-
-	@ApiOperation(value = "checks if taxonomy exist", notes = "Returns list of taxonomy", response = TaxonomySearch.class)
-	@ApiResponses(value = { @ApiResponse(code = 400, message = "unable to check the result", response = String.class) })
-
-	public Response checkTaxonExist(@Context HttpServletRequest request, @QueryParam("speciesName") String speciesName,
-			@QueryParam("rank") String rank) {
-		try {
-			TaxonomySearch result = speciesService.checkTaxonomyExist(request, speciesName, rank);
-			return Response.status(Status.OK).entity(result).build();
-
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
