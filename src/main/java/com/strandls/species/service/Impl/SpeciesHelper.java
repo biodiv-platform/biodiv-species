@@ -24,6 +24,7 @@ import com.strandls.resource.pojo.Resource;
 import com.strandls.species.Headers;
 import com.strandls.species.pojo.SpeciesFieldUpdateData;
 import com.strandls.species.pojo.SpeciesResourceData;
+import com.strandls.species.util.PropertyFileUtil;
 
 /**
  * @author Abhishek Rudra
@@ -39,6 +40,9 @@ public class SpeciesHelper {
 
 	@Inject
 	private Headers headers;
+	
+	private Long defaultLanguageId = Long
+			.parseLong(PropertyFileUtil.fetchProperty("config.properties", "defaultLanguageId"));
 
 	@SuppressWarnings("unchecked")
 	public List<Resource> createResourceMapping(HttpServletRequest request, String context,
@@ -103,7 +107,7 @@ public class SpeciesHelper {
 				resource.setUploadTime(new Date());
 				resource.setUploaderId(userId);
 				resource.setContext(context.toUpperCase());
-				resource.setLanguageId(205L);
+				resource.setLanguageId(defaultLanguageId);
 				resource.setAccessRights(null);
 				resource.setAnnotations(null);
 				resource.setGbifId(null);
