@@ -195,6 +195,9 @@ public class SpeciesServiceImpl implements SpeciesServices {
 	@Inject
 	private TraitsServiceApi traitService;
 
+	private Long defaultLanguageId = Long
+			.parseLong(PropertyFileUtil.fetchProperty("config.properties", "defaultLanguageId"));
+
 	private String blackList = PropertyFileUtil.fetchProperty("config.properties", "blackListSFId");
 
 	private List<Long> blackListSFId = Arrays.asList(blackList.split(",")).stream().map(s -> Long.parseLong(s.trim()))
@@ -283,7 +286,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 			System.out.println("speciesID : " + speciesField.getId());
 			System.out.println("field Id : " + speciesField.getFieldId());
 			FieldNew field = fieldNewDao.findById(speciesField.getFieldId());
-			FieldHeader fieldHeader = fieldHeaderDao.findByFieldId(field.getId(), 205L);
+			FieldHeader fieldHeader = fieldHeaderDao.findByFieldId(field.getId(), defaultLanguageId);
 
 			SpeciesFieldAudienceType sfAudienceType = sfAudienceTypeDao.findById(speciesField.getId());
 
@@ -421,7 +424,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 		String name = "";
 		do {
 			fieldNew = fieldNewDao.findById(fieldId);
-			name = fieldHeaderDao.findByFieldId(fieldNew.getId(), 205L).getHeader() + " > " + name;
+			name = fieldHeaderDao.findByFieldId(fieldNew.getId(), defaultLanguageId).getHeader() + " > " + name;
 			fieldId = fieldNew.getParentId();
 
 		} while (fieldNew.getParentId() != null);
@@ -717,7 +720,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 //			create the species field
 			field = new SpeciesField(null, 0L, sfData.getSfDescription(), sfData.getFieldId(), speciesId,
 					sfData.getSfStatus(), "species.SpeciesField", null, new Date(), new Date(), new Date(), uploaderId,
-					205L, null, false);
+					defaultLanguageId, null, false);
 			field = speciesFieldDao.save(field);
 		}
 
