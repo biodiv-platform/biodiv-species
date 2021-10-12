@@ -5,11 +5,14 @@ package com.strandls.species.pojo;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 /**
  * @author Abhishek Rudra
  *
  * 
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class SpeciesFieldUpdateData {
 
 	private Boolean isEdit;
