@@ -720,7 +720,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 //			create the species field
 			field = new SpeciesField(null, 0L, sfData.getSfDescription(), sfData.getFieldId(), speciesId,
 					sfData.getSfStatus(), "species.SpeciesField", null, new Date(), new Date(), new Date(), uploaderId,
-					defaultLanguageId, null, false);
+					sfData.getLanguageId() != null ? sfData.getLanguageId() : defaultLanguageId, null, false);
 			field = speciesFieldDao.save(field);
 		}
 

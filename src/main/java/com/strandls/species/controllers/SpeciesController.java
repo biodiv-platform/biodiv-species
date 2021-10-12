@@ -160,9 +160,10 @@ public class SpeciesController {
 	@ApiResponses(value = { @ApiResponse(code = 400, message = "unable to fetch the data", response = String.class) })
 
 	public Response updateUserGroupSpecies(@Context HttpServletRequest request,
-			@PathParam("speciesId") String speciesId,
-			@ApiParam(name = "ugSpeciesCreateData") UserGroupSpeciesCreateData ugSpeciesCreateData) {
+			@PathParam("speciesId") String speciesId, @ApiParam(name = "userGroupList") List<Long> userGroupList) {
 		try {
+			UserGroupSpeciesCreateData ugSpeciesCreateData = new UserGroupSpeciesCreateData();
+			ugSpeciesCreateData.setUserGroupIds(userGroupList);
 			List<UserGroupIbp> result = speciesService.updateUserGroup(request, speciesId, ugSpeciesCreateData);
 			return Response.status(Status.OK).entity(result).build();
 
