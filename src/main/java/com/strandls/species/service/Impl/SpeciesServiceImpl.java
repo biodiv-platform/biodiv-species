@@ -1166,4 +1166,16 @@ public class SpeciesServiceImpl implements SpeciesServices {
 		return false;
 	}
 
+	public String getSpeciesIdFromTaxonId(Long taxonId) {
+
+		Species speciesDetails = speciesDao.findByTaxonId(taxonId);
+
+		if (speciesDetails != null) {
+			return speciesDetails.getId().toString();
+		} else {
+			return null;
+		}
+
+	}
+
 }
