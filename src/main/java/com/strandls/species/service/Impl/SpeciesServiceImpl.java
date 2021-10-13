@@ -712,6 +712,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 				return null;
 			field.setDescription(sfData.getSfDescription());
 			field.setStatus(sfData.getSfStatus());
+			field.setLanguageId(sfData.getLanguageId() != null ? sfData.getLanguageId() : defaultLanguageId);
 			field.setLastUpdated(new Date());
 
 			speciesFieldDao.update(field);
