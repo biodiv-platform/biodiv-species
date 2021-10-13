@@ -450,7 +450,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 			UserGroupSpeciesCreateData ugSpeciesCreateData) {
 		try {
 			ugService = headers.addUserGroupHeader(ugService, request.getHeader(HttpHeaders.AUTHORIZATION));
-			List<UserGroupIbp> result = ugService.createUserGroupSpeciesMapping(speciesId, ugSpeciesCreateData);
+			List<UserGroupIbp> result = ugService.updateUserGroupSpeciesMapping(speciesId, ugSpeciesCreateData);
 			updateLastRevised(Long.parseLong(speciesId));
 			return result;
 		} catch (Exception e) {
