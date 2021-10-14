@@ -331,7 +331,12 @@ public class SpeciesServiceImpl implements SpeciesServices {
 	}
 
 	@Override
-	public List<FieldRender> getFields() {
+	public List<FieldRender> getFields(Long langId) {
+
+		if (langId == null)
+			langId = defaultLanguageId;
+
+		FieldHeader fieldHeader = null;
 
 		List<FieldRender> renderList = new ArrayList<FieldRender>();
 
@@ -344,6 +349,9 @@ public class SpeciesServiceImpl implements SpeciesServices {
 			if (!blackListSFId.contains(concpetField.getId())) {
 
 				List<FieldDisplay> categorySubCat = new ArrayList<FieldDisplay>();
+				fieldHeader = fieldHeaderDao.findByFieldId(concpetField.getId(), langId);
+				concpetField.setHeader(fieldHeader.getHeader());
+
 //				extract all the category fields in display order
 				List<FieldNew> categoryFields = fieldNewDao.findByParentId(concpetField.getId());
 
@@ -352,14 +360,20 @@ public class SpeciesServiceImpl implements SpeciesServices {
 //					check if category is blacklisted
 					if (!blackListSFId.contains(catField.getId())) {
 
+						fieldHeader = fieldHeaderDao.findByFieldId(catField.getId(), langId);
+						catField.setHeader(fieldHeader.getHeader());
 //						extract all the subCategory fields in display order
 						List<FieldNew> subCatField = fieldNewDao.findByParentId(catField.getId());
 						List<FieldNew> qualifiedsubCatField = new ArrayList<FieldNew>();
 						if (subCatField != null) {
 							for (FieldNew subCat : subCatField) {
 //								checking for blacklisted sub category
-								if (!blackListSFId.contains(subCat.getId()))
+								if (!blackListSFId.contains(subCat.getId())) {
+									fieldHeader = fieldHeaderDao.findByFieldId(subCat.getId(), langId);
+									subCat.setHeader(fieldHeader.getHeader());
 									qualifiedsubCatField.add(subCat);
+
+								}
 							}
 						}
 						categorySubCat.add(new FieldDisplay(catField, qualifiedsubCatField));
