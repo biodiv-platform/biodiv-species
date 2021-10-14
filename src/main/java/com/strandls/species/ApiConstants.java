@@ -46,5 +46,6 @@ public class ApiConstants {
 	public static final String UNFOLLOW = "/unfollow";
 	public static final String UPDATE = "/update";
 	public static final String USERGROUP = "/usergroup";
+	public static final String SPECIESID = "/speciesid";
 
 }

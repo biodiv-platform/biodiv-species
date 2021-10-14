@@ -106,5 +106,7 @@ public interface SpeciesServices {
 	public Follow unFollowRequest(HttpServletRequest request, Long speciesId);
 
 	public Boolean removeSpeciesPage(HttpServletRequest request, Long speciesId);
+	
+	public String getSpeciesIdFromTaxonId(Long taxonId);
 
 }

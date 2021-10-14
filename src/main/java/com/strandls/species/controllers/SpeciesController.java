@@ -76,6 +76,27 @@ public class SpeciesController {
 	}
 
 	@GET
+	@Path(ApiConstants.SPECIESID + "/{taxonId}")
+	@Produces(MediaType.TEXT_PLAIN)
+	@Consumes(MediaType.APPLICATION_JSON)
+
+	public Response getSpeciesId(@PathParam("taxonId") Long taxonId) {
+
+		try {
+			String speciesId = speciesService.getSpeciesIdFromTaxonId(taxonId);
+			if (speciesId != null) {
+				return Response.status(Status.OK).entity(speciesId).build();
+			} else {
+				return Response.status(Status.NOT_FOUND).build();
+			}
+
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+
+	}
+
+	@GET
 	@Path(ApiConstants.SHOW + "/{speciesId}")
 	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces(MediaType.APPLICATION_JSON)
