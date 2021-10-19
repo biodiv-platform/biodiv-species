@@ -331,7 +331,12 @@ public class SpeciesServiceImpl implements SpeciesServices {
 	}
 
 	@Override
-	public List<FieldRender> getFields() {
+	public List<FieldRender> getFields(Long langId) {
+
+		if (langId == null)
+			langId = defaultLanguageId;
+
+		FieldHeader fieldHeader = null;
 
 		List<FieldRender> renderList = new ArrayList<FieldRender>();
 
@@ -344,6 +349,9 @@ public class SpeciesServiceImpl implements SpeciesServices {
 			if (!blackListSFId.contains(concpetField.getId())) {
 
 				List<FieldDisplay> categorySubCat = new ArrayList<FieldDisplay>();
+				fieldHeader = fieldHeaderDao.findByFieldId(concpetField.getId(), langId);
+				concpetField.setHeader(fieldHeader.getHeader());
+
 //				extract all the category fields in display order
 				List<FieldNew> categoryFields = fieldNewDao.findByParentId(concpetField.getId());
 
@@ -352,14 +360,20 @@ public class SpeciesServiceImpl implements SpeciesServices {
 //					check if category is blacklisted
 					if (!blackListSFId.contains(catField.getId())) {
 
+						fieldHeader = fieldHeaderDao.findByFieldId(catField.getId(), langId);
+						catField.setHeader(fieldHeader.getHeader());
 //						extract all the subCategory fields in display order
 						List<FieldNew> subCatField = fieldNewDao.findByParentId(catField.getId());
 						List<FieldNew> qualifiedsubCatField = new ArrayList<FieldNew>();
 						if (subCatField != null) {
 							for (FieldNew subCat : subCatField) {
 //								checking for blacklisted sub category
-								if (!blackListSFId.contains(subCat.getId()))
+								if (!blackListSFId.contains(subCat.getId())) {
+									fieldHeader = fieldHeaderDao.findByFieldId(subCat.getId(), langId);
+									subCat.setHeader(fieldHeader.getHeader());
 									qualifiedsubCatField.add(subCat);
+
+								}
 							}
 						}
 						categorySubCat.add(new FieldDisplay(catField, qualifiedsubCatField));
@@ -450,7 +464,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 			UserGroupSpeciesCreateData ugSpeciesCreateData) {
 		try {
 			ugService = headers.addUserGroupHeader(ugService, request.getHeader(HttpHeaders.AUTHORIZATION));
-			List<UserGroupIbp> result = ugService.createUserGroupSpeciesMapping(speciesId, ugSpeciesCreateData);
+			List<UserGroupIbp> result = ugService.updateUserGroupSpeciesMapping(speciesId, ugSpeciesCreateData);
 			updateLastRevised(Long.parseLong(speciesId));
 			return result;
 		} catch (Exception e) {
@@ -712,6 +726,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 				return null;
 			field.setDescription(sfData.getSfDescription());
 			field.setStatus(sfData.getSfStatus());
+			field.setLanguageId(sfData.getLanguageId() != null ? sfData.getLanguageId() : defaultLanguageId);
 			field.setLastUpdated(new Date());
 
 			speciesFieldDao.update(field);
@@ -720,7 +735,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 //			create the species field
 			field = new SpeciesField(null, 0L, sfData.getSfDescription(), sfData.getFieldId(), speciesId,
 					sfData.getSfStatus(), "species.SpeciesField", null, new Date(), new Date(), new Date(), uploaderId,
-					defaultLanguageId, null, false);
+					sfData.getLanguageId() != null ? sfData.getLanguageId() : defaultLanguageId, null, false);
 			field = speciesFieldDao.save(field);
 		}
 

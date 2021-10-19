@@ -44,7 +44,7 @@ public interface SpeciesServices {
 
 	public ShowSpeciesPage showSpeciesPage(Long speciesId);
 
-	public List<FieldRender> getFields();
+	public List<FieldRender> getFields(Long langId);
 
 	public List<SpeciesTrait> getSpeciesTraitsByTaxonomyId(Long taxonomyId);
 

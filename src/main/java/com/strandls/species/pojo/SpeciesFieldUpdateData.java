@@ -5,11 +5,14 @@ package com.strandls.species.pojo;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 /**
  * @author Abhishek Rudra
  *
  * 
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class SpeciesFieldUpdateData {
 
 	private Boolean isEdit;
@@ -19,6 +22,7 @@ public class SpeciesFieldUpdateData {
 //	----Core SpeciesField Data------
 	private String sfDescription;
 	private String sfStatus;
+	private Long languageId;
 //	-------Attribution Data-----
 	private String attributions;
 //	-------SpeciesField Resource--------
@@ -41,14 +45,15 @@ public class SpeciesFieldUpdateData {
 	 * @param licenseId
 	 * @param sfDescription
 	 * @param sfStatus
+	 * @param languageId
 	 * @param attributions
 	 * @param speciesFieldResource
 	 * @param contributorIds
 	 * @param references
 	 */
 	public SpeciesFieldUpdateData(Boolean isEdit, Long fieldId, Long speciesFieldId, Long licenseId,
-			String sfDescription, String sfStatus, String attributions, List<SpeciesResourceData> speciesFieldResource,
-			List<Long> contributorIds, List<Reference> references) {
+			String sfDescription, String sfStatus, Long languageId, String attributions,
+			List<SpeciesResourceData> speciesFieldResource, List<Long> contributorIds, List<Reference> references) {
 		super();
 		this.isEdit = isEdit;
 		this.fieldId = fieldId;
@@ -56,6 +61,7 @@ public class SpeciesFieldUpdateData {
 		this.licenseId = licenseId;
 		this.sfDescription = sfDescription;
 		this.sfStatus = sfStatus;
+		this.languageId = languageId;
 		this.attributions = attributions;
 		this.speciesFieldResource = speciesFieldResource;
 		this.contributorIds = contributorIds;
@@ -108,6 +114,14 @@ public class SpeciesFieldUpdateData {
 
 	public void setSfStatus(String sfStatus) {
 		this.sfStatus = sfStatus;
+	}
+
+	public Long getLanguageId() {
+		return languageId;
+	}
+
+	public void setLanguageId(Long languageId) {
+		this.languageId = languageId;
 	}
 
 	public String getAttributions() {
