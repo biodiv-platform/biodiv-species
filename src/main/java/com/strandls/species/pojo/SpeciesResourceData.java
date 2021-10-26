@@ -16,6 +16,7 @@ public class SpeciesResourceData {
 	private String caption;
 	private Integer rating;
 	private Long licenseId;
+	private String contributorName;
 
 	/**
 	 * 
@@ -31,8 +32,10 @@ public class SpeciesResourceData {
 	 * @param caption
 	 * @param rating
 	 * @param licenseId
+	 * @param contributorName
 	 */
-	public SpeciesResourceData(String path, String url, String type, String caption, Integer rating, Long licenseId) {
+	public SpeciesResourceData(String path, String url, String type, String caption, Integer rating, Long licenseId,
+			String contributorName) {
 		super();
 		this.path = path;
 		this.url = url;
@@ -40,6 +43,7 @@ public class SpeciesResourceData {
 		this.caption = caption;
 		this.rating = rating;
 		this.licenseId = licenseId;
+		this.contributorName = contributorName;
 	}
 
 	public String getPath() {
@@ -90,11 +94,20 @@ public class SpeciesResourceData {
 		this.licenseId = licenseId;
 	}
 
+	public String getContributorName() {
+		return contributorName;
+	}
+
+	public void setContributorName(String contributorName) {
+		this.contributorName = contributorName;
+	}
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + ((caption == null) ? 0 : caption.hashCode());
+		result = prime * result + ((contributorName == null) ? 0 : contributorName.hashCode());
 		result = prime * result + ((licenseId == null) ? 0 : licenseId.hashCode());
 		result = prime * result + ((path == null) ? 0 : path.hashCode());
 		result = prime * result + ((rating == null) ? 0 : rating.hashCode());
@@ -116,6 +129,11 @@ public class SpeciesResourceData {
 			if (other.caption != null)
 				return false;
 		} else if (!caption.equals(other.caption))
+			return false;
+		if (contributorName == null) {
+			if (other.contributorName != null)
+				return false;
+		} else if (!contributorName.equals(other.contributorName))
 			return false;
 		if (licenseId == null) {
 			if (other.licenseId != null)
@@ -144,5 +162,7 @@ public class SpeciesResourceData {
 			return false;
 		return true;
 	}
+
+	
 
 }
