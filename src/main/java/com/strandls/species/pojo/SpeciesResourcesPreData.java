@@ -20,7 +20,7 @@ public class SpeciesResourcesPreData {
 	private String caption;
 	private Integer rating;
 	private Long licenseId;
-	private String contributorName;
+	private String contributor;
 
 //	resource coming from observationPull
 	private Long observationId;
@@ -40,12 +40,12 @@ public class SpeciesResourcesPreData {
 	 * @param caption
 	 * @param rating
 	 * @param licenseId
-	 * @param contributorName
+	 * @param contributor
 	 * @param observationId
 	 * @param resourcesId
 	 */
 	public SpeciesResourcesPreData(String path, String url, String type, String caption, Integer rating, Long licenseId,
-			String contributorName, Long observationId, Long resourcesId) {
+			String contributor, Long observationId, Long resourcesId) {
 		super();
 		this.path = path;
 		this.url = url;
@@ -53,7 +53,7 @@ public class SpeciesResourcesPreData {
 		this.caption = caption;
 		this.rating = rating;
 		this.licenseId = licenseId;
-		this.contributorName = contributorName;
+		this.contributor = contributor;
 		this.observationId = observationId;
 		this.resourcesId = resourcesId;
 	}
@@ -106,12 +106,12 @@ public class SpeciesResourcesPreData {
 		this.licenseId = licenseId;
 	}
 
-	public String getContributorName() {
-		return contributorName;
+	public String getContributor() {
+		return contributor;
 	}
 
-	public void setContributorName(String contributorName) {
-		this.contributorName = contributorName;
+	public void setContributor(String contributor) {
+		this.contributor = contributor;
 	}
 
 	public Long getObservationId() {

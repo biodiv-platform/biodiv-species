@@ -913,7 +913,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 					} else {
 						speciesResourceData.add(new SpeciesResourceData(preData.getPath(), preData.getUrl(),
 								preData.getType(), preData.getCaption(), preData.getRating(), preData.getLicenseId(),
-								preData.getContributorName()));
+								preData.getContributor()));
 					}
 				}
 
