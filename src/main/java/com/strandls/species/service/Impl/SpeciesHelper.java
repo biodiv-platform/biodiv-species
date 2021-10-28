@@ -112,7 +112,7 @@ public class SpeciesHelper {
 				resource.setAnnotations(null);
 				resource.setGbifId(null);
 				resource.setLicenseId(resourceData.getLicenseId());
-				resource.setContributor(resourceData.getContributorName());
+				resource.setContributor(resourceData.getContributor());
 
 				resources.add(resource);
 			}

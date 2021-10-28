@@ -19,7 +19,7 @@ public class SpeciesResourceData {
 	private String caption;
 	private Integer rating;
 	private Long licenseId;
-	private String contributorName;
+	private String contributor;
 
 	/**
 	 * 
@@ -35,10 +35,10 @@ public class SpeciesResourceData {
 	 * @param caption
 	 * @param rating
 	 * @param licenseId
-	 * @param contributorName
+	 * @param contributor
 	 */
 	public SpeciesResourceData(String path, String url, String type, String caption, Integer rating, Long licenseId,
-			String contributorName) {
+			String contributor) {
 		super();
 		this.path = path;
 		this.url = url;
@@ -46,7 +46,7 @@ public class SpeciesResourceData {
 		this.caption = caption;
 		this.rating = rating;
 		this.licenseId = licenseId;
-		this.contributorName = contributorName;
+		this.contributor = contributor;
 	}
 
 	public String getPath() {
@@ -97,12 +97,12 @@ public class SpeciesResourceData {
 		this.licenseId = licenseId;
 	}
 
-	public String getContributorName() {
-		return contributorName;
+	public String getContributor() {
+		return contributor;
 	}
 
-	public void setContributorName(String contributorName) {
-		this.contributorName = contributorName;
+	public void setContributor(String contributor) {
+		this.contributor = contributor;
 	}
 
 	@Override
@@ -110,7 +110,7 @@ public class SpeciesResourceData {
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + ((caption == null) ? 0 : caption.hashCode());
-		result = prime * result + ((contributorName == null) ? 0 : contributorName.hashCode());
+		result = prime * result + ((contributor == null) ? 0 : contributor.hashCode());
 		result = prime * result + ((licenseId == null) ? 0 : licenseId.hashCode());
 		result = prime * result + ((path == null) ? 0 : path.hashCode());
 		result = prime * result + ((rating == null) ? 0 : rating.hashCode());
@@ -133,10 +133,10 @@ public class SpeciesResourceData {
 				return false;
 		} else if (!caption.equals(other.caption))
 			return false;
-		if (contributorName == null) {
-			if (other.contributorName != null)
+		if (contributor == null) {
+			if (other.contributor != null)
 				return false;
-		} else if (!contributorName.equals(other.contributorName))
+		} else if (!contributor.equals(other.contributor))
 			return false;
 		if (licenseId == null) {
 			if (other.licenseId != null)
