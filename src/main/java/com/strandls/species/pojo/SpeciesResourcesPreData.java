@@ -3,11 +3,14 @@
  */
 package com.strandls.species.pojo;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 /**
  * @author Abhishek Rudra
  *
  * 
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class SpeciesResourcesPreData {
 
 //	resoruce coming from Draft
