@@ -27,8 +27,6 @@ public class Species implements Serializable {
 	 */
 	private static final long serialVersionUID = -1440457930006685830L;
 	private Long id;
-	private Long version;
-	private Integer percentOfInfo;
 	private Long taxonConceptId;
 	private String title;
 	private Date dateCreated;
@@ -46,8 +44,6 @@ public class Species implements Serializable {
 
 	/**
 	 * @param id
-	 * @param version
-	 * @param percentOfInfo
 	 * @param taxonConceptId
 	 * @param title
 	 * @param dateCreated
@@ -59,13 +55,10 @@ public class Species implements Serializable {
 	 * @param isDeleted
 	 * @param dataTableId
 	 */
-	public Species(Long id, Long version, Integer percentOfInfo, Long taxonConceptId, String title, Date dateCreated,
-			Date lastUpdated, Integer featureCount, Long habitatId, Boolean hasMedia, Long reprImageId,
-			Boolean isDeleted, Long dataTableId) {
+	public Species(Long id, Long taxonConceptId, String title, Date dateCreated, Date lastUpdated, Integer featureCount,
+			Long habitatId, Boolean hasMedia, Long reprImageId, Boolean isDeleted, Long dataTableId) {
 		super();
 		this.id = id;
-		this.version = version;
-		this.percentOfInfo = percentOfInfo;
 		this.taxonConceptId = taxonConceptId;
 		this.title = title;
 		this.dateCreated = dateCreated;
@@ -87,24 +80,6 @@ public class Species implements Serializable {
 
 	public void setId(Long id) {
 		this.id = id;
-	}
-
-	@Column(name = "version")
-	public Long getVersion() {
-		return version;
-	}
-
-	public void setVersion(Long version) {
-		this.version = version;
-	}
-
-	@Column(name = "percent_of_info")
-	public Integer getPercentOfInfo() {
-		return percentOfInfo;
-	}
-
-	public void setPercentOfInfo(Integer percentOfInfo) {
-		this.percentOfInfo = percentOfInfo;
 	}
 
 	@Column(name = "taxon_concept_id")

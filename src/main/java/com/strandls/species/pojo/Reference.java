@@ -12,6 +12,8 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 /**
  * @author Abhishek Rudra
  *
@@ -20,6 +22,7 @@ import javax.persistence.Table;
 
 @Entity
 @Table(name = "reference")
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Reference implements Serializable {
 
 	/**
@@ -27,10 +30,8 @@ public class Reference implements Serializable {
 	 */
 	private static final long serialVersionUID = 8702718753422424784L;
 	private Long id;
-	private Long version;
 	private Long speciesFieldId;
 	private String title;
-	private String url;
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
@@ -41,15 +42,6 @@ public class Reference implements Serializable {
 
 	public void setId(Long id) {
 		this.id = id;
-	}
-
-	@Column(name = "version")
-	public Long getVersion() {
-		return version;
-	}
-
-	public void setVersion(Long version) {
-		this.version = version;
 	}
 
 	@Column(name = "species_field_id")
@@ -68,15 +60,6 @@ public class Reference implements Serializable {
 
 	public void setTitle(String title) {
 		this.title = title;
-	}
-
-	@Column(name = "url")
-	public String getUrl() {
-		return url;
-	}
-
-	public void setUrl(String url) {
-		this.url = url;
 	}
 
 }
