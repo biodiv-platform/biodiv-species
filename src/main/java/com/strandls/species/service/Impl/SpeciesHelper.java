@@ -40,7 +40,7 @@ public class SpeciesHelper {
 
 	@Inject
 	private Headers headers;
-	
+
 	private Long defaultLanguageId = Long
 			.parseLong(PropertyFileUtil.fetchProperty("config.properties", "defaultLanguageId"));
 
@@ -112,6 +112,7 @@ public class SpeciesHelper {
 				resource.setAnnotations(null);
 				resource.setGbifId(null);
 				resource.setLicenseId(resourceData.getLicenseId());
+				resource.setContributor(resourceData.getContributor());
 
 				resources.add(resource);
 			}

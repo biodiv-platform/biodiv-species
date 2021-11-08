@@ -912,7 +912,8 @@ public class SpeciesServiceImpl implements SpeciesServices {
 						speciesPullDatas.add(new SpeciesPullData(preData.getObservationId(), preData.getResourcesId()));
 					} else {
 						speciesResourceData.add(new SpeciesResourceData(preData.getPath(), preData.getUrl(),
-								preData.getType(), preData.getCaption(), preData.getRating(), preData.getLicenseId()));
+								preData.getType(), preData.getCaption(), preData.getRating(), preData.getLicenseId(),
+								preData.getContributor()));
 					}
 				}
 
@@ -927,7 +928,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 
 							SpeciesResourceData sd = new SpeciesResourceData(resource.getFileName(), resource.getUrl(),
 									resource.getType(), resource.getDescription(), resource.getRating(),
-									resource.getLicenseId());
+									resource.getLicenseId(), resource.getContributor());
 
 							if (!speciesResourceData.contains(sd))
 								speciesResourceData.add(sd);
