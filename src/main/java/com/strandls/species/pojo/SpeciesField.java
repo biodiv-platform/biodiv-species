@@ -31,13 +31,11 @@ public class SpeciesField implements Serializable {
 	 */
 	private static final long serialVersionUID = -3085147736923167548L;
 	private Long id;
-	private Long version;
 	private String description;
 	private Long fieldId;
 	private Long speciesId;
 	private String status;
 	private String classes;
-	private Long countryId;
 	private Date dateCreated;
 	private Date lastUpdated;
 	private Date uploadedTime;
@@ -55,13 +53,11 @@ public class SpeciesField implements Serializable {
 
 	/**
 	 * @param id
-	 * @param version
 	 * @param description
 	 * @param fieldId
 	 * @param speciesId
 	 * @param status
 	 * @param classes
-	 * @param countryId
 	 * @param dateCreated
 	 * @param lastUpdated
 	 * @param uploadedTime
@@ -70,18 +66,16 @@ public class SpeciesField implements Serializable {
 	 * @param dataTableId
 	 * @param isDeleted
 	 */
-	public SpeciesField(Long id, Long version, String description, Long fieldId, Long speciesId, String status,
-			String classes, Long countryId, Date dateCreated, Date lastUpdated, Date uploadedTime, Long uploaderId,
-			Long languageId, Long dataTableId, Boolean isDeleted) {
+	public SpeciesField(Long id, String description, Long fieldId, Long speciesId, String status, String classes,
+			Date dateCreated, Date lastUpdated, Date uploadedTime, Long uploaderId, Long languageId, Long dataTableId,
+			Boolean isDeleted) {
 		super();
 		this.id = id;
-		this.version = version;
 		this.description = description;
 		this.fieldId = fieldId;
 		this.speciesId = speciesId;
 		this.status = status;
 		this.classes = classes;
-		this.countryId = countryId;
 		this.dateCreated = dateCreated;
 		this.lastUpdated = lastUpdated;
 		this.uploadedTime = uploadedTime;
@@ -100,15 +94,6 @@ public class SpeciesField implements Serializable {
 
 	public void setId(Long id) {
 		this.id = id;
-	}
-
-	@Column(name = "version")
-	public Long getVersion() {
-		return version;
-	}
-
-	public void setVersion(Long version) {
-		this.version = version;
 	}
 
 	@Column(name = "description", columnDefinition = "TEXT")
@@ -154,15 +139,6 @@ public class SpeciesField implements Serializable {
 
 	public void setClasses(String classes) {
 		this.classes = classes;
-	}
-
-	@Column(name = "country_id")
-	public Long getCountryId() {
-		return countryId;
-	}
-
-	public void setCountryId(Long countryId) {
-		this.countryId = countryId;
 	}
 
 	@Column(name = "date_created")

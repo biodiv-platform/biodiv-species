@@ -28,7 +28,6 @@ public class Contributor implements Serializable {
 	private static final long serialVersionUID = -8328192609469909643L;
 	private Long id;
 	private String name;
-	private Long userId;
 
 	/**
 	 * 
@@ -40,13 +39,11 @@ public class Contributor implements Serializable {
 	/**
 	 * @param id
 	 * @param name
-	 * @param userId
 	 */
-	public Contributor(Long id, String name, Long userId) {
+	public Contributor(Long id, String name) {
 		super();
 		this.id = id;
 		this.name = name;
-		this.userId = userId;
 	}
 
 	@Id
@@ -67,15 +64,6 @@ public class Contributor implements Serializable {
 
 	public void setName(String name) {
 		this.name = name;
-	}
-
-	@Column(name = "user_id")
-	public Long getUserId() {
-		return userId;
-	}
-
-	public void setUserId(Long userId) {
-		this.userId = userId;
 	}
 
 }

@@ -72,7 +72,6 @@ public class SpeciesHelper {
 
 			for (SpeciesResourceData resourceData : resourceDataList) {
 				Resource resource = new Resource();
-				resource.setVersion(0L);
 				if (resourceData.getCaption() != null)
 					resource.setDescription(
 							(resourceData.getCaption().trim().length() != 0) ? resourceData.getCaption().trim() : null);
@@ -108,9 +107,6 @@ public class SpeciesHelper {
 				resource.setUploaderId(userId);
 				resource.setContext(context.toUpperCase());
 				resource.setLanguageId(defaultLanguageId);
-				resource.setAccessRights(null);
-				resource.setAnnotations(null);
-				resource.setGbifId(null);
 				resource.setLicenseId(resourceData.getLicenseId());
 				resource.setContributor(resourceData.getContributor());
 

@@ -576,7 +576,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 
 				} else {
 //						create new attributions
-					Contributor contributor = new Contributor(null, sfdata.getAttributions(), null);
+					Contributor contributor = new Contributor(null, sfdata.getAttributions());
 					contributor = contributorDao.save(contributor);
 
 					sfAttribution = new SpeciesFieldContributor(speciesField.getId(), contributor.getId());
@@ -662,7 +662,6 @@ public class SpeciesServiceImpl implements SpeciesServices {
 //				add new references
 				if (reference.getTitle() != null) {
 					reference.setSpeciesFieldId(speciesFieldId);
-					reference.setVersion(0L);
 					referenceDao.save(reference);
 				}
 
@@ -671,7 +670,6 @@ public class SpeciesServiceImpl implements SpeciesServices {
 //				update existing references
 				Reference ref = referenceDao.findById(reference.getId());
 				ref.setTitle(reference.getTitle());
-				ref.setUrl(reference.getUrl());
 				referenceDao.update(ref);
 				newRefId.add(ref.getId());
 			}
@@ -733,8 +731,8 @@ public class SpeciesServiceImpl implements SpeciesServices {
 
 		} else {
 //			create the species field
-			field = new SpeciesField(null, 0L, sfData.getSfDescription(), sfData.getFieldId(), speciesId,
-					sfData.getSfStatus(), "species.SpeciesField", null, new Date(), new Date(), new Date(), uploaderId,
+			field = new SpeciesField(null, sfData.getSfDescription(), sfData.getFieldId(), speciesId,
+					sfData.getSfStatus(), "species.SpeciesField", new Date(), new Date(), new Date(), uploaderId,
 					sfData.getLanguageId() != null ? sfData.getLanguageId() : defaultLanguageId, null, false);
 			field = speciesFieldDao.save(field);
 		}
@@ -1009,7 +1007,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 		if (isContributor) {
 			Species species = speciesDao.findByTaxonId(speciesCreateData.getTaxonConceptId());
 			if (species == null) {
-				species = new Species(null, 0L, 0, speciesCreateData.getTaxonConceptId(), speciesCreateData.getTitle(),
+				species = new Species(null, speciesCreateData.getTaxonConceptId(), speciesCreateData.getTitle(),
 						new Date(), new Date(), 0, speciesCreateData.getHabitatId(), false, null, false, null);
 				species = speciesDao.save(species);
 
