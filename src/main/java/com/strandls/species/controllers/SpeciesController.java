@@ -2,6 +2,7 @@ package com.strandls.species.controllers;
 
 import java.util.List;
 
+
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
@@ -22,10 +23,16 @@ import javax.ws.rs.core.Response.Status;
 import com.strandls.activity.pojo.Activity;
 import com.strandls.activity.pojo.CommentLoggingData;
 import com.strandls.authentication_utility.filter.ValidateUser;
+import com.strandls.esmodule.pojo.MapBoundParams;
+import com.strandls.esmodule.pojo.MapSearchParams;
+import com.strandls.esmodule.pojo.MapSearchQuery;
+import com.strandls.esmodule.pojo.MapSearchParams.SortTypeEnum;
 import com.strandls.resource.pojo.ResourceData;
 import com.strandls.resource.pojo.SpeciesPull;
 import com.strandls.species.ApiConstants;
+import com.strandls.species.es.util.ESUtility;
 import com.strandls.species.pojo.FieldRender;
+import com.strandls.species.pojo.MapAggregationResponse;
 import com.strandls.species.pojo.ShowSpeciesPage;
 import com.strandls.species.pojo.SpeciesCreateData;
 import com.strandls.species.pojo.SpeciesFieldData;
@@ -66,6 +73,9 @@ public class SpeciesController {
 
 	@Inject
 	private SpeciesListService listService;
+
+	@Inject
+	private ESUtility esUtility;
 
 	@GET
 	@Path(ApiConstants.PING)
@@ -696,17 +706,60 @@ public class SpeciesController {
 	}
 
 	@GET
-	@Path(ApiConstants.LIST)
+	@Path(ApiConstants.LIST + "/{index}/{type}")
 	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces(MediaType.APPLICATION_JSON)
 
 	@ApiOperation(value = "search the species for list page", notes = "return speceis list data", response = SpeciesListPageData.class)
 	@ApiResponses(value = { @ApiResponse(code = 400, message = "unable to search", response = String.class) })
 
-	public Response listSearch(@DefaultValue(value = "0") @QueryParam("offset") String offset,
-			@DefaultValue(value = "lastUpdated") @QueryParam("orderBy") String orderBy) {
+	public Response listSearch(
+			@DefaultValue("extended_species")@PathParam("index") String index,
+			@DefaultValue("_doc")@PathParam("type") String type,
+			@DefaultValue(value = "0") @QueryParam("offset") Integer offset,
+			@DefaultValue("10") @QueryParam("max") Integer max,
+			@DefaultValue("species.dateCreated") @QueryParam("sort") String sortOn,
+			@QueryParam("createdOnMaxDate") String createdOnMaxDate,
+			@QueryParam("createdOnMinDate") String createdOnMinDate,
+			@QueryParam("revisedOnMaxDate") String revisedOnMaxDate,
+			@QueryParam("revisedOnMinDate") String revisedOnMinDate,
+			@DefaultValue("") @QueryParam("userGroupList") String userGroupList,
+			@DefaultValue("") @QueryParam("user") String user, @QueryParam("taxonId") String taxonId,
+			@DefaultValue("") @QueryParam("sGroup") String sGroup,
+			@DefaultValue("") @QueryParam("scientificName") String scientificName,
+			@DefaultValue("") @QueryParam("commonName") String commonName,
+			@DefaultValue("") @QueryParam("attribution") String attribution,
+			@DefaultValue("") @QueryParam("mediaFilter") String mediaFilter,
+			@DefaultValue("") @QueryParam("reference") String reference,
+			@DefaultValue("") @QueryParam("featured") String featured,
+			@DefaultValue("") @QueryParam("traits") String traits,
+			@DefaultValue("") @QueryParam("rank") String rank,
+			@DefaultValue("") @QueryParam("fieldContext") String fieldContext,
+			@DefaultValue("") @QueryParam("fieldText") String fieldText) {
 		try {
-			SpeciesListPageData result = listService.searchList(orderBy, offset);
+			MapBoundParams mapBoundsParams = new MapBoundParams();
+			mapBoundsParams.setBounds(null);
+
+			MapSearchParams mapSearchParams = new MapSearchParams();
+			mapSearchParams.setFrom(offset);
+			mapSearchParams.setLimit(max);
+			mapSearchParams.setSortOn(sortOn);
+			mapSearchParams.setSortType(SortTypeEnum.DESC);
+			mapSearchParams.setMapBoundParams(mapBoundsParams);
+
+			MapSearchQuery mapSearchQuery = esUtility.getMapSearchQuery(scientificName, commonName, sGroup,
+					userGroupList, taxonId, mediaFilter, traits, createdOnMaxDate, createdOnMinDate, revisedOnMinDate,
+					revisedOnMaxDate,rank, mapSearchParams);
+
+			MapAggregationResponse aggregationResult = null;
+			
+				aggregationResult = listService.mapAggregate(index, type, scientificName, commonName, sGroup, userGroupList, taxonId,
+						mediaFilter, traits, createdOnMaxDate, createdOnMinDate, revisedOnMinDate, revisedOnMaxDate,
+						rank,mapSearchParams);
+
+				
+			SpeciesListPageData result = listService.searchList(index, type, mapSearchQuery, aggregationResult);
+
 			return Response.status(Status.OK).entity(result).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();

@@ -3,6 +3,7 @@
  */
 package com.strandls.species.service.Impl;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -22,13 +23,17 @@ import org.pac4j.core.profile.CommonProfile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.strandls.activity.controller.ActivitySerivceApi;
 import com.strandls.activity.pojo.Activity;
 import com.strandls.activity.pojo.CommentLoggingData;
 import com.strandls.authentication_utility.util.AuthUtil;
 import com.strandls.document.controllers.DocumentServiceApi;
 import com.strandls.document.pojo.DocumentMeta;
+import com.strandls.esmodule.ApiException;
 import com.strandls.esmodule.controllers.EsServicesApi;
+import com.strandls.esmodule.pojo.MapDocument;
 import com.strandls.esmodule.pojo.ObservationInfo;
 import com.strandls.esmodule.pojo.ObservationMapInfo;
 import com.strandls.observation.controller.ObservationServiceApi;
@@ -49,6 +54,7 @@ import com.strandls.species.dao.SpeciesFieldContributorDao;
 import com.strandls.species.dao.SpeciesFieldDao;
 import com.strandls.species.dao.SpeciesFieldLicenseDao;
 import com.strandls.species.dao.SpeciesFieldUserDao;
+import com.strandls.species.es.util.SpeciesIndex;
 import com.strandls.species.pojo.Contributor;
 import com.strandls.species.pojo.FieldDisplay;
 import com.strandls.species.pojo.FieldHeader;
@@ -195,6 +201,9 @@ public class SpeciesServiceImpl implements SpeciesServices {
 	@Inject
 	private TraitsServiceApi traitService;
 
+	@Inject
+	private ObjectMapper om;
+
 	private Long defaultLanguageId = Long
 			.parseLong(PropertyFileUtil.fetchProperty("config.properties", "defaultLanguageId"));
 
@@ -318,7 +327,8 @@ public class SpeciesServiceImpl implements SpeciesServices {
 			SpeciesFieldData speciesFieldData = new SpeciesFieldData(speciesField.getId(), field.getId(),
 					field.getDisplayOrder(), field.getLabel(), fieldHeader.getHeader(), fieldHeader.getDescription(),
 					speciesField, references, attribution != null ? attribution.getName() : null, contributors,
-					(sfAudienceType != null) ? sfAudienceType.getAudienceType() : null, sfLicenseData, sfResources);
+					(sfAudienceType != null) ? sfAudienceType.getAudienceType() : null, sfLicenseData, sfResources,
+					field.getPath());
 
 			return speciesFieldData;
 
@@ -508,9 +518,16 @@ public class SpeciesServiceImpl implements SpeciesServices {
 	}
 
 	private void updateLastRevised(Long speciesId) {
-		Species species = speciesDao.findById(speciesId);
-		species.setLastUpdated(new Date());
-		speciesDao.update(species);
+		
+		try {
+			Species species = speciesDao.findById(speciesId);
+			species.setLastUpdated(new Date());
+			speciesDao.update(species);
+			ESSpeciesUpdate(speciesId);
+		} catch (ApiException e) {
+			logger.error(e.getMessage());
+			
+		}
 	}
 
 	@Override
@@ -780,7 +797,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 						request.getHeader(HttpHeaders.AUTHORIZATION));
 				List<CommonName> result = commonNameService.updateAddCommonNames(speciesId.toString(), commonNamesData);
 				updateLastRevised(speciesId);
-
+				
 				return result;
 			}
 
@@ -1011,6 +1028,11 @@ public class SpeciesServiceImpl implements SpeciesServices {
 						new Date(), new Date(), 0, speciesCreateData.getHabitatId(), false, null, false, null);
 				species = speciesDao.save(species);
 
+				try {
+					ESSpeciesUpdate(species.getId());
+				} catch (ApiException e) {
+					logger.error(e.getMessage());
+				}
 				logActivity.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), null, species.getId(),
 						species.getId(), "species", null, "Created species", null);
 
@@ -1200,9 +1222,16 @@ public class SpeciesServiceImpl implements SpeciesServices {
 	public Boolean removeSpeciesPage(HttpServletRequest request, Long speciesId) {
 		Boolean isEligible = checkIsContributor(request, speciesId);
 		if (isEligible) {
-			Species species = speciesDao.findById(speciesId);
-			species.setIsDeleted(true);
-			speciesDao.update(species);
+
+			try {
+				Species species = speciesDao.findById(speciesId);
+				species.setIsDeleted(true);
+				speciesDao.update(species);
+				esService.delete(SpeciesIndex.INDEX.getValue(), SpeciesIndex.TYPE.getValue(), speciesId.toString());
+			} catch (ApiException e) {
+				logger.error(e.getMessage());
+			}
+
 			return true;
 		}
 		return false;
@@ -1218,6 +1247,24 @@ public class SpeciesServiceImpl implements SpeciesServices {
 			return null;
 		}
 
+	}
+
+	@Override
+	public void ESSpeciesUpdate(long speciesId) throws ApiException {
+		ShowSpeciesPage showData = showSpeciesPage(speciesId);
+
+		MapDocument document = new MapDocument();
+
+		try {
+			SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
+			om.setDateFormat(df);
+			document.setDocument(om.writeValueAsString(showData));
+		} catch (JsonProcessingException e) {
+			logger.error(e.getMessage());
+		}
+
+		esService.create(SpeciesIndex.INDEX.getValue(), SpeciesIndex.TYPE.getValue(),
+				showData.getSpecies().getId().toString(), document);
 	}
 
 }

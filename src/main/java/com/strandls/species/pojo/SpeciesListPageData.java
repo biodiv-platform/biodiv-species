@@ -14,6 +14,7 @@ public class SpeciesListPageData {
 
 	private Long totalCount;
 	private List<SpeciesListTiles> speciesTiles;
+	private MapAggregationResponse aggregationData;
 
 	/**
 	 * 
@@ -26,10 +27,12 @@ public class SpeciesListPageData {
 	 * @param totalCount
 	 * @param speciesTiles
 	 */
-	public SpeciesListPageData(Long totalCount, List<SpeciesListTiles> speciesTiles) {
+	public SpeciesListPageData(Long totalCount, List<SpeciesListTiles> speciesTiles,
+			MapAggregationResponse aggregationData) {
 		super();
 		this.totalCount = totalCount;
 		this.speciesTiles = speciesTiles;
+		this.aggregationData = aggregationData;
 	}
 
 	public Long getTotalCount() {
@@ -46,6 +49,14 @@ public class SpeciesListPageData {
 
 	public void setSpeciesTiles(List<SpeciesListTiles> speciesTiles) {
 		this.speciesTiles = speciesTiles;
+	}
+
+	public MapAggregationResponse getAggregationData() {
+		return aggregationData;
+	}
+
+	public void setAggregationData(MapAggregationResponse aggregationData) {
+		this.aggregationData = aggregationData;
 	}
 
 }

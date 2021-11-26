@@ -8,6 +8,8 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
+import org.hibernate.annotations.Type;
+
 /**
  * @author Abhishek Rudra
  *
@@ -23,18 +25,20 @@ public class FieldNew {
 	private Long displayOrder;
 	private String label;
 	private String header;
+	private String path;
 
 	public FieldNew() {
 		super();
 	}
 
-	public FieldNew(Long id, Long parentId, Long displayOrder, String label, String header) {
+	public FieldNew(Long id, Long parentId, Long displayOrder, String label, String header,String path) {
 		super();
 		this.id = id;
 		this.parentId = parentId;
 		this.displayOrder = displayOrder;
 		this.label = label;
 		this.header = header;
+		this.path = path;	
 	}
 
 	@Id
@@ -82,5 +86,15 @@ public class FieldNew {
 	public void setHeader(String header) {
 		this.header = header;
 	}
+	
+	@Column(name = "path", columnDefinition = "ltree")
+	public String getPath() {
+		return path;
+	}
+
+	public void setPath(String path) {
+		this.path = path;
+	}
+
 
 }
