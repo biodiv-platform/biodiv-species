@@ -104,8 +104,8 @@ public class SpeciesListServiceImpl implements SpeciesListService {
 
 	private String getPrefferedCommonName(TaxonomicNames taxonomicName) {
 		String preferredCommonName = null;
-		if (taxonomicName.getCommonNames() == null || taxonomicName.getCommonNames().get(0) == null
-				|| taxonomicName.getCommonNames().isEmpty())
+		if (taxonomicName.getCommonNames() == null || taxonomicName.getCommonNames().isEmpty()
+				|| taxonomicName.getCommonNames().get(0) == null)
 			return preferredCommonName;
 		List<CommonName> prefName = taxonomicName.getCommonNames().stream()
 				.filter(item -> item.getIsPreffered() != null && item.getIsPreffered().equals(Boolean.TRUE))
