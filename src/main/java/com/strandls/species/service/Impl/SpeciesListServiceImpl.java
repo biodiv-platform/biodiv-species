@@ -34,6 +34,8 @@ import com.strandls.species.pojo.ShowSpeciesPage;
 import com.strandls.species.pojo.SpeciesListPageData;
 import com.strandls.species.pojo.SpeciesListTiles;
 import com.strandls.species.service.SpeciesListService;
+import com.strandls.taxonomy.ApiException;
+import com.strandls.taxonomy.controllers.CommonNameServicesApi;
 import com.strandls.taxonomy.pojo.CommonName;
 import com.strandls.taxonomy.pojo.TaxonomicNames;
 
@@ -56,6 +58,9 @@ public class SpeciesListServiceImpl implements SpeciesListService {
 
 	@Inject
 	private ESUtility esUtility;
+
+	@Inject
+	private CommonNameServicesApi commonNameService;
 
 	@Override
 	public SpeciesListPageData searchList(String index, String type, MapSearchQuery querys,
@@ -90,7 +95,7 @@ public class SpeciesListServiceImpl implements SpeciesListService {
 							item.getSpecies().getReprImageId() != null ? getResourceImageAndContext(item)[1] : null,
 							item.getSpecies().getReprImageId() != null ? getResourceImageAndContext(item)[0] : null,
 							item.getTaxonomyDefinition().getStatus(),
-							item.getTaxonomicNames() != null ? getPrefferedCommonName(item.getTaxonomicNames()) : null,
+							item.getSpecies().getTaxonConceptId()!= null? getPrefferedCommonName(item.getSpecies().getTaxonConceptId()) : null,
 							item.getSpeciesGroup() != null ? item.getSpeciesGroup().getId() : null))
 					.collect(Collectors.toList());
 
@@ -102,16 +107,12 @@ public class SpeciesListServiceImpl implements SpeciesListService {
 		return listData;
 	}
 
-	private String getPrefferedCommonName(TaxonomicNames taxonomicName) {
+	private String getPrefferedCommonName(long taxonId) {
 		String preferredCommonName = null;
-		if (taxonomicName.getCommonNames() == null || taxonomicName.getCommonNames().isEmpty()
-				|| taxonomicName.getCommonNames().get(0) == null)
-			return preferredCommonName;
-		List<CommonName> prefName = taxonomicName.getCommonNames().stream()
-				.filter(item -> item.getIsPreffered() != null && item.getIsPreffered().equals(Boolean.TRUE))
-				.collect(Collectors.toList());
-		if (!prefName.isEmpty()) {
-			preferredCommonName = prefName.get(0).getName();
+		try {
+			preferredCommonName = commonNameService.getPrefferedCommanName(taxonId).getName();
+		} catch (ApiException e) {
+			logger.error(e.getMessage());
 		}
 
 		return preferredCommonName;
