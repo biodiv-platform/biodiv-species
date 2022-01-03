@@ -110,7 +110,10 @@ public class SpeciesListServiceImpl implements SpeciesListService {
 	private String getPrefferedCommonName(long taxonId) {
 		String preferredCommonName = null;
 		try {
-			preferredCommonName = commonNameService.getPrefferedCommanName(taxonId).getName();
+			CommonName commonName = commonNameService.getPrefferedCommanName(taxonId);
+			if(commonName!=null && commonName.getName()!=null) {
+				preferredCommonName = commonName.getName();	
+			}
 		} catch (ApiException e) {
 			logger.error(e.getMessage());
 		}
