@@ -123,9 +123,9 @@ public class SpeciesListServiceImpl implements SpeciesListService {
 
 	private String[] getResourceImageAndContext(ShowSpeciesPage showSpecies) {
 		String[] result = new String[2];
-
+		
 		List<ResourceData> resource = showSpecies.getResourceData().stream()
-				.filter(resc -> resc.getResource().getId().toString()
+				.filter(resc -> resc.getResource().getId()!= null &&resc.getResource().getId().toString()
 						.contentEquals(showSpecies.getSpecies().getReprImageId().toString()))
 				.collect(Collectors.toList());
 		if (resource != null && !resource.isEmpty()) {
