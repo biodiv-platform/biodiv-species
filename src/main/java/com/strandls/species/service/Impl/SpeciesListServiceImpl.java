@@ -3,23 +3,41 @@
  */
 package com.strandls.species.service.Impl;
 
+import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.strandls.resource.controllers.ResourceServicesApi;
-import com.strandls.resource.pojo.Resource;
-import com.strandls.species.dao.SpeciesDao;
-import com.strandls.species.pojo.Species;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.strandls.esmodule.controllers.EsServicesApi;
+import com.strandls.esmodule.pojo.AggregationResponse;
+import com.strandls.esmodule.pojo.MapDocument;
+import com.strandls.esmodule.pojo.MapResponse;
+import com.strandls.esmodule.pojo.MapSearchParams;
+import com.strandls.esmodule.pojo.MapSearchQuery;
+import com.strandls.resource.pojo.ResourceData;
+import com.strandls.species.es.util.ESUtility;
+import com.strandls.species.es.util.SpeciesIndex;
+import com.strandls.species.pojo.MapAggregationResponse;
+import com.strandls.species.pojo.ShowSpeciesPage;
 import com.strandls.species.pojo.SpeciesListPageData;
 import com.strandls.species.pojo.SpeciesListTiles;
 import com.strandls.species.service.SpeciesListService;
-import com.strandls.taxonomy.controllers.TaxonomyServicesApi;
-import com.strandls.taxonomy.pojo.TaxonomyDefinition;
+import com.strandls.taxonomy.ApiException;
+import com.strandls.taxonomy.controllers.CommonNameServicesApi;
+import com.strandls.taxonomy.pojo.CommonName;
+import com.strandls.taxonomy.pojo.TaxonomicNames;
 
 /**
  * @author Abhishek Rudra
@@ -31,43 +49,217 @@ public class SpeciesListServiceImpl implements SpeciesListService {
 	private final Logger logger = LoggerFactory.getLogger(SpeciesListServiceImpl.class);
 
 //	Dao injection
-	@Inject
-	private SpeciesDao speciesDao;
-
-//	service Injection
 
 	@Inject
-	private ResourceServicesApi resourcesService;
+	private EsServicesApi esService;
 
 	@Inject
-	private TaxonomyServicesApi taxonomyService;
+	private ObjectMapper objectMapper;
+
+	@Inject
+	private ESUtility esUtility;
+
+	@Inject
+	private CommonNameServicesApi commonNameService;
 
 	@Override
-	public SpeciesListPageData searchList(String orderBy, String offset) {
-		List<Species> speciesList = speciesDao.fetchInBatches(orderBy, offset);
-		Long totalCount = speciesDao.fetchCountOfSpeices();
-		List<SpeciesListTiles> tileData = new ArrayList<SpeciesListTiles>();
-		Resource resource = null;
+	public SpeciesListPageData searchList(String index, String type, MapSearchQuery querys,
+			MapAggregationResponse aggregationResult) {
+		SpeciesListPageData listData = null;
+
 		try {
-			for (Species species : speciesList) {
+			MapResponse result = esService.search(index, type, null, null, false, null, null, querys);
+			List<MapDocument> documents = result.getDocuments();
+			Long totalCount = result.getTotalDocuments();
+			List<ShowSpeciesPage> specieList = new ArrayList<ShowSpeciesPage>();
+			SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+			objectMapper.setDateFormat(df);
+			for (MapDocument document : documents) {
+				JsonNode rootNode = objectMapper.readTree(document.getDocument().toString());
+				((ObjectNode) rootNode).remove("id");
+				((ObjectNode) rootNode).replace("featured", null);
+				((ObjectNode) rootNode).replace("facts", null);
+				JsonNode child = ((ObjectNode) rootNode).get("taxonomyDefinition");
+				((ObjectNode) child).replace("defaultHierarchy", null);
 
-				resource = null;
-				if (species.getReprImageId() != null)
-					resource = resourcesService.getResourceDataById(species.getReprImageId().toString());
+				try {
 
-				TaxonomyDefinition taxonomyDefinition = taxonomyService
-						.getTaxonomyConceptName(species.getTaxonConceptId().toString());
-				tileData.add(new SpeciesListTiles(species.getId(), taxonomyDefinition.getItalicisedForm(),
-						resource != null ? resource.getContext() : null,
-						resource != null ? resource.getFileName() : null, taxonomyDefinition.getStatus()));
+					specieList.add(objectMapper.readValue(String.valueOf(rootNode), ShowSpeciesPage.class));
+				} catch (IOException e) {
+					logger.error(e.getMessage());
+				}
 			}
 
-			SpeciesListPageData result = new SpeciesListPageData(totalCount, tileData);
-			return result;
+			List<SpeciesListTiles> speciesListTile = specieList.stream()
+					.map(item -> new SpeciesListTiles(item.getSpecies().getId(), item.getSpecies().getTitle(),
+							item.getSpecies().getReprImageId() != null ? getResourceImageAndContext(item)[1] : null,
+							item.getSpecies().getReprImageId() != null ? getResourceImageAndContext(item)[0] : null,
+							item.getTaxonomyDefinition().getStatus(),
+							item.getSpecies().getTaxonConceptId()!= null? getPrefferedCommonName(item.getSpecies().getTaxonConceptId()) : null,
+							item.getSpeciesGroup() != null ? item.getSpeciesGroup().getId() : null))
+					.collect(Collectors.toList());
+
+			listData = new SpeciesListPageData(totalCount, speciesListTile, aggregationResult);
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 		}
-		return null;
+
+		return listData;
+	}
+
+	private String getPrefferedCommonName(long taxonId) {
+		String preferredCommonName = null;
+		try {
+			CommonName commonName = commonNameService.getPrefferedCommanName(taxonId);
+			if(commonName!=null && commonName.getName()!=null) {
+				preferredCommonName = commonName.getName();	
+			}
+		} catch (ApiException e) {
+			logger.error(e.getMessage());
+		}
+
+		return preferredCommonName;
+	}
+
+	private String[] getResourceImageAndContext(ShowSpeciesPage showSpecies) {
+		String[] result = new String[2];
+
+		List<ResourceData> resource = showSpecies.getResourceData().stream()
+				.filter(resc -> resc.getResource().getId().toString()
+						.contentEquals(showSpecies.getSpecies().getReprImageId().toString()))
+				.collect(Collectors.toList());
+		if (resource != null && !resource.isEmpty()) {
+			result[0] = resource.get(0).getResource().getFileName();
+			result[1] = resource.get(0).getResource().getContext();
+		}
+
+		return result;
+
+	}
+
+	private void getAggregateLatch(String index, String type, String filter, MapSearchQuery searchQuery,
+			Map<String, AggregationResponse> mapResponse, CountDownLatch latch, String namedAgg) {
+
+		LatchThreadWorker worker = new LatchThreadWorker(index, type, filter, searchQuery, mapResponse, namedAgg, latch,
+				esService);
+		worker.start();
+
+	}
+
+	@Override
+	public MapAggregationResponse mapAggregate(String index, String type, String scientificName, String commonName,
+			String sGroup, String userGroupList, String taxonId, String mediaFilter, String traits,
+			String createdOnMaxDate, String createdOnMinDate, String revisedOnMinDate, String revisedOnMaxDate,
+			String rank, MapSearchParams mapSearchParams) {
+
+		MapSearchQuery mapSearchQueryFilter;
+		MapSearchQuery mapSearchQuery = esUtility.getMapSearchQuery(scientificName, commonName, sGroup, userGroupList,
+				taxonId, mediaFilter, traits, createdOnMaxDate, createdOnMinDate, revisedOnMinDate, revisedOnMaxDate,
+				rank, mapSearchParams);
+
+		String omiter = null;
+		MapAggregationResponse aggregationResponse = new MapAggregationResponse();
+
+		Map<String, AggregationResponse> mapAggResponse = new HashMap<String, AggregationResponse>();
+
+		int totalLatch = 5;
+//		latch count down
+		CountDownLatch latch = new CountDownLatch(totalLatch);
+
+//		sGroup aggregation
+		if (sGroup != null && !sGroup.isEmpty()) {
+
+			mapSearchQueryFilter = esUtility.getMapSearchQuery(scientificName, commonName, omiter, userGroupList,
+					taxonId, mediaFilter, traits, createdOnMaxDate, createdOnMinDate, revisedOnMinDate,
+					revisedOnMaxDate, rank, mapSearchParams);
+
+			getAggregateLatch(index, type, SpeciesIndex.SGROUP.getValue(), mapSearchQueryFilter, mapAggResponse, latch,
+					null);
+
+		} else {
+			getAggregateLatch(index, type, SpeciesIndex.SGROUP.getValue(), mapSearchQuery, mapAggResponse, latch, null);
+		}
+
+//		userGroupList aggregation
+
+		if (userGroupList != null && !userGroupList.isEmpty()) {
+
+			mapSearchQueryFilter = esUtility.getMapSearchQuery(scientificName, commonName, sGroup, omiter, taxonId,
+					mediaFilter, traits, createdOnMaxDate, createdOnMinDate, revisedOnMinDate, revisedOnMaxDate, rank,
+					mapSearchParams);
+
+			getAggregateLatch(index, type, SpeciesIndex.USERGROUPID.getValue(), mapSearchQueryFilter, mapAggResponse,
+					latch, null);
+
+		} else {
+			getAggregateLatch(index, type, SpeciesIndex.USERGROUPID.getValue(), mapSearchQuery, mapAggResponse, latch,
+					null);
+		}
+
+//		mediaFilter aggregation
+
+		if (mediaFilter != null && !mediaFilter.isEmpty()) {
+
+			mapSearchQueryFilter = esUtility.getMapSearchQuery(scientificName, commonName, sGroup, userGroupList,
+					taxonId, omiter, traits, createdOnMaxDate, createdOnMinDate, revisedOnMinDate, revisedOnMaxDate,
+					rank, mapSearchParams);
+
+			getAggregateLatch(index, type, SpeciesIndex.MEDIA_TYPE_KEYWORD.getValue(), mapSearchQueryFilter,
+					mapAggResponse, latch, null);
+
+		} else {
+			getAggregateLatch(index, type, SpeciesIndex.MEDIA_TYPE_KEYWORD.getValue(), mapSearchQuery, mapAggResponse,
+					latch, null);
+		}
+
+//		traits aggregation
+		if (traits != null && !traits.isEmpty()) {
+
+			mapSearchQueryFilter = esUtility.getMapSearchQuery(scientificName, commonName, sGroup, userGroupList,
+					taxonId, mediaFilter, omiter, createdOnMaxDate, createdOnMinDate, revisedOnMinDate,
+					revisedOnMaxDate, rank, mapSearchParams);
+
+			getAggregateLatch(index, type, SpeciesIndex.FACT_KEYWORD.getValue(), mapSearchQueryFilter, mapAggResponse,
+					latch, null);
+
+		} else {
+			getAggregateLatch(index, type, SpeciesIndex.FACT_KEYWORD.getValue(), mapSearchQuery, mapAggResponse, latch,
+					null);
+		}
+
+//		rank aggregation
+		if (rank != null && !rank.isEmpty()) {
+
+			mapSearchQueryFilter = esUtility.getMapSearchQuery(scientificName, commonName, sGroup, userGroupList,
+					taxonId, mediaFilter, traits, createdOnMaxDate, createdOnMinDate, revisedOnMinDate,
+					revisedOnMaxDate, omiter, mapSearchParams);
+
+			getAggregateLatch(index, type, SpeciesIndex.RANK_KEYWORD.getValue(), mapSearchQueryFilter, mapAggResponse,
+					latch, null);
+
+		} else {
+			getAggregateLatch(index, type, SpeciesIndex.RANK_KEYWORD.getValue(), mapSearchQuery, mapAggResponse, latch,
+					null);
+		}
+		try {
+			latch.await();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			Thread.currentThread().interrupt();
+		}
+
+		aggregationResponse
+				.setGroupSpeciesName(mapAggResponse.get(SpeciesIndex.SGROUP.getValue()).getGroupAggregation());
+		aggregationResponse
+				.setGroupUserGroupName(mapAggResponse.get(SpeciesIndex.USERGROUPID.getValue()).getGroupAggregation());
+		aggregationResponse
+				.setGroupTraits(mapAggResponse.get(SpeciesIndex.FACT_KEYWORD.getValue()).getGroupAggregation());
+		aggregationResponse.setGroupMediaType(
+				mapAggResponse.get(SpeciesIndex.MEDIA_TYPE_KEYWORD.getValue()).getGroupAggregation());
+
+		aggregationResponse
+				.setGroupRank(mapAggResponse.get(SpeciesIndex.RANK_KEYWORD.getValue()).getGroupAggregation());
+		return aggregationResponse;
 	}
 
 }

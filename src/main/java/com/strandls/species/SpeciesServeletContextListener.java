@@ -42,6 +42,7 @@ import com.strandls.observation.controller.ObservationServiceApi;
 import com.strandls.resource.controllers.ResourceServicesApi;
 import com.strandls.species.controllers.SpeciesControllerModule;
 import com.strandls.species.dao.SpeciesDaoModule;
+import com.strandls.species.es.util.ESUtilModule;
 import com.strandls.species.service.Impl.SpeciesServiceModule;
 import com.strandls.taxonomy.controllers.CommonNameServicesApi;
 import com.strandls.taxonomy.controllers.SpeciesServicesApi;
@@ -112,7 +113,7 @@ public class SpeciesServeletContextListener extends GuiceServletContextListener 
 				serve("/api/*").with(ServletContainer.class, props);
 
 			}
-		}, new SpeciesControllerModule(), new SpeciesDaoModule(), new SpeciesServiceModule());
+		}, new SpeciesControllerModule(), new SpeciesDaoModule(), new SpeciesServiceModule(),new ESUtilModule());
 
 		return injector;
 

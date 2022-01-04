@@ -9,6 +9,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import com.strandls.activity.pojo.Activity;
 import com.strandls.activity.pojo.CommentLoggingData;
+import com.strandls.esmodule.ApiException;
 import com.strandls.resource.pojo.ResourceData;
 import com.strandls.resource.pojo.SpeciesPull;
 import com.strandls.species.pojo.FieldRender;
@@ -108,5 +109,7 @@ public interface SpeciesServices {
 	public Boolean removeSpeciesPage(HttpServletRequest request, Long speciesId);
 	
 	public String getSpeciesIdFromTaxonId(Long taxonId);
+
+	public void  ESSpeciesUpdate(long speciesId) throws ApiException;	
 
 }

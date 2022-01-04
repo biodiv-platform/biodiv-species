@@ -29,6 +29,7 @@ public class SpeciesFieldData {
 	private String audienceType;
 	private License license;
 	private List<ResourceData> speciesFieldResource;
+	private String path;
 
 	/**
 	 * 
@@ -54,7 +55,7 @@ public class SpeciesFieldData {
 	 */
 	public SpeciesFieldData(Long id, Long fieldId, Long displayOrder, String label, String fieldDescription,
 			String header, SpeciesField fieldData, List<Reference> references, String attributions,
-			List<UserIbp> contributor, String audienceType, License license, List<ResourceData> speciesFieldResource) {
+			List<UserIbp> contributor, String audienceType, License license, List<ResourceData> speciesFieldResource,String path) {
 		super();
 		this.id = id;
 		this.fieldId = fieldId;
@@ -69,8 +70,9 @@ public class SpeciesFieldData {
 		this.audienceType = audienceType;
 		this.license = license;
 		this.speciesFieldResource = speciesFieldResource;
+		this.path = path;
 	}
-
+	
 	public Long getId() {
 		return id;
 	}
@@ -173,6 +175,14 @@ public class SpeciesFieldData {
 
 	public void setSpeciesFieldResource(List<ResourceData> speciesFieldResource) {
 		this.speciesFieldResource = speciesFieldResource;
+	}
+
+	public String getPath() {
+		return path;
+	}
+
+	public void setPath(String path) {
+		this.path = path;
 	}
 
 }

@@ -15,6 +15,8 @@ public class SpeciesListTiles {
 	private String context;
 	private String reprImage;
 	private String status;
+	private String commonName;
+	private Long sGroup;
 
 	/**
 	 * 
@@ -30,13 +32,16 @@ public class SpeciesListTiles {
 	 * @param reprImage
 	 * @param status
 	 */
-	public SpeciesListTiles(Long id, String name, String context, String reprImage, String status) {
+	public SpeciesListTiles(Long id, String name, String context, String reprImage, String status, String commonName,
+			Long sGroup) {
 		super();
 		this.id = id;
 		this.name = name;
 		this.context = context;
 		this.reprImage = reprImage;
 		this.status = status;
+		this.commonName = commonName;
+		this.sGroup = sGroup;
 	}
 
 	public Long getId() {
@@ -77,6 +82,22 @@ public class SpeciesListTiles {
 
 	public void setStatus(String status) {
 		this.status = status;
+	}
+
+	public String getCommonName() {
+		return commonName;
+	}
+
+	public void setCommonName(String commonName) {
+		this.commonName = commonName;
+	}
+
+	public Long getsGroup() {
+		return sGroup;
+	}
+
+	public void setsGroup(Long sGroup) {
+		this.sGroup = sGroup;
 	}
 
 }
