@@ -1276,7 +1276,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 				commonNameService = headers.addCommonNameHeader(commonNameService,
 						request.getHeader(HttpHeaders.AUTHORIZATION));
 				result = commonNameService.updateIsPreffered(commonNameId);
-				updateLastRevised(speciesId);
+				ESSpeciesUpdate(speciesId);
 			}
 		} catch (Exception e) {
 			logger.error(e.getMessage());
