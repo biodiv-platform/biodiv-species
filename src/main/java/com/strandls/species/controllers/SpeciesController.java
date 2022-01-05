@@ -348,7 +348,9 @@ public class SpeciesController {
 	@Path(ApiConstants.UPDATE + ApiConstants.PREFERREDCOMMONNAME + "/{speciesId}/{commonNameId}")
 	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces(MediaType.APPLICATION_JSON)
+	
 	@ValidateUser
+	
 	@ApiOperation(value = "update preferrred common Names", notes = "return preferred common Name", response = CommonName.class)
 	@ApiResponses(value = {
 			@ApiResponse(code = 404, message = "unable to update the preferrred common Names", response = String.class) })

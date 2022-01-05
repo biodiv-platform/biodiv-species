@@ -1256,8 +1256,6 @@ public class SpeciesServiceImpl implements SpeciesServices {
 		MapDocument document = new MapDocument();
 
 		try {
-			SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
-			om.setDateFormat(df);
 			document.setDocument(om.writeValueAsString(showData));
 		} catch (JsonProcessingException e) {
 			logger.error(e.getMessage());
@@ -1271,10 +1269,10 @@ public class SpeciesServiceImpl implements SpeciesServices {
 	public CommonName updatePrefferedCommonName(HttpServletRequest request, Long speciesId, Long commonNameId) {
 		CommonName result = null;
 		Boolean isContributor = checkIsContributor(request, speciesId);
+		commonNameService = headers.addCommonNameHeader(commonNameService,
+				request.getHeader(HttpHeaders.AUTHORIZATION));
 		try {
 			if (Boolean.TRUE.equals(isContributor)) {
-				commonNameService = headers.addCommonNameHeader(commonNameService,
-						request.getHeader(HttpHeaders.AUTHORIZATION));
 				result = commonNameService.updateIsPreffered(commonNameId);
 				ESSpeciesUpdate(speciesId);
 			}
