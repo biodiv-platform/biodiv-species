@@ -34,7 +34,6 @@ import com.strandls.species.pojo.ShowSpeciesPage;
 import com.strandls.species.pojo.SpeciesListPageData;
 import com.strandls.species.pojo.SpeciesListTiles;
 import com.strandls.species.service.SpeciesListService;
-import com.strandls.taxonomy.ApiException;
 import com.strandls.taxonomy.controllers.CommonNameServicesApi;
 import com.strandls.taxonomy.pojo.CommonName;
 import com.strandls.taxonomy.pojo.TaxonomicNames;
