@@ -95,7 +95,7 @@ public class SpeciesListServiceImpl implements SpeciesListService {
 							item.getSpecies().getReprImageId() != null ? getResourceImageAndContext(item)[1] : null,
 							item.getSpecies().getReprImageId() != null ? getResourceImageAndContext(item)[0] : null,
 							item.getTaxonomyDefinition().getStatus(),
-							item.getSpecies().getTaxonConceptId()!= null? getPrefferedCommonName(item.getSpecies().getTaxonConceptId()) : null,
+							item.getSpecies().getTaxonConceptId()!= null?getPrefferedCommonName(item.getTaxonomicNames()) : null,
 							item.getSpeciesGroup() != null ? item.getSpeciesGroup().getId() : null))
 					.collect(Collectors.toList());
 
@@ -107,17 +107,17 @@ public class SpeciesListServiceImpl implements SpeciesListService {
 		return listData;
 	}
 
-	private String getPrefferedCommonName(long taxonId) {
+	private String getPrefferedCommonName(TaxonomicNames taxonomicName) {
 		String preferredCommonName = null;
-		try {
-			CommonName commonName = commonNameService.getPrefferedCommanName(taxonId);
-			if(commonName!=null && commonName.getName()!=null) {
-				preferredCommonName = commonName.getName();	
-			}
-		} catch (ApiException e) {
-			logger.error(e.getMessage());
+		if (taxonomicName.getCommonNames() == null || taxonomicName.getCommonNames().isEmpty()
+				|| taxonomicName.getCommonNames().get(0) == null)
+			return preferredCommonName;
+		List<CommonName> prefName = taxonomicName.getCommonNames().stream()
+				.filter(item -> item.getIsPreffered() != null && item.getIsPreffered().equals(Boolean.TRUE))
+				.collect(Collectors.toList());
+		if (!prefName.isEmpty()) {
+			preferredCommonName = prefName.get(0).getName();
 		}
-
 		return preferredCommonName;
 	}
 

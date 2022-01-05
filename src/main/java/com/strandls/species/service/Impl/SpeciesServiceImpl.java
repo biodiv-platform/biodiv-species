@@ -518,7 +518,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 	}
 
 	private void updateLastRevised(Long speciesId) {
-		
+
 		try {
 			Species species = speciesDao.findById(speciesId);
 			species.setLastUpdated(new Date());
@@ -526,7 +526,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 			ESSpeciesUpdate(speciesId);
 		} catch (ApiException e) {
 			logger.error(e.getMessage());
-			
+
 		}
 	}
 
@@ -797,7 +797,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 						request.getHeader(HttpHeaders.AUTHORIZATION));
 				List<CommonName> result = commonNameService.updateAddCommonNames(speciesId.toString(), commonNamesData);
 				updateLastRevised(speciesId);
-				
+
 				return result;
 			}
 
@@ -1265,6 +1265,23 @@ public class SpeciesServiceImpl implements SpeciesServices {
 
 		esService.create(SpeciesIndex.INDEX.getValue(), SpeciesIndex.TYPE.getValue(),
 				showData.getSpecies().getId().toString(), document);
+	}
+
+	@Override
+	public CommonName updatePrefferedCommonName(HttpServletRequest request, Long speciesId, Long commonNameId) {
+		CommonName result = null;
+		Boolean isContributor = checkIsContributor(request, speciesId);
+		try {
+			if (Boolean.TRUE.equals(isContributor)) {
+				commonNameService = headers.addCommonNameHeader(commonNameService,
+						request.getHeader(HttpHeaders.AUTHORIZATION));
+				result = commonNameService.updateIsPreffered(commonNameId);
+				updateLastRevised(speciesId);
+			}
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return result;
 	}
 
 }
