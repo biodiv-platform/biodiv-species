@@ -24,7 +24,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.strandls.activity.controller.ActivitySerivceApi;
 import com.strandls.activity.pojo.Activity;
 import com.strandls.activity.pojo.CommentLoggingData;
@@ -1256,6 +1258,10 @@ public class SpeciesServiceImpl implements SpeciesServices {
 		MapDocument document = new MapDocument();
 
 		try {
+			JsonNode rootNode = om.readTree(showData.toString());
+			JsonNode child = ((ObjectNode) rootNode).get("taxonomyDefinition");
+			((ObjectNode) child).replace("defaultHierarchy",
+					(JsonNode) om.readValue(showData.getTaxonomyDefinition().getDefaultHierarchy(), Object.class));
 			document.setDocument(om.writeValueAsString(showData));
 		} catch (JsonProcessingException e) {
 			logger.error(e.getMessage());
