@@ -1254,15 +1254,17 @@ public class SpeciesServiceImpl implements SpeciesServices {
 	@Override
 	public void ESSpeciesUpdate(long speciesId) throws ApiException {
 		ShowSpeciesPage showData = showSpeciesPage(speciesId);
-
 		MapDocument document = new MapDocument();
-
 		try {
-			JsonNode rootNode = om.readTree(showData.toString());
-			JsonNode child = ((ObjectNode) rootNode).get("taxonomyDefinition");
-			((ObjectNode) child).replace("defaultHierarchy",
-					(JsonNode) om.readValue(showData.getTaxonomyDefinition().getDefaultHierarchy(), Object.class));
-			document.setDocument(om.writeValueAsString(showData));
+			String payload = om.writeValueAsString(showData);
+			JsonNode rootNode = om.readTree(payload);
+			if (showData.getTaxonomyDefinition().getDefaultHierarchy() != null
+					&& !showData.getTaxonomyDefinition().getDefaultHierarchy().isEmpty()) {
+				JsonNode child = ((ObjectNode) rootNode).get("taxonomyDefinition");
+				((ObjectNode) child).replace("defaultHierarchy",
+						om.readValue(showData.getTaxonomyDefinition().getDefaultHierarchy(), JsonNode.class));
+			}
+			document.setDocument(om.writeValueAsString(rootNode));
 		} catch (JsonProcessingException e) {
 			logger.error(e.getMessage());
 		}
