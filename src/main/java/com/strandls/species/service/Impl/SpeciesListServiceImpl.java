@@ -85,23 +85,22 @@ public class SpeciesListServiceImpl implements SpeciesListService {
 
 					specieList.add(objectMapper.readValue(String.valueOf(rootNode), ShowSpeciesPage.class));
 				} catch (IOException e) {
-					e.printStackTrace();
 					logger.error(e.getMessage());
 				}
 			}
 
-			List<SpeciesListTiles> speciesListTile = specieList.stream()
-					.map(item -> new SpeciesListTiles(item.getSpecies().getId(), item.getSpecies().getTitle(),
-							item.getSpecies().getReprImageId() != null ? getResourceImageAndContext(item)[1] : null,
-							item.getSpecies().getReprImageId() != null ? getResourceImageAndContext(item)[0] : null,
-							item.getTaxonomyDefinition().getStatus(),
-							item.getSpecies().getTaxonConceptId()!= null?getPrefferedCommonName(item.getTaxonomicNames()) : null,
-							item.getSpeciesGroup() != null ? item.getSpeciesGroup().getId() : null))
+			List<SpeciesListTiles> speciesListTile = specieList.stream().map(item -> new SpeciesListTiles(
+					item.getSpecies().getId(), item.getSpecies().getTitle(),
+					item.getSpecies().getReprImageId() != null ? getResourceImageAndContext(item)[1] : null,
+					item.getSpecies().getReprImageId() != null ? getResourceImageAndContext(item)[0] : null,
+					item.getTaxonomyDefinition().getStatus(),
+					item.getSpecies().getTaxonConceptId() != null ? getPrefferedCommonName(item.getTaxonomicNames())
+							: null,
+					item.getSpeciesGroup() != null ? item.getSpeciesGroup().getId() : null))
 					.collect(Collectors.toList());
 
 			listData = new SpeciesListPageData(totalCount, speciesListTile, aggregationResult);
 		} catch (Exception e) {
-			e.printStackTrace();
 			logger.error(e.getMessage());
 		}
 
@@ -124,9 +123,9 @@ public class SpeciesListServiceImpl implements SpeciesListService {
 
 	private String[] getResourceImageAndContext(ShowSpeciesPage showSpecies) {
 		String[] result = new String[2];
-		
+
 		List<ResourceData> resource = showSpecies.getResourceData().stream()
-				.filter(resc -> resc.getResource().getId()!= null &&resc.getResource().getId().toString()
+				.filter(resc -> resc.getResource().getId() != null && resc.getResource().getId().toString()
 						.contentEquals(showSpecies.getSpecies().getReprImageId().toString()))
 				.collect(Collectors.toList());
 		if (resource != null && !resource.isEmpty()) {
@@ -246,21 +245,25 @@ public class SpeciesListServiceImpl implements SpeciesListService {
 			latch.await();
 		} catch (Exception e) {
 			logger.error(e.getMessage());
-			e.printStackTrace();
 			Thread.currentThread().interrupt();
 		}
 
-		aggregationResponse
-				.setGroupSpeciesName(mapAggResponse.get(SpeciesIndex.SGROUP.getValue()).getGroupAggregation());
-		aggregationResponse
-				.setGroupUserGroupName(mapAggResponse.get(SpeciesIndex.USERGROUPID.getValue()).getGroupAggregation());
-		aggregationResponse
-				.setGroupTraits(mapAggResponse.get(SpeciesIndex.FACT_KEYWORD.getValue()).getGroupAggregation());
-		aggregationResponse.setGroupMediaType(
-				mapAggResponse.get(SpeciesIndex.MEDIA_TYPE_KEYWORD.getValue()).getGroupAggregation());
+		aggregationResponse.setGroupSpeciesName(mapAggResponse.get(SpeciesIndex.SGROUP.getValue()) != null
+				? mapAggResponse.get(SpeciesIndex.SGROUP.getValue()).getGroupAggregation()
+				: null);
+		aggregationResponse.setGroupUserGroupName(mapAggResponse.get(SpeciesIndex.USERGROUPID.getValue()) != null
+				? mapAggResponse.get(SpeciesIndex.USERGROUPID.getValue()).getGroupAggregation()
+				: null);
+		aggregationResponse.setGroupTraits(mapAggResponse.get(SpeciesIndex.FACT_KEYWORD.getValue()) != null
+				? mapAggResponse.get(SpeciesIndex.FACT_KEYWORD.getValue()).getGroupAggregation()
+				: null);
+		aggregationResponse.setGroupMediaType(mapAggResponse.get(SpeciesIndex.MEDIA_TYPE_KEYWORD.getValue()) != null
+				? mapAggResponse.get(SpeciesIndex.MEDIA_TYPE_KEYWORD.getValue()).getGroupAggregation()
+				: null);
 
-		aggregationResponse
-				.setGroupRank(mapAggResponse.get(SpeciesIndex.RANK_KEYWORD.getValue()).getGroupAggregation());
+		aggregationResponse.setGroupRank(mapAggResponse.get(SpeciesIndex.RANK_KEYWORD.getValue()) != null
+				? mapAggResponse.get(SpeciesIndex.RANK_KEYWORD.getValue()).getGroupAggregation()
+				: null);
 		return aggregationResponse;
 	}
 
