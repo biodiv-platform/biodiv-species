@@ -1261,8 +1261,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 			if (showData.getTaxonomyDefinition().getDefaultHierarchy() != null
 					&& !showData.getTaxonomyDefinition().getDefaultHierarchy().isEmpty()) {
 				JsonNode child = ((ObjectNode) rootNode).get("taxonomyDefinition");
-				((ObjectNode) child).replace("defaultHierarchy",
-						om.readValue(showData.getTaxonomyDefinition().getDefaultHierarchy(), JsonNode.class));
+				((ObjectNode) child).replace("defaultHierarchy",null);
 			}
 			document.setDocument(om.writeValueAsString(rootNode));
 		} catch (JsonProcessingException e) {

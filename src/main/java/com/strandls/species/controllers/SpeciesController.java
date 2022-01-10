@@ -748,7 +748,7 @@ public class SpeciesController {
 			@QueryParam("revisedOnMaxDate") String revisedOnMaxDate,
 			@QueryParam("revisedOnMinDate") String revisedOnMinDate,
 			@DefaultValue("") @QueryParam("userGroupList") String userGroupList,
-			@DefaultValue("") @QueryParam("user") String user, @QueryParam("taxonId") String taxonId,
+			@DefaultValue("") @QueryParam("user") String user, @QueryParam("taxon") String taxonId,
 			@DefaultValue("") @QueryParam("sGroup") String sGroup,
 			@DefaultValue("") @QueryParam("scientificName") String scientificName,
 			@DefaultValue("") @QueryParam("commonName") String commonName,
