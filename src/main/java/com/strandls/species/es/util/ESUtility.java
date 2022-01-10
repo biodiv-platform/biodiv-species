@@ -208,6 +208,7 @@ public class ESUtility {
 			mapSearchQuery.setOrMatchPhraseQueries(orMatchPhraseQueriesnew);
 
 		} catch (Exception e) {
+			e.printStackTrace();
 			logger.error(e.getMessage());
 		}
 		mapSearchQuery.setSearchParams(mapSearchParams);
