@@ -123,6 +123,7 @@ public class ESUtility {
 			if (!sciName.isEmpty()) {
 				for (Object o : sciName) {
 					String result = o.toString().toLowerCase();
+					orMatchPhraseQueriesnew.add(assignOrMatchPhrase(SpeciesIndex.SYNONYM.getValue(), result));
 					orMatchPhraseQueriesnew.add(assignOrMatchPhrase(SpeciesIndex.SCIENTIFICNAME.getValue(), result));
 				}
 			}

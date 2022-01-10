@@ -4,11 +4,12 @@ public enum SpeciesIndex {
 
 	INDEX("extended_species"),
 	TYPE("_doc"),
-	SCIENTIFICNAME("taxonomyDefinition.defaultHierarchy.name"),//match phrase
+	SCIENTIFICNAME("taxonomyDefinition.name"),//match phrase
+	SYNONYM("taxonomicNames.synonyms.name"),//match phrase 
 	COMMONNAME("taxonomicNames.commonNames.name"),//match phrase 
 	SGROUP("speciesGroup.id"), //terms search comma sep or query
 	USERGROUPID("userGroups.id"), //terms search comma sep or query
-	TAXONID("taxonomyDefinition.defaultHierarchy.id"), //terms search comma sep or query
+	TAXONID("breadCrumbs.id"), //terms search comma sep or query
 	MEDIATYPE("resourceData.resource.type"), //terms or bool query
 	TRAITS("facts.value"),//term or bool query
 	CREATEDON("species.dateCreated"),

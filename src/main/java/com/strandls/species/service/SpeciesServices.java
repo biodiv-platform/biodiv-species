@@ -109,7 +109,9 @@ public interface SpeciesServices {
 	public Boolean removeSpeciesPage(HttpServletRequest request, Long speciesId);
 	
 	public String getSpeciesIdFromTaxonId(Long taxonId);
+	
+	public void  ESSpeciesUpdate(long speciesId) throws ApiException;
 
-	public void  ESSpeciesUpdate(long speciesId) throws ApiException;	
+	CommonName updatePrefferedCommonName(HttpServletRequest request, Long speciesId, Long commonNameId);	
 
 }

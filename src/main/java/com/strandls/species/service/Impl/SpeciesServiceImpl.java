@@ -24,7 +24,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.strandls.activity.controller.ActivitySerivceApi;
 import com.strandls.activity.pojo.Activity;
 import com.strandls.activity.pojo.CommentLoggingData;
@@ -518,7 +520,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 	}
 
 	private void updateLastRevised(Long speciesId) {
-		
+
 		try {
 			Species species = speciesDao.findById(speciesId);
 			species.setLastUpdated(new Date());
@@ -526,7 +528,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 			ESSpeciesUpdate(speciesId);
 		} catch (ApiException e) {
 			logger.error(e.getMessage());
-			
+
 		}
 	}
 
@@ -797,7 +799,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 						request.getHeader(HttpHeaders.AUTHORIZATION));
 				List<CommonName> result = commonNameService.updateAddCommonNames(speciesId.toString(), commonNamesData);
 				updateLastRevised(speciesId);
-				
+
 				return result;
 			}
 
@@ -1252,19 +1254,39 @@ public class SpeciesServiceImpl implements SpeciesServices {
 	@Override
 	public void ESSpeciesUpdate(long speciesId) throws ApiException {
 		ShowSpeciesPage showData = showSpeciesPage(speciesId);
-
 		MapDocument document = new MapDocument();
-
 		try {
-			SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
-			om.setDateFormat(df);
-			document.setDocument(om.writeValueAsString(showData));
+			String payload = om.writeValueAsString(showData);
+			JsonNode rootNode = om.readTree(payload);
+			if (showData.getTaxonomyDefinition().getDefaultHierarchy() != null
+					&& !showData.getTaxonomyDefinition().getDefaultHierarchy().isEmpty()) {
+				JsonNode child = ((ObjectNode) rootNode).get("taxonomyDefinition");
+				((ObjectNode) child).replace("defaultHierarchy",null);
+			}
+			document.setDocument(om.writeValueAsString(rootNode));
 		} catch (JsonProcessingException e) {
 			logger.error(e.getMessage());
 		}
 
 		esService.create(SpeciesIndex.INDEX.getValue(), SpeciesIndex.TYPE.getValue(),
 				showData.getSpecies().getId().toString(), document);
+	}
+
+	@Override
+	public CommonName updatePrefferedCommonName(HttpServletRequest request, Long speciesId, Long commonNameId) {
+		CommonName result = null;
+		Boolean isContributor = checkIsContributor(request, speciesId);
+		commonNameService = headers.addCommonNameHeader(commonNameService,
+				request.getHeader(HttpHeaders.AUTHORIZATION));
+		try {
+			if (Boolean.TRUE.equals(isContributor)) {
+				result = commonNameService.updateIsPreffered(commonNameId);
+				ESSpeciesUpdate(speciesId);
+			}
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return result;
 	}
 
 }

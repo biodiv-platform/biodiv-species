@@ -343,6 +343,30 @@ public class SpeciesController {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
 	}
+	
+	@PUT
+	@Path(ApiConstants.UPDATE + ApiConstants.PREFERREDCOMMONNAME + "/{speciesId}/{commonNameId}")
+	@Consumes(MediaType.TEXT_PLAIN)
+	@Produces(MediaType.APPLICATION_JSON)
+	
+	@ValidateUser
+	
+	@ApiOperation(value = "update preferrred common Names", notes = "return preferred common Name", response = CommonName.class)
+	@ApiResponses(value = {
+			@ApiResponse(code = 404, message = "unable to update the preferrred common Names", response = String.class) })
+
+	public Response updatePreferredCommonName(@Context HttpServletRequest request, @PathParam("speciesId") String speciesId,
+			@PathParam("commonNameId") String commonNameId) {
+		try {
+
+			Long sId = Long.parseLong(speciesId);
+			Long pCname = Long.parseLong(commonNameId);
+			CommonName result = speciesService.updatePrefferedCommonName(request, sId, pCname);
+			return Response.status(Status.OK).entity(result).build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+	}
 
 	@DELETE
 	@Path(ApiConstants.REMOVE + ApiConstants.COMMONNAME + "/{speciesId}/{commonNameId}")
@@ -724,7 +748,7 @@ public class SpeciesController {
 			@QueryParam("revisedOnMaxDate") String revisedOnMaxDate,
 			@QueryParam("revisedOnMinDate") String revisedOnMinDate,
 			@DefaultValue("") @QueryParam("userGroupList") String userGroupList,
-			@DefaultValue("") @QueryParam("user") String user, @QueryParam("taxonId") String taxonId,
+			@DefaultValue("") @QueryParam("user") String user, @QueryParam("taxon") String taxonId,
 			@DefaultValue("") @QueryParam("sGroup") String sGroup,
 			@DefaultValue("") @QueryParam("scientificName") String scientificName,
 			@DefaultValue("") @QueryParam("commonName") String commonName,

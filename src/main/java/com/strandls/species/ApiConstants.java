@@ -20,6 +20,7 @@ public class ApiConstants {
 	public static final String CHECK = "/check";
 	public static final String COMMENT = "/comment";
 	public static final String COMMONNAME = "/commonname";
+	public static final String PREFERREDCOMMONNAME = "/preferred-commonname";
 	public static final String EDIT = "/edit";
 	public static final String FEATURED = "/featured";
 	public static final String FIELDS = "/fields";
