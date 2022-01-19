@@ -2,7 +2,6 @@ package com.strandls.species.controllers;
 
 import java.util.List;
 
-
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
@@ -343,20 +342,20 @@ public class SpeciesController {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
 	}
-	
+
 	@PUT
 	@Path(ApiConstants.UPDATE + ApiConstants.PREFERREDCOMMONNAME + "/{speciesId}/{commonNameId}")
 	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces(MediaType.APPLICATION_JSON)
-	
+
 	@ValidateUser
-	
+
 	@ApiOperation(value = "update preferrred common Names", notes = "return preferred common Name", response = CommonName.class)
 	@ApiResponses(value = {
 			@ApiResponse(code = 404, message = "unable to update the preferrred common Names", response = String.class) })
 
-	public Response updatePreferredCommonName(@Context HttpServletRequest request, @PathParam("speciesId") String speciesId,
-			@PathParam("commonNameId") String commonNameId) {
+	public Response updatePreferredCommonName(@Context HttpServletRequest request,
+			@PathParam("speciesId") String speciesId, @PathParam("commonNameId") String commonNameId) {
 		try {
 
 			Long sId = Long.parseLong(speciesId);
@@ -737,9 +736,8 @@ public class SpeciesController {
 	@ApiOperation(value = "search the species for list page", notes = "return speceis list data", response = SpeciesListPageData.class)
 	@ApiResponses(value = { @ApiResponse(code = 400, message = "unable to search", response = String.class) })
 
-	public Response listSearch(
-			@DefaultValue("extended_species")@PathParam("index") String index,
-			@DefaultValue("_doc")@PathParam("type") String type,
+	public Response listSearch(@DefaultValue("extended_species") @PathParam("index") String index,
+			@DefaultValue("_doc") @PathParam("type") String type,
 			@DefaultValue(value = "0") @QueryParam("offset") Integer offset,
 			@DefaultValue("10") @QueryParam("max") Integer max,
 			@DefaultValue("species.dateCreated") @QueryParam("sort") String sortOn,
@@ -756,10 +754,10 @@ public class SpeciesController {
 			@DefaultValue("") @QueryParam("mediaFilter") String mediaFilter,
 			@DefaultValue("") @QueryParam("reference") String reference,
 			@DefaultValue("") @QueryParam("featured") String featured,
-			@DefaultValue("") @QueryParam("traits") String traits,
-			@DefaultValue("") @QueryParam("rank") String rank,
-			@DefaultValue("") @QueryParam("fieldContext") String fieldContext,
-			@DefaultValue("") @QueryParam("fieldText") String fieldText) {
+			@DefaultValue("") @QueryParam("traits") String traits, @DefaultValue("") @QueryParam("rank") String rank,
+			@DefaultValue("") @QueryParam("path") String path,
+			@DefaultValue("") @QueryParam("description") String description,
+			@DefaultValue("") @QueryParam("attributes") String attributes) {
 		try {
 			MapBoundParams mapBoundsParams = new MapBoundParams();
 			mapBoundsParams.setBounds(null);
@@ -773,15 +771,14 @@ public class SpeciesController {
 
 			MapSearchQuery mapSearchQuery = esUtility.getMapSearchQuery(scientificName, commonName, sGroup,
 					userGroupList, taxonId, mediaFilter, traits, createdOnMaxDate, createdOnMinDate, revisedOnMinDate,
-					revisedOnMaxDate,rank, mapSearchParams);
+					revisedOnMaxDate, rank, path, user, attributes, reference, description, mapSearchParams);
 
 			MapAggregationResponse aggregationResult = null;
-			
-				aggregationResult = listService.mapAggregate(index, type, scientificName, commonName, sGroup, userGroupList, taxonId,
-						mediaFilter, traits, createdOnMaxDate, createdOnMinDate, revisedOnMinDate, revisedOnMaxDate,
-						rank,mapSearchParams);
 
-				
+			aggregationResult = listService.mapAggregate(index, type, scientificName, commonName, sGroup, userGroupList,
+					taxonId, mediaFilter, traits, createdOnMaxDate, createdOnMinDate, revisedOnMinDate,
+					revisedOnMaxDate, rank, path, user, attributes, reference, description, mapSearchParams);
+
 			SpeciesListPageData result = listService.searchList(index, type, mapSearchQuery, aggregationResult);
 
 			return Response.status(Status.OK).entity(result).build();

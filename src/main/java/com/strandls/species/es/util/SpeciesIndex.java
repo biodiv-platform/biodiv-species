@@ -16,8 +16,13 @@ public enum SpeciesIndex {
 	LASTREVISED("species.lastUpdated"),
 	MEDIA_TYPE_KEYWORD("resourceData.resource.type.keyword"),
 	FACT_KEYWORD("facts.valueId"),
-	RANK_KEYWORD("taxonomyDefinition.rank.keyword")
-	;
+	RANK_KEYWORD("taxonomyDefinition.rank.keyword"),
+	FIELD_PATH("fieldData.path"),
+	FIELD_DESCRIPTION("fieldData.fieldData.description"),
+	FIELD_REFERENCES("fieldData.references.title"),
+	FIELD_CONTRIBUTOR("fieldData.contributor.id"),
+	FIELD_ATTRIBUTION("fieldData.attributions"),
+	TRAITS_NAME_KEYWORD("facts.nameId");
 
 	private String field;
 

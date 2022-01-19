@@ -8,7 +8,8 @@ public class MapAggregationResponse {
 	private Map<String, Long> groupUserGroupName;
 	private Map<String, Long> groupTraits;
 	private Map<String, Long> groupMediaType;
-	private  Map<String, Long> groupRank;
+	private Map<String, Long> groupRank;
+	private Map<String, Long> groupTraitsName;
 
 	public Map<String, Long> getGroupSpeciesName() {
 		return groupSpeciesName;
@@ -50,6 +51,12 @@ public class MapAggregationResponse {
 		this.groupRank = groupRank;
 	}
 
-	
+	public Map<String, Long> getGroupTraitsName() {
+		return groupTraitsName;
+	}
+
+	public void setGroupTraitsName(Map<String, Long> groupTraitsName) {
+		this.groupTraitsName = groupTraitsName;
+	}
 
 }
