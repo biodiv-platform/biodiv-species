@@ -4,7 +4,6 @@
 package com.strandls.species.service.Impl;
 
 import java.io.IOException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -34,7 +33,6 @@ import com.strandls.species.pojo.ShowSpeciesPage;
 import com.strandls.species.pojo.SpeciesListPageData;
 import com.strandls.species.pojo.SpeciesListTiles;
 import com.strandls.species.service.SpeciesListService;
-import com.strandls.taxonomy.controllers.CommonNameServicesApi;
 import com.strandls.taxonomy.pojo.CommonName;
 import com.strandls.taxonomy.pojo.TaxonomicNames;
 
@@ -57,9 +55,6 @@ public class SpeciesListServiceImpl implements SpeciesListService {
 
 	@Inject
 	private ESUtility esUtility;
-
-	@Inject
-	private CommonNameServicesApi commonNameService;
 
 	@Override
 	public SpeciesListPageData searchList(String index, String type, MapSearchQuery querys,
@@ -150,19 +145,20 @@ public class SpeciesListServiceImpl implements SpeciesListService {
 	public MapAggregationResponse mapAggregate(String index, String type, String scientificName, String commonName,
 			String sGroup, String userGroupList, String taxonId, String mediaFilter, String traits,
 			String createdOnMaxDate, String createdOnMinDate, String revisedOnMinDate, String revisedOnMaxDate,
-			String rank, MapSearchParams mapSearchParams) {
+			String rank, String path, String userId, String attributes, String reference, String description,
+			MapSearchParams mapSearchParams) {
 
 		MapSearchQuery mapSearchQueryFilter;
 		MapSearchQuery mapSearchQuery = esUtility.getMapSearchQuery(scientificName, commonName, sGroup, userGroupList,
 				taxonId, mediaFilter, traits, createdOnMaxDate, createdOnMinDate, revisedOnMinDate, revisedOnMaxDate,
-				rank, mapSearchParams);
+				rank, path, userId, attributes, reference, description, mapSearchParams);
 
 		String omiter = null;
 		MapAggregationResponse aggregationResponse = new MapAggregationResponse();
 
 		Map<String, AggregationResponse> mapAggResponse = new HashMap<String, AggregationResponse>();
 
-		int totalLatch = 5;
+		int totalLatch = 6;
 //		latch count down
 		CountDownLatch latch = new CountDownLatch(totalLatch);
 
@@ -171,7 +167,7 @@ public class SpeciesListServiceImpl implements SpeciesListService {
 
 			mapSearchQueryFilter = esUtility.getMapSearchQuery(scientificName, commonName, omiter, userGroupList,
 					taxonId, mediaFilter, traits, createdOnMaxDate, createdOnMinDate, revisedOnMinDate,
-					revisedOnMaxDate, rank, mapSearchParams);
+					revisedOnMaxDate, rank, path, userId, attributes, reference, description, mapSearchParams);
 
 			getAggregateLatch(index, type, SpeciesIndex.SGROUP.getValue(), mapSearchQueryFilter, mapAggResponse, latch,
 					null);
@@ -186,7 +182,7 @@ public class SpeciesListServiceImpl implements SpeciesListService {
 
 			mapSearchQueryFilter = esUtility.getMapSearchQuery(scientificName, commonName, sGroup, omiter, taxonId,
 					mediaFilter, traits, createdOnMaxDate, createdOnMinDate, revisedOnMinDate, revisedOnMaxDate, rank,
-					mapSearchParams);
+					path, userId, attributes, reference, description, mapSearchParams);
 
 			getAggregateLatch(index, type, SpeciesIndex.USERGROUPID.getValue(), mapSearchQueryFilter, mapAggResponse,
 					latch, null);
@@ -202,7 +198,7 @@ public class SpeciesListServiceImpl implements SpeciesListService {
 
 			mapSearchQueryFilter = esUtility.getMapSearchQuery(scientificName, commonName, sGroup, userGroupList,
 					taxonId, omiter, traits, createdOnMaxDate, createdOnMinDate, revisedOnMinDate, revisedOnMaxDate,
-					rank, mapSearchParams);
+					rank, path, userId, attributes, reference, description, mapSearchParams);
 
 			getAggregateLatch(index, type, SpeciesIndex.MEDIA_TYPE_KEYWORD.getValue(), mapSearchQueryFilter,
 					mapAggResponse, latch, null);
@@ -217,7 +213,7 @@ public class SpeciesListServiceImpl implements SpeciesListService {
 
 			mapSearchQueryFilter = esUtility.getMapSearchQuery(scientificName, commonName, sGroup, userGroupList,
 					taxonId, mediaFilter, omiter, createdOnMaxDate, createdOnMinDate, revisedOnMinDate,
-					revisedOnMaxDate, rank, mapSearchParams);
+					revisedOnMaxDate, rank, path, userId, attributes, reference, description, mapSearchParams);
 
 			getAggregateLatch(index, type, SpeciesIndex.FACT_KEYWORD.getValue(), mapSearchQueryFilter, mapAggResponse,
 					latch, null);
@@ -232,7 +228,7 @@ public class SpeciesListServiceImpl implements SpeciesListService {
 
 			mapSearchQueryFilter = esUtility.getMapSearchQuery(scientificName, commonName, sGroup, userGroupList,
 					taxonId, mediaFilter, traits, createdOnMaxDate, createdOnMinDate, revisedOnMinDate,
-					revisedOnMaxDate, omiter, mapSearchParams);
+					revisedOnMaxDate, omiter, path, userId, attributes, reference, description, mapSearchParams);
 
 			getAggregateLatch(index, type, SpeciesIndex.RANK_KEYWORD.getValue(), mapSearchQueryFilter, mapAggResponse,
 					latch, null);
@@ -241,6 +237,22 @@ public class SpeciesListServiceImpl implements SpeciesListService {
 			getAggregateLatch(index, type, SpeciesIndex.RANK_KEYWORD.getValue(), mapSearchQuery, mapAggResponse, latch,
 					null);
 		}
+
+//		traits name aggregation
+		if (traits != null && !traits.isEmpty()) {
+
+			mapSearchQueryFilter = esUtility.getMapSearchQuery(scientificName, commonName, sGroup, userGroupList,
+					taxonId, mediaFilter, omiter, createdOnMaxDate, createdOnMinDate, revisedOnMinDate,
+					revisedOnMaxDate, rank, path, userId, attributes, reference, description, mapSearchParams);
+
+			getAggregateLatch(index, type, SpeciesIndex.TRAITS_NAME_KEYWORD.getValue(), mapSearchQueryFilter, mapAggResponse,
+					latch, null);
+
+		} else {
+			getAggregateLatch(index, type, SpeciesIndex.TRAITS_NAME_KEYWORD.getValue(), mapSearchQuery, mapAggResponse, latch,
+					null);
+		}
+		
 		try {
 			latch.await();
 		} catch (Exception e) {
@@ -263,6 +275,9 @@ public class SpeciesListServiceImpl implements SpeciesListService {
 
 		aggregationResponse.setGroupRank(mapAggResponse.get(SpeciesIndex.RANK_KEYWORD.getValue()) != null
 				? mapAggResponse.get(SpeciesIndex.RANK_KEYWORD.getValue()).getGroupAggregation()
+				: null);
+		aggregationResponse.setGroupTraitsName(mapAggResponse.get(SpeciesIndex.TRAITS_NAME_KEYWORD.getValue()) != null
+				? mapAggResponse.get(SpeciesIndex.TRAITS_NAME_KEYWORD.getValue()).getGroupAggregation()
 				: null);
 		return aggregationResponse;
 	}

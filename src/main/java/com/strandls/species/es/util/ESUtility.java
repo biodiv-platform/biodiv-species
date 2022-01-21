@@ -26,7 +26,7 @@ public class ESUtility {
 	private Logger logger = LoggerFactory.getLogger(ESUtility.class);
 
 	private List<Object> cSTSOT(String str) {
-		if (str == null ||  str.equals("")|| str.isEmpty())
+		if (str == null || str.equals("") || str.isEmpty())
 			return new ArrayList<Object>();
 
 		String[] y = str.split(",");
@@ -45,12 +45,12 @@ public class ESUtility {
 
 	}
 
-//	private MapAndMatchPhraseQuery assignAndMatchPhrase(String key, String value) {
-//		MapAndMatchPhraseQuery andMatchPhrase = new MapAndMatchPhraseQuery();
-//		andMatchPhrase.setKey(key);
-//		andMatchPhrase.setValue(value);
-//		return andMatchPhrase;
-//	}
+	private MapAndMatchPhraseQuery assignAndMatchPhrase(String key, String value) {
+		MapAndMatchPhraseQuery andMatchPhrase = new MapAndMatchPhraseQuery();
+		andMatchPhrase.setKey(key);
+		andMatchPhrase.setValue(value);
+		return andMatchPhrase;
+	}
 
 	private MapOrMatchPhraseQuery assignOrMatchPhrase(String key, String value) {
 		MapOrMatchPhraseQuery orMatchPhrase = new MapOrMatchPhraseQuery();
@@ -70,8 +70,8 @@ public class ESUtility {
 
 	public MapSearchQuery getMapSearchQuery(String scientificName, String commonName, String sGroup,
 			String userGroupList, String taxonId, String mediaFilter, String traits, String createdOnMaxDate,
-			String createdOnMinDate, String revisedOnMinDate, String revisedOnMaxDate, String rank,
-			MapSearchParams mapSearchParams) {
+			String createdOnMinDate, String revisedOnMinDate, String revisedOnMaxDate, String rank, String path,
+			String userId, String attributes, String reference, String description, MapSearchParams mapSearchParams) {
 		MapSearchQuery mapSearchQuery = new MapSearchQuery();
 		List<MapAndBoolQuery> boolAndLists = new ArrayList<MapAndBoolQuery>();
 		List<MapOrBoolQuery> boolOrLists = new ArrayList<MapOrBoolQuery>();
@@ -119,13 +119,43 @@ public class ESUtility {
 			}
 
 //			scientific name
-			List<Object> sciName = cSTSOT(scientificName);
-			if (!sciName.isEmpty()) {
-				for (Object o : sciName) {
+			if (scientificName != null&&  !scientificName.equals("") && !scientificName.isEmpty()) {
+				orMatchPhraseQueriesnew.add(assignOrMatchPhrase(SpeciesIndex.SYNONYM.getValue(), scientificName));
+				orMatchPhraseQueriesnew.add(assignOrMatchPhrase(SpeciesIndex.SCIENTIFICNAME.getValue(), scientificName));
+
+			}
+
+//			fieldDescription filter
+			List<Object> fieldDescription = cSTSOT(description);
+			if (!fieldDescription.isEmpty() && !path.isEmpty()) {
+				for (Object o : fieldDescription) {
 					String result = o.toString().toLowerCase();
-					orMatchPhraseQueriesnew.add(assignOrMatchPhrase(SpeciesIndex.SYNONYM.getValue(), result));
-					orMatchPhraseQueriesnew.add(assignOrMatchPhrase(SpeciesIndex.SCIENTIFICNAME.getValue(), result));
+					andMatchPhraseQueries.add(assignAndMatchPhrase(SpeciesIndex.FIELD_PATH.getValue(), path));
+					andMatchPhraseQueries.add(assignAndMatchPhrase(SpeciesIndex.FIELD_DESCRIPTION.getValue(), result));
 				}
+			}
+
+//			references filter
+			List<Object> references = cSTSOT(reference);
+			if (!references.isEmpty()) {
+				for (Object o : references) {
+					String result = o.toString().toLowerCase();
+					andMatchPhraseQueries.add(assignAndMatchPhrase(SpeciesIndex.FIELD_REFERENCES.getValue(), result));
+				}
+			}
+
+//			attribution filter
+			List<Object> attribution = cSTSOT(attributes);
+			if (!attribution.isEmpty()) {
+				for (Object o : attribution) {
+					String result = o.toString().toLowerCase();
+					andMatchPhraseQueries.add(assignAndMatchPhrase(SpeciesIndex.FIELD_ATTRIBUTION.getValue(), result));
+				}
+			}
+//			contributor browser 
+			List<Object> contributor = cSTSOT(userId);
+			if (!contributor.isEmpty()) {
+				boolAndLists.add(assignBoolAndQuery(SpeciesIndex.FIELD_CONTRIBUTOR.getValue(), contributor));
 			}
 
 //			common name
