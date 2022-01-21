@@ -70,9 +70,8 @@ public class ESUtility {
 
 	public MapSearchQuery getMapSearchQuery(String scientificName, String commonName, String sGroup,
 			String userGroupList, String taxonId, String mediaFilter, String traits, String createdOnMaxDate,
-			String createdOnMinDate, String revisedOnMinDate, String revisedOnMaxDate, String rank,
-			String path,
-			String userId, String attributes, String reference, String description,MapSearchParams mapSearchParams) {
+			String createdOnMinDate, String revisedOnMinDate, String revisedOnMaxDate, String rank, String path,
+			String userId, String attributes, String reference, String description, MapSearchParams mapSearchParams) {
 		MapSearchQuery mapSearchQuery = new MapSearchQuery();
 		List<MapAndBoolQuery> boolAndLists = new ArrayList<MapAndBoolQuery>();
 		List<MapOrBoolQuery> boolOrLists = new ArrayList<MapOrBoolQuery>();
@@ -120,13 +119,10 @@ public class ESUtility {
 			}
 
 //			scientific name
-			List<Object> sciName = cSTSOT(scientificName);
-			if (!sciName.isEmpty()) {
-				for (Object o : sciName) {
-					String result = o.toString().toLowerCase();
-					orMatchPhraseQueriesnew.add(assignOrMatchPhrase(SpeciesIndex.SYNONYM.getValue(), result));
-					orMatchPhraseQueriesnew.add(assignOrMatchPhrase(SpeciesIndex.SCIENTIFICNAME.getValue(), result));
-				}
+			if (scientificName != null&&  !scientificName.equals("") && !scientificName.isEmpty()) {
+				orMatchPhraseQueriesnew.add(assignOrMatchPhrase(SpeciesIndex.SYNONYM.getValue(), scientificName));
+				orMatchPhraseQueriesnew.add(assignOrMatchPhrase(SpeciesIndex.SCIENTIFICNAME.getValue(), scientificName));
+
 			}
 
 //			fieldDescription filter

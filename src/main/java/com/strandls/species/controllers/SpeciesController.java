@@ -750,7 +750,6 @@ public class SpeciesController {
 			@DefaultValue("") @QueryParam("sGroup") String sGroup,
 			@DefaultValue("") @QueryParam("scientificName") String scientificName,
 			@DefaultValue("") @QueryParam("commonName") String commonName,
-			@DefaultValue("") @QueryParam("attribution") String attribution,
 			@DefaultValue("") @QueryParam("mediaFilter") String mediaFilter,
 			@DefaultValue("") @QueryParam("reference") String reference,
 			@DefaultValue("") @QueryParam("featured") String featured,
