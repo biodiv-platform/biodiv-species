@@ -45,17 +45,19 @@ public class ESUtility {
 
 	}
 
-	private MapAndMatchPhraseQuery assignAndMatchPhrase(String key, String value) {
+	private MapAndMatchPhraseQuery assignAndMatchPhrase(String key, String value, String path) {
 		MapAndMatchPhraseQuery andMatchPhrase = new MapAndMatchPhraseQuery();
 		andMatchPhrase.setKey(key);
 		andMatchPhrase.setValue(value);
+		andMatchPhrase.setPath(path);
 		return andMatchPhrase;
 	}
 
-	private MapOrMatchPhraseQuery assignOrMatchPhrase(String key, String value) {
+	private MapOrMatchPhraseQuery assignOrMatchPhrase(String key, String value, String path) {
 		MapOrMatchPhraseQuery orMatchPhrase = new MapOrMatchPhraseQuery();
 		orMatchPhrase.setKey(key);
 		orMatchPhrase.setValue(value);
+		orMatchPhrase.setPath(null);
 		return orMatchPhrase;
 	}
 
@@ -119,19 +121,23 @@ public class ESUtility {
 			}
 
 //			scientific name
-			if (scientificName != null&&  !scientificName.equals("") && !scientificName.isEmpty()) {
-				orMatchPhraseQueriesnew.add(assignOrMatchPhrase(SpeciesIndex.SYNONYM.getValue(), scientificName));
-				orMatchPhraseQueriesnew.add(assignOrMatchPhrase(SpeciesIndex.SCIENTIFICNAME.getValue(), scientificName));
+			if (scientificName != null && !scientificName.equals("") && !scientificName.isEmpty()) {
+				orMatchPhraseQueriesnew.add(assignOrMatchPhrase(SpeciesIndex.SYNONYM.getValue(), scientificName, null));
+				orMatchPhraseQueriesnew
+						.add(assignOrMatchPhrase(SpeciesIndex.SCIENTIFICNAME.getValue(), scientificName, null));
 
 			}
 
 //			fieldDescription filter
 			List<Object> fieldDescription = cSTSOT(description);
-			if (!fieldDescription.isEmpty() && !path.isEmpty()) {
-				for (Object o : fieldDescription) {
-					String result = o.toString().toLowerCase();
-					andMatchPhraseQueries.add(assignAndMatchPhrase(SpeciesIndex.FIELD_PATH.getValue(), path));
-					andMatchPhraseQueries.add(assignAndMatchPhrase(SpeciesIndex.FIELD_DESCRIPTION.getValue(), result));
+			List<Object> pathList = cSTSOT(path);
+
+			if (!fieldDescription.isEmpty() && !pathList.isEmpty()) {
+				for (int i = 0; i < fieldDescription.size(); i++) {
+					andMatchPhraseQueries.add(assignAndMatchPhrase(SpeciesIndex.FIELD_PATH.getValue(),
+							pathList.get(i).toString().toLowerCase(),null));
+					andMatchPhraseQueries.add(assignAndMatchPhrase(SpeciesIndex.FIELD_DESCRIPTION.getValue(),
+							fieldDescription.get(i).toString().toLowerCase(),null));
 				}
 			}
 
@@ -140,7 +146,8 @@ public class ESUtility {
 			if (!references.isEmpty()) {
 				for (Object o : references) {
 					String result = o.toString().toLowerCase();
-					andMatchPhraseQueries.add(assignAndMatchPhrase(SpeciesIndex.FIELD_REFERENCES.getValue(), result));
+					andMatchPhraseQueries
+							.add(assignAndMatchPhrase(SpeciesIndex.FIELD_REFERENCES.getValue(), result, null));
 				}
 			}
 
@@ -149,7 +156,8 @@ public class ESUtility {
 			if (!attribution.isEmpty()) {
 				for (Object o : attribution) {
 					String result = o.toString().toLowerCase();
-					andMatchPhraseQueries.add(assignAndMatchPhrase(SpeciesIndex.FIELD_ATTRIBUTION.getValue(), result));
+					andMatchPhraseQueries
+							.add(assignAndMatchPhrase(SpeciesIndex.FIELD_ATTRIBUTION.getValue(), result, null));
 				}
 			}
 //			contributor browser 
@@ -163,7 +171,7 @@ public class ESUtility {
 			if (!cName.isEmpty()) {
 				for (Object o : cName) {
 					String result = o.toString().toLowerCase();
-					orMatchPhraseQueriesnew.add(assignOrMatchPhrase(SpeciesIndex.COMMONNAME.getValue(), result));
+					orMatchPhraseQueriesnew.add(assignOrMatchPhrase(SpeciesIndex.COMMONNAME.getValue(), result, null));
 				}
 			}
 
