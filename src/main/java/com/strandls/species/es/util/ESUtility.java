@@ -129,15 +129,20 @@ public class ESUtility {
 			}
 
 //			fieldDescription filter
-			List<Object> fieldDescription = cSTSOT(description);
-			List<Object> pathList = cSTSOT(path);
-
-			if (!fieldDescription.isEmpty() && !pathList.isEmpty()) {
-				for (int i = 0; i < fieldDescription.size(); i++) {
+			if (path!=null&&description	!=null  &&!path.isEmpty() && !description.isEmpty()) {
+				String[] fieldDescription = description.split(",");
+				String[] pathList =  path.split(",");
+				
+				for (int i = 0; i < fieldDescription.length; i++) {
+					
+					String nestedPath = SpeciesIndex.FIELD_DATA.getValue()
+							.concat("." + pathList[i].toString().toLowerCase());///fieldData.108
+					
 					andMatchPhraseQueries.add(assignAndMatchPhrase(SpeciesIndex.FIELD_PATH.getValue(),
-							pathList.get(i).toString().toLowerCase(),null));
+							pathList[i].toString().toLowerCase(), nestedPath));/// nestedPath=fieldData.108
+					
 					andMatchPhraseQueries.add(assignAndMatchPhrase(SpeciesIndex.FIELD_DESCRIPTION.getValue(),
-							fieldDescription.get(i).toString().toLowerCase(),null));
+							fieldDescription[i].toString().toLowerCase(), nestedPath));///nestedPath=fieldData.108
 				}
 			}
 

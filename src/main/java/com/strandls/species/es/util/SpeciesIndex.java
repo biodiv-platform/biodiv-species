@@ -22,7 +22,8 @@ public enum SpeciesIndex {
 	FIELD_REFERENCES("fieldData.references.title"),
 	FIELD_CONTRIBUTOR("fieldData.contributor.id"),
 	FIELD_ATTRIBUTION("fieldData.attributions"),
-	TRAITS_NAME_KEYWORD("facts.nameId");
+	TRAITS_NAME_KEYWORD("facts.nameId"),
+	FIELD_DATA("fieldData");
 
 	private String field;
 
