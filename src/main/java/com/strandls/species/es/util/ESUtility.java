@@ -57,7 +57,7 @@ public class ESUtility {
 		MapOrMatchPhraseQuery orMatchPhrase = new MapOrMatchPhraseQuery();
 		orMatchPhrase.setKey(key);
 		orMatchPhrase.setValue(value);
-		orMatchPhrase.setPath(null);
+		orMatchPhrase.setPath(path);
 		return orMatchPhrase;
 	}
 
@@ -136,13 +136,13 @@ public class ESUtility {
 				for (int i = 0; i < fieldDescription.length; i++) {
 					
 					String nestedPath = SpeciesIndex.FIELD_DATA.getValue()
-							.concat("." + pathList[i].toString().toLowerCase());///fieldData.108
+							.concat("." + pathList[i].toLowerCase());///fieldData.108
 					
 					andMatchPhraseQueries.add(assignAndMatchPhrase(SpeciesIndex.FIELD_PATH.getValue(),
-							pathList[i].toString().toLowerCase(), nestedPath));/// nestedPath=fieldData.108
+							pathList[i].toLowerCase(), nestedPath));/// nestedPath=fieldData.108
 					
 					andMatchPhraseQueries.add(assignAndMatchPhrase(SpeciesIndex.FIELD_DESCRIPTION.getValue(),
-							fieldDescription[i].toString().toLowerCase(), nestedPath));///nestedPath=fieldData.108
+							fieldDescription[i].toLowerCase(), nestedPath));///nestedPath=fieldData.108
 				}
 			}
 
