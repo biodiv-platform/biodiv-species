@@ -73,6 +73,7 @@ public class SpeciesListServiceImpl implements SpeciesListService {
 				((ObjectNode) rootNode).remove("id");
 				((ObjectNode) rootNode).replace("featured", null);
 				((ObjectNode) rootNode).replace("facts", null);
+				((ObjectNode) rootNode).replace("fieldData", null);
 				JsonNode child = ((ObjectNode) rootNode).get("taxonomyDefinition");
 				((ObjectNode) child).replace("defaultHierarchy", null);
 
