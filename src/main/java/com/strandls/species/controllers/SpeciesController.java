@@ -756,7 +756,16 @@ public class SpeciesController {
 			@DefaultValue("") @QueryParam("traits") String traits, @DefaultValue("") @QueryParam("rank") String rank,
 			@DefaultValue("") @QueryParam("path") String path,
 			@DefaultValue("") @QueryParam("description") String description,
-			@DefaultValue("") @QueryParam("attributes") String attributes) {
+			@DefaultValue("") @QueryParam("attributes") String attributes,
+			@DefaultValue("") @QueryParam("h") String hue,
+			@DefaultValue("") @QueryParam("s") String saturation,
+			@DefaultValue("") @QueryParam("v") String value,
+			@DefaultValue("") @QueryParam("nameId") String nameId,
+			@DefaultValue("") @QueryParam("rangeNameId") String rangeNameId,
+			@DefaultValue("20") @QueryParam("colorRange") Integer colorRange,
+			@DefaultValue("") @QueryParam("traitMax") String traitMax,
+			@DefaultValue("") @QueryParam("traitMin") String traitMin
+			) {
 		try {
 			MapBoundParams mapBoundsParams = new MapBoundParams();
 			mapBoundsParams.setBounds(null);
@@ -770,13 +779,13 @@ public class SpeciesController {
 
 			MapSearchQuery mapSearchQuery = esUtility.getMapSearchQuery(scientificName, commonName, sGroup,
 					userGroupList, taxonId, mediaFilter, traits, createdOnMaxDate, createdOnMinDate, revisedOnMinDate,
-					revisedOnMaxDate, rank, path, user, attributes, reference, description, mapSearchParams);
+					revisedOnMaxDate, rank, path, user, attributes, reference, description,hue,saturation,value,nameId, colorRange,traitMin,traitMax,rangeNameId,mapSearchParams);
 
 			MapAggregationResponse aggregationResult = null;
 
 			aggregationResult = listService.mapAggregate(index, type, scientificName, commonName, sGroup, userGroupList,
 					taxonId, mediaFilter, traits, createdOnMaxDate, createdOnMinDate, revisedOnMinDate,
-					revisedOnMaxDate, rank, path, user, attributes, reference, description, mapSearchParams);
+					revisedOnMaxDate, rank, path, user, attributes, reference, description,hue,saturation,value,nameId, colorRange,traitMin,traitMax,rangeNameId, mapSearchParams);
 
 			SpeciesListPageData result = listService.searchList(index, type, mapSearchQuery, aggregationResult);
 

@@ -22,6 +22,8 @@ public interface SpeciesListService {
 			String sGroup, String userGroupList, String taxonId, String mediaFilter, String traits,
 			String createdOnMaxDate, String createdOnMinDate, String revisedOnMinDate, String revisedOnMaxDate,
 			String rank, String path, String userId, String attributes, String reference, String description,
+			String hue, String saturation,
+			String value, String nameId, Integer colorRange, String traitMin, String traitMax, String rangeNameId,
 			MapSearchParams mapSearchParams);
 
 }
