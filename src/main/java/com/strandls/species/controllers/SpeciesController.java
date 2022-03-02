@@ -764,7 +764,10 @@ public class SpeciesController {
 			@DefaultValue("") @QueryParam("rangeNameId") String rangeNameId,
 			@DefaultValue("20") @QueryParam("colorRange") Integer colorRange,
 			@DefaultValue("") @QueryParam("traitMax") String traitMax,
-			@DefaultValue("") @QueryParam("traitMin") String traitMin
+			@DefaultValue("") @QueryParam("traitMin") String traitMin,
+			@DefaultValue("") @QueryParam("traitsFrom") String traitsFrom,
+			@DefaultValue("") @QueryParam("traitsTo") String traitsTo,
+			@DefaultValue("") @QueryParam("traitsNameId") String traitsNameId
 			) {
 		try {
 			MapBoundParams mapBoundsParams = new MapBoundParams();
@@ -779,13 +782,13 @@ public class SpeciesController {
 
 			MapSearchQuery mapSearchQuery = esUtility.getMapSearchQuery(scientificName, commonName, sGroup,
 					userGroupList, taxonId, mediaFilter, traits, createdOnMaxDate, createdOnMinDate, revisedOnMinDate,
-					revisedOnMaxDate, rank, path, user, attributes, reference, description,hue,saturation,value,nameId, colorRange,traitMin,traitMax,rangeNameId,mapSearchParams);
+					revisedOnMaxDate, rank, path, user, attributes, reference, description,hue,saturation,value,nameId, colorRange,traitMin,traitMax,rangeNameId,traitsFrom, traitsTo, traitsNameId, mapSearchParams);
 
 			MapAggregationResponse aggregationResult = null;
 
 			aggregationResult = listService.mapAggregate(index, type, scientificName, commonName, sGroup, userGroupList,
 					taxonId, mediaFilter, traits, createdOnMaxDate, createdOnMinDate, revisedOnMinDate,
-					revisedOnMaxDate, rank, path, user, attributes, reference, description,hue,saturation,value,nameId, colorRange,traitMin,traitMax,rangeNameId, mapSearchParams);
+					revisedOnMaxDate, rank, path, user, attributes, reference, description,hue,saturation,value,nameId, colorRange,traitMin,traitMax,rangeNameId,traitsFrom, traitsTo, traitsNameId,  mapSearchParams);
 
 			SpeciesListPageData result = listService.searchList(index, type, mapSearchQuery, aggregationResult);
 
