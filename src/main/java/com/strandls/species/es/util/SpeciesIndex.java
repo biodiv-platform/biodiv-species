@@ -11,11 +11,11 @@ public enum SpeciesIndex {
 	MEDIATYPE("resourceData.resource.type"), // terms or bool query
 	TRAITS("facts.value"), // term or bool query
 	CREATEDON("species.dateCreated"), LASTREVISED("species.lastUpdated"),
-	MEDIA_TYPE_KEYWORD("resourceData.resource.type.keyword"), FACT_KEYWORD("facts.valueId"),
+	MEDIA_TYPE_KEYWORD("resourceData.resource.type.keyword"), FACT_KEYWORD("nested.facts.valueId"),
 	RANK_KEYWORD("taxonomyDefinition.rank.keyword"), FIELD_PATH("fieldData.path"),
 	FIELD_DESCRIPTION("fieldData.fieldData.description"), FIELD_REFERENCES("fieldData.references.title"),
 	FIELD_CONTRIBUTOR("fieldData.contributor.id"), FIELD_ATTRIBUTION("fieldData.attributions"),
-	TRAITS_NAME_KEYWORD("facts.nameId"), TRAITS_COLOR_HUE("facts.color.h"), TRAITS_COLOR_SATURATION("facts.color.s"),
+	TRAITS_NAME_KEYWORD("nested.facts.nameId"), TRAITS_COLOR_HUE("facts.color.h"), TRAITS_COLOR_SATURATION("facts.color.s"),
 	TRAITS_COLOR_VALUE("facts.color.v"), TRAITS_RANGE_MAX("facts.range.max"), TRAITS_RANGE_MIN("facts.range.min"),
 	TRAITS_COLOR_GROUP("facts.color.1"), TRAITS_RANGE_GROUP("facts.range.1"), TRAITS_COLOR_NAMEID("facts.color.nameId"),
 	TRAITS_RANGE_NAMEID("facts.range.nameId"), FACTS_GROUP("facts.1"), TRAITS_TO_DATE("facts.toDate"),
