@@ -216,9 +216,9 @@ public class ESUtility {
 
 						if (!traitList.isEmpty() && !traitNameIdList.isEmpty()) {
 							boolAndLists.add(assignBoolAndQuery(SpeciesIndex.TRAITS_NAME_ID.getValue(), traitNameIdList,
-									SpeciesIndex.FACTS_GROUP.getValue()));
+									SpeciesIndex.FACTS_GROUP.getValue()+"."+traitId));
 							boolAndLists.add(assignBoolAndQuery(SpeciesIndex.FACT_VALUEID.getValue(), traitList,
-									SpeciesIndex.FACTS_GROUP.getValue()));
+									SpeciesIndex.FACTS_GROUP.getValue()+"."+traitId));
 						}
 
 					}
@@ -245,36 +245,36 @@ public class ESUtility {
 						if (traitsMinDateValue != null && traitsMaxDateValue != null) {
 
 							rangeAndLists.add(assignAndRange(SpeciesIndex.TRAITS_NAME_ID.getValue(), traitId, null,
-									SpeciesIndex.FACTS_GROUP.getValue()));
+									SpeciesIndex.FACTS_GROUP.getValue()+"."+traitId));
 
 							rangeAndLists.add(assignAndRange(SpeciesIndex.TRAITS_FROM_DATE.getValue(),
-									traitsMinDateValue, traitsMaxDateValue, SpeciesIndex.FACTS_GROUP.getValue()));
+									traitsMinDateValue, traitsMaxDateValue, SpeciesIndex.FACTS_GROUP.getValue()+"."+traitId));
 							
 							rangeAndLists.add(assignAndRange(SpeciesIndex.TRAITS_TO_DATE.getValue(), traitsMinDateValue,
-									traitsMaxDateValue, SpeciesIndex.FACTS_GROUP.getValue()));
+									traitsMaxDateValue, SpeciesIndex.FACTS_GROUP.getValue()+"."+traitId));
 						}
 
 						if (traitsMinDateValue != null && traitsMaxDateValue == null) {
 
 							rangeAndLists.add(assignAndRange(SpeciesIndex.TRAITS_NAME_ID.getValue(), traitId, null,
-									SpeciesIndex.FACTS_GROUP.getValue()));
+									SpeciesIndex.FACTS_GROUP.getValue()+"."+traitId));
 
 							rangeAndLists.add(assignAndRange(SpeciesIndex.TRAITS_FROM_DATE.getValue(),
-									traitsMinDateValue, out.format(date), SpeciesIndex.FACTS_GROUP.getValue()));
+									traitsMinDateValue, out.format(date), SpeciesIndex.FACTS_GROUP.getValue()+"."+traitId));
 							
 							rangeAndLists.add(assignAndRange(SpeciesIndex.TRAITS_TO_DATE.getValue(), traitsMinDateValue,
-									out.format(date), SpeciesIndex.FACTS_GROUP.getValue()));
+									out.format(date), SpeciesIndex.FACTS_GROUP.getValue()+"."+traitId));
 						}
 
 						if (traitsMinDateValue == null && traitsMaxDateValue != null) {
 							rangeAndLists.add(assignAndRange(SpeciesIndex.TRAITS_NAME_ID.getValue(), traitId, null,
-									SpeciesIndex.FACTS_GROUP.getValue()));
+									SpeciesIndex.FACTS_GROUP.getValue()+"."+traitId));
 
 							rangeAndLists.add(assignAndRange(SpeciesIndex.TRAITS_FROM_DATE.getValue(), out.format(date),
-									traitsMaxDateValue, SpeciesIndex.FACTS_GROUP.getValue()));
+									traitsMaxDateValue, SpeciesIndex.FACTS_GROUP.getValue()+"."+traitId));
 							
 							rangeAndLists.add(assignAndRange(SpeciesIndex.TRAITS_TO_DATE.getValue(), out.format(date),
-									traitsMaxDateValue, SpeciesIndex.FACTS_GROUP.getValue()));
+									traitsMaxDateValue, SpeciesIndex.FACTS_GROUP.getValue()+"."+traitId));
 						}
 					}
 					
@@ -287,11 +287,11 @@ public class ESUtility {
 							Object vmin = listOfIds.get(1);
 
 							rangeAndLists.add(assignAndRange(SpeciesIndex.TRAITS_RANGE_NAMEID.getValue(), traitId, null,
-									SpeciesIndex.TRAITS_RANGE_GROUP.getValue()));
+									SpeciesIndex.TRAITS_RANGE_GROUP.getValue()+"."+traitId));
 							rangeAndLists.add(assignAndRange(SpeciesIndex.TRAITS_RANGE_MAX.getValue(), vmin, vmax,
-									SpeciesIndex.TRAITS_RANGE_GROUP.getValue()));
+									SpeciesIndex.TRAITS_RANGE_GROUP.getValue()+"."+traitId));
 							rangeAndLists.add(assignAndRange(SpeciesIndex.TRAITS_RANGE_MIN.getValue(), vmin, vmax,
-									SpeciesIndex.TRAITS_RANGE_GROUP.getValue()));
+									SpeciesIndex.TRAITS_RANGE_GROUP.getValue()+"."+traitId));
 						}
 
 					}
@@ -318,13 +318,13 @@ public class ESUtility {
 							Double smax = Double.parseDouble(listOfIds.get(1).toString()) + colorRange;
 
 							rangeAndLists.add(assignAndRange(SpeciesIndex.TRAITS_COLOR_NAMEID.getValue(), traitId, null,
-									SpeciesIndex.TRAITS_COLOR_GROUP.getValue()));
+									SpeciesIndex.TRAITS_COLOR_GROUP.getValue()+"."+traitId));
 							rangeAndLists.add(assignAndRange(SpeciesIndex.TRAITS_COLOR_VALUE.getValue(), vmin, vmax,
-									SpeciesIndex.TRAITS_COLOR_GROUP.getValue()));
+									SpeciesIndex.TRAITS_COLOR_GROUP.getValue()+"."+traitId));
 							rangeAndLists.add(assignAndRange(SpeciesIndex.TRAITS_COLOR_SATURATION.getValue(), smin,
-									smax, SpeciesIndex.TRAITS_COLOR_GROUP.getValue()));
+									smax, SpeciesIndex.TRAITS_COLOR_GROUP.getValue()+"."+traitId));
 							rangeAndLists.add(assignAndRange(SpeciesIndex.TRAITS_COLOR_HUE.getValue(), hmin, hmax,
-									SpeciesIndex.TRAITS_COLOR_GROUP.getValue()));
+									SpeciesIndex.TRAITS_COLOR_GROUP.getValue()+"."+traitId));
 						}
 
 					}
