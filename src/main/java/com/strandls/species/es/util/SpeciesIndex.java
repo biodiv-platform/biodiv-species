@@ -19,9 +19,9 @@ public enum SpeciesIndex {
 //	Traits and facts filter
 	FACT_VALUEID("facts.valueId"), FACT_KEYWORD("nested.facts.valueId"), TRAITS_NAME_KEYWORD("nested.facts.nameId"),
 	TRAITS_COLOR_HUE("facts.color.h"), TRAITS_COLOR_SATURATION("facts.color.s"), TRAITS_COLOR_VALUE("facts.color.v"),
-	TRAITS_RANGE_MAX("facts.range.max"), TRAITS_RANGE_MIN("facts.range.min"), TRAITS_COLOR_GROUP("facts.color.1"),
-	TRAITS_RANGE_GROUP("facts.range.1"), TRAITS_COLOR_NAMEID("facts.color.nameId"),
-	TRAITS_RANGE_NAMEID("facts.range.nameId"), FACTS_GROUP("facts.1"), TRAITS_TO_DATE("facts.toDate"),
+	TRAITS_RANGE_MAX("facts.range.max"), TRAITS_RANGE_MIN("facts.range.min"), TRAITS_COLOR_GROUP("facts.color"),
+	TRAITS_RANGE_GROUP("facts.range"), TRAITS_COLOR_NAMEID("facts.color.nameId"),
+	TRAITS_RANGE_NAMEID("facts.range.nameId"), FACTS_GROUP("facts"), TRAITS_TO_DATE("facts.toDate"),
 	TRAITS_FROM_DATE("facts.fromDate"), TRAITS_NAME_ID("facts.nameId");
 
 	private String field;
