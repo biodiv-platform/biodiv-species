@@ -201,7 +201,7 @@ public class ESUtility {
 			}
 			
 //          Traits
-			if (!traitParams.isEmpty()) {
+			if (traitParams!= null && !traitParams.isEmpty()) {
 				for (Map.Entry<String, List<String>> entry : traitParams.entrySet()) {
 					String type = entry.getKey().split("\\.")[1];
 					String key = entry.getKey().split("\\.")[0];
