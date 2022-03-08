@@ -760,7 +760,7 @@ public class SpeciesController {
 			@DefaultValue("") @QueryParam("rank") String rank, @DefaultValue("") @QueryParam("path") String path,
 			@DefaultValue("") @QueryParam("description") String description,
 			@DefaultValue("") @QueryParam("attributes") String attributes,
-			@DefaultValue("20") @QueryParam("colorRange") Integer colorRange, @Context UriInfo uriInfo) {
+			@DefaultValue("40") @QueryParam("colorRange") Integer colorRange, @Context UriInfo uriInfo) {
 		try {
 
 			MultivaluedMap<String, String> queryParams = uriInfo.getQueryParameters();
