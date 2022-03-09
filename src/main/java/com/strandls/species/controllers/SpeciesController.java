@@ -1,6 +1,8 @@
 package com.strandls.species.controllers;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
@@ -16,7 +18,9 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.core.Response.Status;
 
 import com.strandls.activity.pojo.Activity;
@@ -753,11 +757,17 @@ public class SpeciesController {
 			@DefaultValue("") @QueryParam("mediaFilter") String mediaFilter,
 			@DefaultValue("") @QueryParam("reference") String reference,
 			@DefaultValue("") @QueryParam("featured") String featured,
-			@DefaultValue("") @QueryParam("traits") String traits, @DefaultValue("") @QueryParam("rank") String rank,
-			@DefaultValue("") @QueryParam("path") String path,
+			@DefaultValue("") @QueryParam("rank") String rank, @DefaultValue("") @QueryParam("path") String path,
 			@DefaultValue("") @QueryParam("description") String description,
-			@DefaultValue("") @QueryParam("attributes") String attributes) {
+			@DefaultValue("") @QueryParam("attributes") String attributes,
+			@DefaultValue("40") @QueryParam("colorRange") Integer colorRange, @Context UriInfo uriInfo) {
 		try {
+
+			MultivaluedMap<String, String> queryParams = uriInfo.getQueryParameters();
+			Map<String, List<String>> traitParams = queryParams.entrySet().stream()
+					.filter(entry -> entry.getKey().startsWith("trait"))
+					.collect(Collectors.toMap(p -> p.getKey(), p -> p.getValue()));
+
 			MapBoundParams mapBoundsParams = new MapBoundParams();
 			mapBoundsParams.setBounds(null);
 
@@ -769,14 +779,15 @@ public class SpeciesController {
 			mapSearchParams.setMapBoundParams(mapBoundsParams);
 
 			MapSearchQuery mapSearchQuery = esUtility.getMapSearchQuery(scientificName, commonName, sGroup,
-					userGroupList, taxonId, mediaFilter, traits, createdOnMaxDate, createdOnMinDate, revisedOnMinDate,
-					revisedOnMaxDate, rank, path, user, attributes, reference, description, mapSearchParams);
+					userGroupList, taxonId, mediaFilter, createdOnMaxDate, createdOnMinDate, revisedOnMinDate,
+					revisedOnMaxDate, rank, path, user, attributes, reference, description, colorRange, traitParams,
+					mapSearchParams);
 
 			MapAggregationResponse aggregationResult = null;
 
 			aggregationResult = listService.mapAggregate(index, type, scientificName, commonName, sGroup, userGroupList,
-					taxonId, mediaFilter, traits, createdOnMaxDate, createdOnMinDate, revisedOnMinDate,
-					revisedOnMaxDate, rank, path, user, attributes, reference, description, mapSearchParams);
+					taxonId, mediaFilter, createdOnMaxDate, createdOnMinDate, revisedOnMinDate, revisedOnMaxDate, rank,
+					path, user, attributes, reference, description, colorRange, traitParams, mapSearchParams);
 
 			SpeciesListPageData result = listService.searchList(index, type, mapSearchQuery, aggregationResult);
 

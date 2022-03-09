@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -37,10 +38,36 @@ public class ESUtility {
 
 	}
 
-	private MapAndBoolQuery assignBoolAndQuery(String key, List<Object> values) {
+	private boolean isParsableAsLong(final String s) {
+		try {
+			Long.valueOf(s);
+			return true;
+		} catch (NumberFormatException numberFormatException) {
+			return false;
+		}
+	}
+
+	private List<Long> getListOfIds(String str) {
+		if (str == null || str.equals("") || str.isEmpty())
+			return new ArrayList<Long>();
+		String[] y = str.split(",");
+		List<Long> LongIds = new ArrayList<>();
+		for (String z : y) {
+			if (isParsableAsLong(z)) {
+				LongIds.add(Long.parseLong(z));
+			} else {
+				LongIds.add(0L);
+			}
+		}
+
+		return LongIds;
+	}
+
+	private MapAndBoolQuery assignBoolAndQuery(String key, List<Object> values, String path) {
 		MapAndBoolQuery andBool = new MapAndBoolQuery();
 		andBool.setKey(key);
 		andBool.setValues(values);
+		andBool.setPath(path);
 		return andBool;
 
 	}
@@ -71,9 +98,9 @@ public class ESUtility {
 	}
 
 	public MapSearchQuery getMapSearchQuery(String scientificName, String commonName, String sGroup,
-			String userGroupList, String taxonId, String mediaFilter, String traits, String createdOnMaxDate,
+			String userGroupList, String taxonId, String mediaFilter, String createdOnMaxDate,
 			String createdOnMinDate, String revisedOnMinDate, String revisedOnMaxDate, String rank, String path,
-			String userId, String attributes, String reference, String description, MapSearchParams mapSearchParams) {
+			String userId, String attributes, String reference, String description,  Integer colorRange, Map<String, List<String>> traitParams,MapSearchParams mapSearchParams) {
 		MapSearchQuery mapSearchQuery = new MapSearchQuery();
 		List<MapAndBoolQuery> boolAndLists = new ArrayList<MapAndBoolQuery>();
 		List<MapOrBoolQuery> boolOrLists = new ArrayList<MapOrBoolQuery>();
@@ -88,36 +115,30 @@ public class ESUtility {
 //		userGroupList
 			List<Object> ugList = cSTSOT(userGroupList);
 			if (!ugList.isEmpty()) {
-				boolAndLists.add(assignBoolAndQuery(SpeciesIndex.USERGROUPID.getValue(), ugList));
+				boolAndLists.add(assignBoolAndQuery(SpeciesIndex.USERGROUPID.getValue(), ugList, null));
 			}
 
 //			rank filter
 			List<Object> rankList = cSTSOT(rank);
 			if (!rankList.isEmpty()) {
-				boolAndLists.add(assignBoolAndQuery(SpeciesIndex.RANK_KEYWORD.getValue(), rankList));
+				boolAndLists.add(assignBoolAndQuery(SpeciesIndex.RANK_KEYWORD.getValue(), rankList, null));
 			}
 
 //			media type
 			List<Object> media = cSTSOT(mediaFilter);
 			if (!media.isEmpty()) {
-				boolAndLists.add(assignBoolAndQuery(SpeciesIndex.MEDIA_TYPE_KEYWORD.getValue(), media));
-			}
-
-//				traits type
-			List<Object> traitList = cSTSOT(traits);
-			if (!traitList.isEmpty()) {
-				boolAndLists.add(assignBoolAndQuery(SpeciesIndex.FACT_KEYWORD.getValue(), traitList));
+				boolAndLists.add(assignBoolAndQuery(SpeciesIndex.MEDIA_TYPE_KEYWORD.getValue(), media, null));
 			}
 
 //			taxon browser 
 			List<Object> taxonList = cSTSOT(taxonId);
 			if (!taxonList.isEmpty()) {
-				boolAndLists.add(assignBoolAndQuery(SpeciesIndex.TAXONID.getValue(), taxonList));
+				boolAndLists.add(assignBoolAndQuery(SpeciesIndex.TAXONID.getValue(), taxonList, null));
 			}
 //		species group
 			List<Object> groupId = cSTSOT(sGroup);
 			if (!groupId.isEmpty()) {
-				boolAndLists.add(assignBoolAndQuery(SpeciesIndex.SGROUP.getValue(), groupId));
+				boolAndLists.add(assignBoolAndQuery(SpeciesIndex.SGROUP.getValue(), groupId, null));
 			}
 
 //			scientific name
@@ -129,20 +150,19 @@ public class ESUtility {
 			}
 
 //			fieldDescription filter
-			if (path!=null&&description	!=null  &&!path.isEmpty() && !description.isEmpty()) {
+			if (path != null && description != null && !path.isEmpty() && !description.isEmpty()) {
 				String[] fieldDescription = description.split(",");
-				String[] pathList =  path.split(",");
-				
+				String[] pathList = path.split(",");
+
 				for (int i = 0; i < fieldDescription.length; i++) {
-					
-					String nestedPath = SpeciesIndex.FIELD_DATA.getValue()
-							.concat("." + pathList[i].toLowerCase());///fieldData.108
-					
+
+					String nestedPath = SpeciesIndex.FIELD_DATA.getValue().concat("." + pathList[i].toLowerCase());/// fieldData.108
+
 					andMatchPhraseQueries.add(assignAndMatchPhrase(SpeciesIndex.FIELD_PATH.getValue(),
 							pathList[i].toLowerCase(), nestedPath));/// nestedPath=fieldData.108
-					
+
 					andMatchPhraseQueries.add(assignAndMatchPhrase(SpeciesIndex.FIELD_DESCRIPTION.getValue(),
-							fieldDescription[i].toLowerCase(), nestedPath));///nestedPath=fieldData.108
+							fieldDescription[i].toLowerCase(), nestedPath));/// nestedPath=fieldData.108
 				}
 			}
 
@@ -168,7 +188,7 @@ public class ESUtility {
 //			contributor browser 
 			List<Object> contributor = cSTSOT(userId);
 			if (!contributor.isEmpty()) {
-				boolAndLists.add(assignBoolAndQuery(SpeciesIndex.FIELD_CONTRIBUTOR.getValue(), contributor));
+				boolAndLists.add(assignBoolAndQuery(SpeciesIndex.FIELD_CONTRIBUTOR.getValue(), contributor, null));
 			}
 
 //			common name
@@ -177,6 +197,137 @@ public class ESUtility {
 				for (Object o : cName) {
 					String result = o.toString().toLowerCase();
 					orMatchPhraseQueriesnew.add(assignOrMatchPhrase(SpeciesIndex.COMMONNAME.getValue(), result, null));
+				}
+			}
+			
+//          Traits
+			if (traitParams!= null && !traitParams.isEmpty()) {
+				for (Map.Entry<String, List<String>> entry : traitParams.entrySet()) {
+					String type = entry.getKey().split("\\.")[1];
+					String key = entry.getKey().split("\\.")[0];
+					String traitId = key.split("_")[1];
+					String valueList = entry.getValue().get(0);
+
+					
+//					traits string filter
+					if (type.equalsIgnoreCase("string") && !valueList.isEmpty()) {
+						List<Object> traitList = cSTSOT(valueList);
+						List<Object> traitNameIdList = cSTSOT(traitId);
+
+						if (!traitList.isEmpty() && !traitNameIdList.isEmpty()) {
+							boolAndLists.add(assignBoolAndQuery(SpeciesIndex.TRAITS_NAME_ID.getValue(), traitNameIdList,
+									SpeciesIndex.FACTS_GROUP.getValue()+"."+traitId));
+							boolAndLists.add(assignBoolAndQuery(SpeciesIndex.FACT_VALUEID.getValue(), traitList,
+									SpeciesIndex.FACTS_GROUP.getValue()+"."+traitId));
+						}
+
+					}
+					
+					
+//                  traits date filter
+					if (type.equalsIgnoreCase("season")) {
+						String[] dateRange = valueList.split(",");
+						String traitsMaxDateValue = null;
+						String traitsMinDateValue = null;
+						Date date = new Date();
+						SimpleDateFormat out = new SimpleDateFormat("yyyy-MM-dd");
+						try {
+							if (dateRange[0] != null) {
+								traitsMinDateValue = dateRange[0];
+							}
+							if (dateRange[1] != null) {
+								traitsMaxDateValue = dateRange[1];
+							}
+						} catch (Exception e) {
+							logger.error(e.getMessage());
+						}
+
+						if (traitsMinDateValue != null && traitsMaxDateValue != null) {
+
+							rangeAndLists.add(assignAndRange(SpeciesIndex.TRAITS_NAME_ID.getValue(), traitId, null,
+									SpeciesIndex.FACTS_GROUP.getValue()+"."+traitId));
+
+							rangeAndLists.add(assignAndRange(SpeciesIndex.TRAITS_FROM_DATE.getValue(),
+									traitsMinDateValue, traitsMaxDateValue, SpeciesIndex.FACTS_GROUP.getValue()+"."+traitId));
+							
+							rangeAndLists.add(assignAndRange(SpeciesIndex.TRAITS_TO_DATE.getValue(), traitsMinDateValue,
+									traitsMaxDateValue, SpeciesIndex.FACTS_GROUP.getValue()+"."+traitId));
+						}
+
+						if (traitsMinDateValue != null && traitsMaxDateValue == null) {
+
+							rangeAndLists.add(assignAndRange(SpeciesIndex.TRAITS_NAME_ID.getValue(), traitId, null,
+									SpeciesIndex.FACTS_GROUP.getValue()+"."+traitId));
+
+							rangeAndLists.add(assignAndRange(SpeciesIndex.TRAITS_FROM_DATE.getValue(),
+									traitsMinDateValue, out.format(date), SpeciesIndex.FACTS_GROUP.getValue()+"."+traitId));
+							
+							rangeAndLists.add(assignAndRange(SpeciesIndex.TRAITS_TO_DATE.getValue(), traitsMinDateValue,
+									out.format(date), SpeciesIndex.FACTS_GROUP.getValue()+"."+traitId));
+						}
+
+						if (traitsMinDateValue == null && traitsMaxDateValue != null) {
+							rangeAndLists.add(assignAndRange(SpeciesIndex.TRAITS_NAME_ID.getValue(), traitId, null,
+									SpeciesIndex.FACTS_GROUP.getValue()+"."+traitId));
+
+							rangeAndLists.add(assignAndRange(SpeciesIndex.TRAITS_FROM_DATE.getValue(), out.format(date),
+									traitsMaxDateValue, SpeciesIndex.FACTS_GROUP.getValue()+"."+traitId));
+							
+							rangeAndLists.add(assignAndRange(SpeciesIndex.TRAITS_TO_DATE.getValue(), out.format(date),
+									traitsMaxDateValue, SpeciesIndex.FACTS_GROUP.getValue()+"."+traitId));
+						}
+					}
+					
+//                  traits range filter
+					if (type.equalsIgnoreCase("range")) {
+						List<Long> listOfIds = getListOfIds(valueList);
+
+						if (listOfIds.size() == 2 && !traitId.isEmpty()) {
+							Object vmax = listOfIds.get(0);
+							Object vmin = listOfIds.get(1);
+
+							rangeAndLists.add(assignAndRange(SpeciesIndex.TRAITS_RANGE_NAMEID.getValue(), traitId, null,
+									SpeciesIndex.TRAITS_RANGE_GROUP.getValue()+"."+traitId));
+							rangeAndLists.add(assignAndRange(SpeciesIndex.TRAITS_RANGE_MAX.getValue(), vmin, vmax,
+									SpeciesIndex.TRAITS_RANGE_GROUP.getValue()+"."+traitId));
+							rangeAndLists.add(assignAndRange(SpeciesIndex.TRAITS_RANGE_MIN.getValue(), vmin, vmax,
+									SpeciesIndex.TRAITS_RANGE_GROUP.getValue()+"."+traitId));
+						}
+
+					}
+
+//					trait color filter
+					if (type.equalsIgnoreCase("color_hsl")) {
+						List<Long> listOfIds = getListOfIds(valueList);
+
+						if (listOfIds.size() == 3) {
+							Double hmin = !listOfIds.get(0).toString().equals("0")
+									? Double.parseDouble(listOfIds.get(0).toString()) - colorRange
+									: Double.parseDouble(listOfIds.get(0).toString());
+							Double hmax = Double.parseDouble(listOfIds.get(0).toString()) + colorRange;
+
+							Double vmin = !listOfIds.get(2).toString().equals("0")
+									? Double.parseDouble(listOfIds.get(2).toString()) - colorRange
+									: Double.parseDouble(listOfIds.get(2).toString());
+
+							Double vmax = Double.parseDouble(listOfIds.get(2).toString()) + colorRange;
+
+							Double smin = !listOfIds.get(1).toString().equals("0")
+									? Double.parseDouble(listOfIds.get(1).toString()) - colorRange
+									: Double.parseDouble(listOfIds.get(1).toString());
+							Double smax = Double.parseDouble(listOfIds.get(1).toString()) + colorRange;
+
+							rangeAndLists.add(assignAndRange(SpeciesIndex.TRAITS_COLOR_NAMEID.getValue(), traitId, null,
+									SpeciesIndex.TRAITS_COLOR_GROUP.getValue()+"."+traitId));
+							rangeAndLists.add(assignAndRange(SpeciesIndex.TRAITS_COLOR_VALUE.getValue(), vmin, vmax,
+									SpeciesIndex.TRAITS_COLOR_GROUP.getValue()+"."+traitId));
+							rangeAndLists.add(assignAndRange(SpeciesIndex.TRAITS_COLOR_SATURATION.getValue(), smin,
+									smax, SpeciesIndex.TRAITS_COLOR_GROUP.getValue()+"."+traitId));
+							rangeAndLists.add(assignAndRange(SpeciesIndex.TRAITS_COLOR_HUE.getValue(), hmin, hmax,
+									SpeciesIndex.TRAITS_COLOR_GROUP.getValue()+"."+traitId));
+						}
+
+					}
 				}
 			}
 
