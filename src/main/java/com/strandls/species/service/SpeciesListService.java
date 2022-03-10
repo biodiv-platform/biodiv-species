@@ -3,6 +3,9 @@
  */
 package com.strandls.species.service;
 
+import java.util.List;
+import java.util.Map;
+
 import com.strandls.esmodule.pojo.MapSearchParams;
 import com.strandls.esmodule.pojo.MapSearchQuery;
 import com.strandls.species.pojo.MapAggregationResponse;
@@ -19,9 +22,9 @@ public interface SpeciesListService {
 			MapAggregationResponse aggregationResult);
 
 	public MapAggregationResponse mapAggregate(String index, String type, String scientificName, String commonName,
-			String sGroup, String userGroupList, String taxonId, String mediaFilter, String traits,
-			String createdOnMaxDate, String createdOnMinDate, String revisedOnMinDate, String revisedOnMaxDate,
-			String rank, String path, String userId, String attributes, String reference, String description,
-			MapSearchParams mapSearchParams);
+			String sGroup, String userGroupList, String taxonId, String mediaFilter, String createdOnMaxDate,
+			String createdOnMinDate, String revisedOnMinDate, String revisedOnMaxDate, String rank, String path,
+			String userId, String attributes, String reference, String description, Integer colorRange,
+			Map<String, List<String>> traitParams, MapSearchParams mapSearchParams);
 
 }
