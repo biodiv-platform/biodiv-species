@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -70,7 +71,9 @@ public class ESUpdate {
 						((ObjectNode) child).replace("defaultHierarchy", null);
 					}
 					
-					return om.convertValue(rootNode, Map.class);
+					
+					
+					return om.convertValue(rootNode,new TypeReference<Map<String, Object>>(){});
 
 				}).collect(Collectors.toList());
 

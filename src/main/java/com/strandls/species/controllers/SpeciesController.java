@@ -17,6 +17,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
@@ -826,6 +827,10 @@ public class SpeciesController {
 							&& !bulkAction.isEmpty() && view.equalsIgnoreCase("bulkMapping"))) {
 				mapSearchParams.setFrom(0);
 				mapSearchParams.setLimit(100000);
+				
+				if(request.getHeader(HttpHeaders.AUTHORIZATION) == null) {
+					return Response.status(Status.BAD_REQUEST).build();
+				}
 				
 				SpeciesBulkMappingThread bulkMappingThread = new SpeciesBulkMappingThread(selectAll, bulkAction,
 						bulkObservationIds, bulkUsergroupIds, mapSearchQuery, ugService, index, type, esService,
