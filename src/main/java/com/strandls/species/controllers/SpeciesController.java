@@ -785,7 +785,7 @@ public class SpeciesController {
 			@DefaultValue("40") @QueryParam("colorRange") Integer colorRange,
 			@QueryParam("view") String view, @QueryParam("bulkAction") String bulkAction,
 			@QueryParam("selectAll") Boolean selectAll, @QueryParam("bulkUsergroupIds") String bulkUsergroupIds,
-			@QueryParam("bulkObservationIds") String bulkObservationIds, @Context HttpServletRequest request,
+			@QueryParam("bulkSpeciesIds") String bulkSpeciesIds, @Context HttpServletRequest request,
 			@Context UriInfo uriInfo) {
 		try {
 
@@ -820,8 +820,8 @@ public class SpeciesController {
 				SpeciesListPageData result = listService.searchList(index, type, mapSearchQuery, aggregationResult);
 
 				return Response.status(Status.OK).entity(result).build();
-			} else if ((Boolean.FALSE.equals(selectAll) && bulkObservationIds != null && !bulkAction.isEmpty()
-					&& !bulkObservationIds.isEmpty() && bulkUsergroupIds != null && !bulkUsergroupIds.isEmpty()
+			} else if ((Boolean.FALSE.equals(selectAll) && bulkSpeciesIds != null && !bulkAction.isEmpty()
+					&& !bulkSpeciesIds.isEmpty() && bulkUsergroupIds != null && !bulkUsergroupIds.isEmpty()
 					&& view.equalsIgnoreCase("bulkMapping"))
 					|| (Boolean.TRUE.equals(selectAll) && bulkUsergroupIds != null && !bulkUsergroupIds.isEmpty()
 							&& !bulkAction.isEmpty() && view.equalsIgnoreCase("bulkMapping"))) {
@@ -833,7 +833,7 @@ public class SpeciesController {
 				}
 				
 				SpeciesBulkMappingThread bulkMappingThread = new SpeciesBulkMappingThread(selectAll, bulkAction,
-						bulkObservationIds, bulkUsergroupIds, mapSearchQuery, ugService, index, type, esService,
+						bulkSpeciesIds, bulkUsergroupIds, mapSearchQuery, ugService, index, type, esService,
 						request, headers, objectMapper, esUpdate);
 
 				Thread thread = new Thread(bulkMappingThread);
