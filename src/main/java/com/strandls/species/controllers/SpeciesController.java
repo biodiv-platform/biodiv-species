@@ -783,7 +783,7 @@ public class SpeciesController {
 			@DefaultValue("") @QueryParam("description") String description,
 			@DefaultValue("") @QueryParam("attributes") String attributes,
 			@DefaultValue("40") @QueryParam("colorRange") Integer colorRange,
-			@QueryParam("view") String view, @QueryParam("bulkAction") String bulkAction,
+			@DefaultValue("grid") @QueryParam("view") String view, @QueryParam("bulkAction") String bulkAction,
 			@QueryParam("selectAll") Boolean selectAll, @QueryParam("bulkUsergroupIds") String bulkUsergroupIds,
 			@QueryParam("bulkSpeciesIds") String bulkSpeciesIds, @Context HttpServletRequest request,
 			@Context UriInfo uriInfo) {
