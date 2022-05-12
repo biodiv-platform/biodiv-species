@@ -144,7 +144,7 @@ public class SpeciesBulkMappingThread implements Runnable {
 			while (count < list.size()) {
 				ugObsList.add(list.get(count));
 
-				if (ugObsList.size() >= 200) {
+				if (ugObsList.size() >= 30) {
 					bulkGroupAction(ugObsList, ugIds);
 				}
 				count++;
