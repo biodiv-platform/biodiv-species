@@ -70,15 +70,13 @@ public class ESUpdate {
 
 			if (!ESSpeciesShowList.isEmpty()) {
 
-				String json = om.writeValueAsString(ESSpeciesShowList);
-
-				esService.bulkUpload(SpeciesIndex.INDEX.getValue(), SpeciesIndex.TYPE.getValue(), json.toString());
+				esService.bulkUpdate(SpeciesIndex.INDEX.getValue(), SpeciesIndex.TYPE.getValue(), ESSpeciesShowList);
 
 				System.out.println("--------------completed-------------speciesIds");
 
 			}
 
-		} catch (ApiException | JsonProcessingException e) {
+		} catch (ApiException e) {
 			logger.error(e.getMessage());
 		}
 	}
