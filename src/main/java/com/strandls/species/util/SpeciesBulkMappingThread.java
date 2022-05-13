@@ -146,11 +146,13 @@ public class SpeciesBulkMappingThread implements Runnable {
 
 				if (ugObsList.size() >= 20) {
 					bulkGroupAction(ugObsList, ugIds);
+					ugObsList.clear();
 				}
 				count++;
 			}
 
 			bulkGroupAction(ugObsList, ugIds);
+			ugObsList.clear();
 		}
 
 	}
