@@ -63,9 +63,8 @@ public class ESUpdate {
 				Map<String, Object> payload = new HashMap<>();
 				payload.put("id", id);
 				payload.put("userGroups", userGroupList);
-				if (!userGroupList.isEmpty()) {
-					ESSpeciesShowList.add(payload);
-				}
+				ESSpeciesShowList.add(payload);
+
 			}
 
 			if (!ESSpeciesShowList.isEmpty()) {
