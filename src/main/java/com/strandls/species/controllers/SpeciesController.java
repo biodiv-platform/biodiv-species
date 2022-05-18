@@ -17,15 +17,18 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.core.Response.Status;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.strandls.activity.pojo.Activity;
 import com.strandls.activity.pojo.CommentLoggingData;
 import com.strandls.authentication_utility.filter.ValidateUser;
+import com.strandls.esmodule.controllers.EsServicesApi;
 import com.strandls.esmodule.pojo.MapBoundParams;
 import com.strandls.esmodule.pojo.MapSearchParams;
 import com.strandls.esmodule.pojo.MapSearchQuery;
@@ -33,6 +36,8 @@ import com.strandls.esmodule.pojo.MapSearchParams.SortTypeEnum;
 import com.strandls.resource.pojo.ResourceData;
 import com.strandls.resource.pojo.SpeciesPull;
 import com.strandls.species.ApiConstants;
+import com.strandls.species.Headers;
+import com.strandls.species.es.util.ESUpdate;
 import com.strandls.species.es.util.ESUtility;
 import com.strandls.species.pojo.FieldRender;
 import com.strandls.species.pojo.MapAggregationResponse;
@@ -46,6 +51,7 @@ import com.strandls.species.pojo.SpeciesResourcesPreData;
 import com.strandls.species.pojo.SpeciesTrait;
 import com.strandls.species.service.SpeciesListService;
 import com.strandls.species.service.SpeciesServices;
+import com.strandls.species.util.SpeciesBulkMappingThread;
 import com.strandls.taxonomy.pojo.CommonName;
 import com.strandls.taxonomy.pojo.CommonNamesData;
 import com.strandls.taxonomy.pojo.EncryptedKey;
@@ -56,6 +62,7 @@ import com.strandls.taxonomy.pojo.TaxonomySave;
 import com.strandls.traits.pojo.FactValuePair;
 import com.strandls.traits.pojo.FactsUpdateData;
 import com.strandls.user.pojo.Follow;
+import com.strandls.userGroup.controller.UserGroupSerivceApi;
 import com.strandls.userGroup.pojo.Featured;
 import com.strandls.userGroup.pojo.FeaturedCreate;
 import com.strandls.userGroup.pojo.UserGroupIbp;
@@ -79,6 +86,21 @@ public class SpeciesController {
 
 	@Inject
 	private ESUtility esUtility;
+
+	@Inject
+	private ObjectMapper objectMapper;
+
+	@Inject
+	private UserGroupSerivceApi ugService;
+
+	@Inject
+	private EsServicesApi esService;
+
+	@Inject
+	private Headers headers;
+
+	@Inject
+	private ESUpdate esUpdate;
 
 	@GET
 	@Path(ApiConstants.PING)
@@ -760,7 +782,11 @@ public class SpeciesController {
 			@DefaultValue("") @QueryParam("rank") String rank, @DefaultValue("") @QueryParam("path") String path,
 			@DefaultValue("") @QueryParam("description") String description,
 			@DefaultValue("") @QueryParam("attributes") String attributes,
-			@DefaultValue("40") @QueryParam("colorRange") Integer colorRange, @Context UriInfo uriInfo) {
+			@DefaultValue("40") @QueryParam("colorRange") Integer colorRange,
+			@DefaultValue("grid") @QueryParam("view") String view, @QueryParam("bulkAction") String bulkAction,
+			@QueryParam("selectAll") Boolean selectAll, @QueryParam("bulkUsergroupIds") String bulkUsergroupIds,
+			@QueryParam("bulkSpeciesIds") String bulkSpeciesIds, @Context HttpServletRequest request,
+			@Context UriInfo uriInfo) {
 		try {
 
 			MultivaluedMap<String, String> queryParams = uriInfo.getQueryParameters();
@@ -783,15 +809,39 @@ public class SpeciesController {
 					revisedOnMaxDate, rank, path, user, attributes, reference, description, colorRange, traitParams,
 					mapSearchParams);
 
-			MapAggregationResponse aggregationResult = null;
+			if (view.equalsIgnoreCase("list") || view.equalsIgnoreCase("grid")) {
+				MapAggregationResponse aggregationResult = null;
 
-			aggregationResult = listService.mapAggregate(index, type, scientificName, commonName, sGroup, userGroupList,
-					taxonId, mediaFilter, createdOnMaxDate, createdOnMinDate, revisedOnMinDate, revisedOnMaxDate, rank,
-					path, user, attributes, reference, description, colorRange, traitParams, mapSearchParams);
+				aggregationResult = listService.mapAggregate(index, type, scientificName, commonName, sGroup,
+						userGroupList, taxonId, mediaFilter, createdOnMaxDate, createdOnMinDate, revisedOnMinDate,
+						revisedOnMaxDate, rank, path, user, attributes, reference, description, colorRange, traitParams,
+						mapSearchParams);
 
-			SpeciesListPageData result = listService.searchList(index, type, mapSearchQuery, aggregationResult);
+				SpeciesListPageData result = listService.searchList(index, type, mapSearchQuery, aggregationResult);
 
-			return Response.status(Status.OK).entity(result).build();
+				return Response.status(Status.OK).entity(result).build();
+			} else if ((Boolean.FALSE.equals(selectAll) && bulkSpeciesIds != null && !bulkAction.isEmpty()
+					&& !bulkSpeciesIds.isEmpty() && bulkUsergroupIds != null && !bulkUsergroupIds.isEmpty()
+					&& view.equalsIgnoreCase("bulkMapping"))
+					|| (Boolean.TRUE.equals(selectAll) && bulkUsergroupIds != null && !bulkUsergroupIds.isEmpty()
+							&& !bulkAction.isEmpty() && view.equalsIgnoreCase("bulkMapping"))) {
+				mapSearchParams.setFrom(0);
+				mapSearchParams.setLimit(100000);
+				
+				if(request.getHeader(HttpHeaders.AUTHORIZATION) == null) {
+					return Response.status(Status.BAD_REQUEST).build();
+				}
+				
+				SpeciesBulkMappingThread bulkMappingThread = new SpeciesBulkMappingThread(selectAll, bulkAction,
+						bulkSpeciesIds, bulkUsergroupIds, mapSearchQuery, ugService, index, type, esService,
+						request, headers, objectMapper, esUpdate);
+
+				Thread thread = new Thread(bulkMappingThread);
+				thread.start();
+				return Response.status(Status.OK).build();
+			}
+
+			return Response.status(Status.OK).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}

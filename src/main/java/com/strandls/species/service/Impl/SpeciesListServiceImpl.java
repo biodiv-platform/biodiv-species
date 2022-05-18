@@ -4,6 +4,7 @@
 package com.strandls.species.service.Impl;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -66,8 +67,8 @@ public class SpeciesListServiceImpl implements SpeciesListService {
 			List<MapDocument> documents = result.getDocuments();
 			Long totalCount = result.getTotalDocuments();
 			List<ShowSpeciesPage> specieList = new ArrayList<ShowSpeciesPage>();
-// 			SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
-// 			objectMapper.setDateFormat(df);
+ 			SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+ 			objectMapper.setDateFormat(df);
 			for (MapDocument document : documents) {
 				JsonNode rootNode = objectMapper.readTree(document.getDocument().toString());
 				((ObjectNode) rootNode).remove("id");
