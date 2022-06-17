@@ -31,6 +31,8 @@ import com.strandls.activity.pojo.Activity;
 import com.strandls.activity.pojo.CommentLoggingData;
 import com.strandls.activity.pojo.MailData;
 import com.strandls.activity.pojo.SpeciesMailData;
+import com.strandls.activity.pojo.UserGroupActivity;
+import com.strandls.activity.pojo.UserGroupMailData;
 import com.strandls.authentication_utility.util.AuthUtil;
 import com.strandls.document.controllers.DocumentServiceApi;
 import com.strandls.document.pojo.DocumentMeta;
@@ -483,8 +485,21 @@ public class SpeciesServiceImpl implements SpeciesServices {
 			updateLastRevised(Long.parseLong(speciesId));
 			for (Long ugId : ugSpeciesCreateData.getUserGroupIds()) {
 
-				logActivity.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), "", sId, sId, "species", ugId,
-						"Posted resource", getSpeciesMailData(request, species));
+				UserGroupActivity ugActivity = new UserGroupActivity();
+				UserGroupIbp ugIbp = ugService.getIbpData(ugId.toString());
+				String description = "";
+				ugActivity.setFeatured(null);
+				ugActivity.setUserGroupId(ugIbp.getId());
+				ugActivity.setUserGroupName(ugIbp.getName());
+				ugActivity.setWebAddress(ugIbp.getWebAddress());
+				try {
+					description = om.writeValueAsString(ugActivity);
+				} catch (Exception e) {
+					logger.error(e.getMessage());
+				}
+
+				logActivity.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), description, sId, sId, "species",
+						ugId, "Posted resource", getSpeciesMailData(request, species));
 
 			}
 
@@ -665,7 +680,6 @@ public class SpeciesServiceImpl implements SpeciesServices {
 
 				String fieldHierarchy = fieldHierarchyString(sfdata.getFieldId());
 
-				updateLastRevised(speciesId);
 				if (sfdata.getIsEdit()) {
 					String desc = "Updated species field : " + fieldHierarchy;
 					logActivity.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), desc, speciesId, speciesId,
@@ -677,6 +691,8 @@ public class SpeciesServiceImpl implements SpeciesServices {
 							"species", speciesField.getId(), "Added species field",
 							getSpeciesMailData(request, species));
 				}
+
+				updateLastRevised(speciesId);
 
 				return getSpeciesFieldData(speciesField);
 			}
@@ -786,14 +802,14 @@ public class SpeciesServiceImpl implements SpeciesServices {
 			speciesfield.setIsDeleted(true);
 			speciesFieldDao.update(speciesfield);
 
-			updateLastRevised(speciesfield.getSpeciesId());
-
 			String fieldHierarchy = fieldHierarchyString(speciesfield.getFieldId());
 
 			String desc = "Deleted species field : " + fieldHierarchy;
 			logActivity.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), desc, speciesfield.getSpeciesId(),
 					speciesfield.getSpeciesId(), "species", speciesfield.getId(), "Deleted species field",
 					getSpeciesMailData(request, species));
+
+			updateLastRevised(speciesfield.getSpeciesId());
 
 			return true;
 		}
@@ -973,10 +989,12 @@ public class SpeciesServiceImpl implements SpeciesServices {
 
 				List<ResourceData> resource = getSpeciesResources(request, speciesId);
 				updateReprImage(speciesId, resource);
-				updateLastRevised(speciesId);
-				logActivity.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), null, speciesId, speciesId,
-						"species", speciesId, "Updated species gallery", getSpeciesMailData(request, species));
 
+				logActivity.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), "Updated species gallery",
+						speciesId, speciesId, "species", speciesId, "Updated species gallery",
+						getSpeciesMailData(request, species));
+
+				updateLastRevised(speciesId);
 				return resource;
 			}
 
@@ -1052,8 +1070,9 @@ public class SpeciesServiceImpl implements SpeciesServices {
 					logger.error(e.getMessage());
 				}
 
-				logActivity.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), null, species.getId(),
-						species.getId(), "species", null, "Created species", getSpeciesMailData(request, species));
+				logActivity.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), "Created species",
+						species.getId(), species.getId(), "species", null, "Created species",
+						getSpeciesMailData(request, species));
 
 				return species.getId();
 			}
@@ -1066,11 +1085,12 @@ public class SpeciesServiceImpl implements SpeciesServices {
 	private MailData getSpeciesMailData(HttpServletRequest request, Species species) {
 
 		SpeciesGroup speciesGroup = null;
-		Resource resourceData = null;
 
 		try {
 			speciesGroup = sgroupServices.getGroupId(species.getTaxonConceptId());
-			resourceData = resourceServices.getResourceDataById(species.getReprImageId().toString());
+			Resource resourceData = species.getReprImageId() != null
+					? resourceServices.getResourceDataById(species.getReprImageId().toString())
+					: null;
 			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 			String authorId = profile.getId();
 			SpeciesMailData speciesData = new SpeciesMailData();
@@ -1079,7 +1099,23 @@ public class SpeciesServiceImpl implements SpeciesServices {
 			speciesData.setIconUrl(resourceData != null ? resourceData.getUrl() : null);
 			speciesData.setSpeciesId(species.getId());
 			speciesData.setSpeciesName(species.getTitle());
+
+			List<UserGroupIbp> userGroupIbp = ugService.getSpeciesUserGroup(species.getId().toString());
+			List<UserGroupMailData> userGroupData = new ArrayList<UserGroupMailData>();
 			MailData payload = new MailData();
+			if (userGroupIbp != null && !userGroupIbp.isEmpty()) {
+				for (UserGroupIbp ugIbp : userGroupIbp) {
+					UserGroupMailData ugMailData = new UserGroupMailData();
+					ugMailData.setId(ugIbp.getId());
+					ugMailData.setIcon(ugIbp.getIcon());
+					ugMailData.setName(ugIbp.getName());
+					ugMailData.setWebAddress(ugIbp.getWebAddress());
+					userGroupData.add(ugMailData);
+				}
+				
+				payload.setUserGroupData(userGroupData);
+			}
+			
 			payload.setSpeciesData(speciesData);
 			return payload;
 		} catch (Exception e) {
