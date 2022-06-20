@@ -1033,7 +1033,9 @@ public class SpeciesServiceImpl implements SpeciesServices {
 	@Override
 	public Activity addSpeciesComment(HttpServletRequest request, CommentLoggingData loggingData) {
 		try {
+			Species species = speciesDao.findById(loggingData.getRootHolderId());
 			activityService = headers.addActivityHeader(activityService, request.getHeader(HttpHeaders.AUTHORIZATION));
+			loggingData.setMailData(getSpeciesMailData(request, species));
 			Activity result = activityService.addComment("species", loggingData);
 			updateLastRevised(loggingData.getRootHolderId());
 			return result;
@@ -1096,7 +1098,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 			SpeciesMailData speciesData = new SpeciesMailData();
 			speciesData.setAuthorId(Long.parseLong(authorId));
 			speciesData.setGroup(speciesGroup != null ? speciesGroup.getName() : null);
-			speciesData.setIconUrl(resourceData != null ? resourceData.getUrl() : null);
+			speciesData.setIconUrl(resourceData != null ? resourceData.getFileName() : null);
 			speciesData.setSpeciesId(species.getId());
 			speciesData.setSpeciesName(species.getTitle());
 
@@ -1112,10 +1114,10 @@ public class SpeciesServiceImpl implements SpeciesServices {
 					ugMailData.setWebAddress(ugIbp.getWebAddress());
 					userGroupData.add(ugMailData);
 				}
-				
+
 				payload.setUserGroupData(userGroupData);
 			}
-			
+
 			payload.setSpeciesData(speciesData);
 			return payload;
 		} catch (Exception e) {
@@ -1310,6 +1312,10 @@ public class SpeciesServiceImpl implements SpeciesServices {
 				species.setIsDeleted(true);
 				speciesDao.update(species);
 				esService.delete(SpeciesIndex.INDEX.getValue(), SpeciesIndex.TYPE.getValue(), speciesId.toString());
+
+				logActivity.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), "Remove species", speciesId,
+						speciesId, "species", speciesId, "Remove species", getSpeciesMailData(request, species));
+
 			} catch (ApiException e) {
 				logger.error(e.getMessage());
 			}
