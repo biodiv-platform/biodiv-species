@@ -988,7 +988,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 				}
 
 				List<ResourceData> resource = getSpeciesResources(request, speciesId);
-				updateReprImage(speciesId, resource);
+				species = updateReprImage(speciesId, resource);
 
 				logActivity.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), "Updated species gallery",
 						speciesId, speciesId, "species", speciesId, "Updated species gallery",
@@ -1004,7 +1004,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 		return null;
 	}
 
-	private void updateReprImage(Long speciesId, List<ResourceData> resourcesData) {
+	private Species updateReprImage(Long speciesId, List<ResourceData> resourcesData) {
 		Long reprImage = null;
 		int rating = 0;
 		Boolean hasMedia = false;
@@ -1026,7 +1026,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 		Species species = speciesDao.findById(speciesId);
 		species.setHasMedia(hasMedia);
 		species.setReprImageId(reprImage);
-		speciesDao.update(species);
+		return speciesDao.update(species);
 
 	}
 
