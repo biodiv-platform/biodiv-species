@@ -3,7 +3,6 @@
  */
 package com.strandls.species.service.Impl;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -30,6 +29,10 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.strandls.activity.controller.ActivitySerivceApi;
 import com.strandls.activity.pojo.Activity;
 import com.strandls.activity.pojo.CommentLoggingData;
+import com.strandls.activity.pojo.MailData;
+import com.strandls.activity.pojo.SpeciesMailData;
+import com.strandls.activity.pojo.UserGroupActivity;
+import com.strandls.activity.pojo.UserGroupMailData;
 import com.strandls.authentication_utility.util.AuthUtil;
 import com.strandls.document.controllers.DocumentServiceApi;
 import com.strandls.document.pojo.DocumentMeta;
@@ -475,9 +478,31 @@ public class SpeciesServiceImpl implements SpeciesServices {
 	public List<UserGroupIbp> updateUserGroup(HttpServletRequest request, String speciesId,
 			UserGroupSpeciesCreateData ugSpeciesCreateData) {
 		try {
+			Long sId = Long.parseLong(speciesId);
+			Species species = speciesDao.findById(sId);
 			ugService = headers.addUserGroupHeader(ugService, request.getHeader(HttpHeaders.AUTHORIZATION));
 			List<UserGroupIbp> result = ugService.updateUserGroupSpeciesMapping(speciesId, ugSpeciesCreateData);
 			updateLastRevised(Long.parseLong(speciesId));
+			for (Long ugId : ugSpeciesCreateData.getUserGroupIds()) {
+
+				UserGroupActivity ugActivity = new UserGroupActivity();
+				UserGroupIbp ugIbp = ugService.getIbpData(ugId.toString());
+				String description = "";
+				ugActivity.setFeatured(null);
+				ugActivity.setUserGroupId(ugIbp.getId());
+				ugActivity.setUserGroupName(ugIbp.getName());
+				ugActivity.setWebAddress(ugIbp.getWebAddress());
+				try {
+					description = om.writeValueAsString(ugActivity);
+				} catch (Exception e) {
+					logger.error(e.getMessage());
+				}
+
+				logActivity.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), description, sId, sId, "species",
+						ugId, "Posted resource", getSpeciesMailData(request, species));
+
+			}
+
 			return result;
 		} catch (Exception e) {
 			logger.error(e.getMessage());
@@ -564,6 +589,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 			Long userId = Long.parseLong(profile.getId());
 			Boolean isContributor = checkIsContributor(request, speciesId);
+			Species species = speciesDao.findById(speciesId);
 
 //			check if edit is done by the same contributor
 			List<Long> sfUserList = new ArrayList<Long>();
@@ -654,16 +680,19 @@ public class SpeciesServiceImpl implements SpeciesServices {
 
 				String fieldHierarchy = fieldHierarchyString(sfdata.getFieldId());
 
-				updateLastRevised(speciesId);
 				if (sfdata.getIsEdit()) {
 					String desc = "Updated species field : " + fieldHierarchy;
 					logActivity.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), desc, speciesId, speciesId,
-							"species", speciesField.getId(), "Updated species field", null);
+							"species", speciesField.getId(), "Updated species field",
+							getSpeciesMailData(request, species));
 				} else {
 					String desc = "Added species field : " + fieldHierarchy;
 					logActivity.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), desc, speciesId, speciesId,
-							"species", speciesField.getId(), "Added species field", null);
+							"species", speciesField.getId(), "Added species field",
+							getSpeciesMailData(request, species));
 				}
+
+				updateLastRevised(speciesId);
 
 				return getSpeciesFieldData(speciesField);
 			}
@@ -766,19 +795,21 @@ public class SpeciesServiceImpl implements SpeciesServices {
 		Long userId = Long.parseLong(profile.getId());
 		List<Long> sfUserList = sfUserDao.findBySpeciesFieldId(speciesfieldId);
 		SpeciesField speciesfield = speciesFieldDao.findById(speciesfieldId);
+		Species species = speciesDao.findById(speciesfield.getSpeciesId());
 		Boolean isContributor = checkIsContributor(request, speciesfield.getSpeciesId());
 
 		if (userRoles.contains("ROLE_ADMIN") || (isContributor && sfUserList.contains(userId))) {
 			speciesfield.setIsDeleted(true);
 			speciesFieldDao.update(speciesfield);
 
-			updateLastRevised(speciesfield.getSpeciesId());
-
 			String fieldHierarchy = fieldHierarchyString(speciesfield.getFieldId());
 
 			String desc = "Deleted species field : " + fieldHierarchy;
 			logActivity.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), desc, speciesfield.getSpeciesId(),
-					speciesfield.getSpeciesId(), "species", speciesfield.getId(), "Deleted species field", null);
+					speciesfield.getSpeciesId(), "species", speciesfield.getId(), "Deleted species field",
+					getSpeciesMailData(request, species));
+
+			updateLastRevised(speciesfield.getSpeciesId());
 
 			return true;
 		}
@@ -919,6 +950,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 
 		try {
 			Boolean isContributor = checkIsContributor(request, speciesId);
+			Species species = speciesDao.findById(speciesId);
 			if (!isContributor)
 				isContributor = checkIsObservationCurator(request, speciesId);
 			if (isContributor) {
@@ -956,11 +988,13 @@ public class SpeciesServiceImpl implements SpeciesServices {
 				}
 
 				List<ResourceData> resource = getSpeciesResources(request, speciesId);
-				updateReprImage(speciesId, resource);
-				updateLastRevised(speciesId);
-				logActivity.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), null, speciesId, speciesId,
-						"species", speciesId, "Updated species gallery", null);
+				species = updateReprImage(speciesId, resource);
 
+				logActivity.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), "Updated species gallery",
+						speciesId, speciesId, "species", speciesId, "Updated species gallery",
+						getSpeciesMailData(request, species));
+
+				updateLastRevised(speciesId);
 				return resource;
 			}
 
@@ -970,7 +1004,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 		return null;
 	}
 
-	private void updateReprImage(Long speciesId, List<ResourceData> resourcesData) {
+	private Species updateReprImage(Long speciesId, List<ResourceData> resourcesData) {
 		Long reprImage = null;
 		int rating = 0;
 		Boolean hasMedia = false;
@@ -992,14 +1026,16 @@ public class SpeciesServiceImpl implements SpeciesServices {
 		Species species = speciesDao.findById(speciesId);
 		species.setHasMedia(hasMedia);
 		species.setReprImageId(reprImage);
-		speciesDao.update(species);
+		return speciesDao.update(species);
 
 	}
 
 	@Override
 	public Activity addSpeciesComment(HttpServletRequest request, CommentLoggingData loggingData) {
 		try {
+			Species species = speciesDao.findById(loggingData.getRootHolderId());
 			activityService = headers.addActivityHeader(activityService, request.getHeader(HttpHeaders.AUTHORIZATION));
+			loggingData.setMailData(getSpeciesMailData(request, species));
 			Activity result = activityService.addComment("species", loggingData);
 			updateLastRevised(loggingData.getRootHolderId());
 			return result;
@@ -1035,13 +1071,59 @@ public class SpeciesServiceImpl implements SpeciesServices {
 				} catch (ApiException e) {
 					logger.error(e.getMessage());
 				}
-				logActivity.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), null, species.getId(),
-						species.getId(), "species", null, "Created species", null);
+
+				logActivity.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), "Created species",
+						species.getId(), species.getId(), "species", null, "Created species",
+						getSpeciesMailData(request, species));
 
 				return species.getId();
 			}
 
 		}
+		return null;
+
+	}
+
+	private MailData getSpeciesMailData(HttpServletRequest request, Species species) {
+
+		SpeciesGroup speciesGroup = null;
+
+		try {
+			speciesGroup = sgroupServices.getGroupId(species.getTaxonConceptId());
+			Resource resourceData = species.getReprImageId() != null
+					? resourceServices.getResourceDataById(species.getReprImageId().toString())
+					: null;
+			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
+			String authorId = profile.getId();
+			SpeciesMailData speciesData = new SpeciesMailData();
+			speciesData.setAuthorId(Long.parseLong(authorId));
+			speciesData.setGroup(speciesGroup != null ? speciesGroup.getName().toLowerCase() : null);
+			speciesData.setIconUrl(resourceData != null ? resourceData.getFileName() : null);
+			speciesData.setSpeciesId(species.getId());
+			speciesData.setSpeciesName(species.getTitle());
+
+			List<UserGroupIbp> userGroupIbp = ugService.getSpeciesUserGroup(species.getId().toString());
+			List<UserGroupMailData> userGroupData = new ArrayList<UserGroupMailData>();
+			MailData payload = new MailData();
+			if (userGroupIbp != null && !userGroupIbp.isEmpty()) {
+				for (UserGroupIbp ugIbp : userGroupIbp) {
+					UserGroupMailData ugMailData = new UserGroupMailData();
+					ugMailData.setId(ugIbp.getId());
+					ugMailData.setIcon(ugIbp.getIcon());
+					ugMailData.setName(ugIbp.getName());
+					ugMailData.setWebAddress(ugIbp.getWebAddress());
+					userGroupData.add(ugMailData);
+				}
+
+				payload.setUserGroupData(userGroupData);
+			}
+
+			payload.setSpeciesData(speciesData);
+			return payload;
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+
 		return null;
 
 	}
@@ -1230,6 +1312,10 @@ public class SpeciesServiceImpl implements SpeciesServices {
 				species.setIsDeleted(true);
 				speciesDao.update(species);
 				esService.delete(SpeciesIndex.INDEX.getValue(), SpeciesIndex.TYPE.getValue(), speciesId.toString());
+
+				logActivity.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), "Remove species", speciesId,
+						speciesId, "species", speciesId, "Remove species", getSpeciesMailData(request, species));
+
 			} catch (ApiException e) {
 				logger.error(e.getMessage());
 			}
@@ -1261,7 +1347,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 			if (showData.getTaxonomyDefinition().getDefaultHierarchy() != null
 					&& !showData.getTaxonomyDefinition().getDefaultHierarchy().isEmpty()) {
 				JsonNode child = ((ObjectNode) rootNode).get("taxonomyDefinition");
-				((ObjectNode) child).replace("defaultHierarchy",null);
+				((ObjectNode) child).replace("defaultHierarchy", null);
 			}
 			document.setDocument(om.writeValueAsString(rootNode));
 		} catch (JsonProcessingException e) {
