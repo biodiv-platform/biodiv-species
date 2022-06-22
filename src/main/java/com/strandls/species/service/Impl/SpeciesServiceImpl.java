@@ -1097,7 +1097,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 			String authorId = profile.getId();
 			SpeciesMailData speciesData = new SpeciesMailData();
 			speciesData.setAuthorId(Long.parseLong(authorId));
-			speciesData.setGroup(speciesGroup != null ? speciesGroup.getName() : null);
+			speciesData.setGroup(speciesGroup != null ? speciesGroup.getName().toLowerCase() : null);
 			speciesData.setIconUrl(resourceData != null ? resourceData.getFileName() : null);
 			speciesData.setSpeciesId(species.getId());
 			speciesData.setSpeciesName(species.getTitle());
