@@ -82,6 +82,7 @@ import com.strandls.species.pojo.SpeciesResourceData;
 import com.strandls.species.pojo.SpeciesResourcesPreData;
 import com.strandls.species.pojo.SpeciesTrait;
 import com.strandls.species.service.SpeciesServices;
+import com.strandls.species.util.AppUtil;
 import com.strandls.species.util.PropertyFileUtil;
 import com.strandls.taxonomy.controllers.CommonNameServicesApi;
 import com.strandls.taxonomy.controllers.SpeciesServicesApi;
@@ -1098,7 +1099,10 @@ public class SpeciesServiceImpl implements SpeciesServices {
 			SpeciesMailData speciesData = new SpeciesMailData();
 			speciesData.setAuthorId(Long.parseLong(authorId));
 			speciesData.setGroup(speciesGroup != null ? speciesGroup.getName().toLowerCase() : null);
-			speciesData.setIconUrl(resourceData != null ?resourceData.getContext() +"/"+resourceData.getFileName() : null);
+			speciesData
+					.setIconUrl(resourceData != null && AppUtil.getResourceContext(resourceData.getContext()) != null
+							? AppUtil.getResourceContext(resourceData.getContext()) + "/" + resourceData.getFileName()
+							: null);
 			speciesData.setSpeciesId(species.getId());
 			speciesData.setSpeciesName(species.getTitle());
 
