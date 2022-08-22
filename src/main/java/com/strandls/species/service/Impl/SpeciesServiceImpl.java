@@ -957,6 +957,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 			if (isContributor) {
 				List<SpeciesPullData> speciesPullDatas = new ArrayList<SpeciesPullData>();
 				List<SpeciesResourceData> speciesResourceData = new ArrayList<SpeciesResourceData>();
+				
 				for (SpeciesResourcesPreData preData : preDataList) {
 					if (preData.getObservationId() != null) {
 						speciesPullDatas.add(new SpeciesPullData(preData.getObservationId(), preData.getResourcesId()));
@@ -1010,19 +1011,20 @@ public class SpeciesServiceImpl implements SpeciesServices {
 		int rating = 0;
 		Boolean hasMedia = false;
 		Resource res;
-		if (resourcesData != null ) {
-			for (ResourceData resData : resourcesData) {
-				res = resData.getResource();
-				if (res.getType().equals("IMAGE")) {
-					if (reprImage == null)
-						reprImage = res.getId();
-					if (res.getRating() != null && res.getRating() > rating) {
-						reprImage = res.getId();
-						rating = res.getRating();
-					}
+
+		for (ResourceData resData : resourcesData) {
+			res = resData.getResource();
+			if (res.getType().equals("IMAGE")) {
+				if (reprImage == null)
+					reprImage = res.getId();
+				if (res.getRating() != null && res.getRating() > rating) {
+					reprImage = res.getId();
+					rating = res.getRating();
 				}
 			}
 		}
+
+
 
 		Species species = speciesDao.findById(speciesId);
 		species.setHasMedia(hasMedia);
