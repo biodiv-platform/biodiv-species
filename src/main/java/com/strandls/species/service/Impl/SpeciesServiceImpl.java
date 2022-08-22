@@ -1010,7 +1010,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 		int rating = 0;
 		Boolean hasMedia = false;
 		Resource res;
-		if (resourcesData != null && !resourcesData.isEmpty()) {
+		if (resourcesData != null ) {
 			for (ResourceData resData : resourcesData) {
 				res = resData.getResource();
 				if (res.getType().equals("IMAGE")) {
