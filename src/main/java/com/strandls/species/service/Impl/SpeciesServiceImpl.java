@@ -957,9 +957,9 @@ public class SpeciesServiceImpl implements SpeciesServices {
 			if (isContributor) {
 				List<SpeciesPullData> speciesPullDatas = new ArrayList<SpeciesPullData>();
 				List<SpeciesResourceData> speciesResourceData = new ArrayList<SpeciesResourceData>();
-				
+
 				for (SpeciesResourcesPreData preData : preDataList) {
-					if (preData.getObservationId() != null) {
+					if (preData.getObservationId() != null || !preDataList.isEmpty()) {
 						speciesPullDatas.add(new SpeciesPullData(preData.getObservationId(), preData.getResourcesId()));
 					} else {
 						speciesResourceData.add(new SpeciesResourceData(preData.getPath(), preData.getUrl(),
@@ -971,7 +971,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 				List<ResourceData> newResourceList = null;
 				if (!speciesPullDatas.isEmpty())
 					newResourceList = pullResource(request, speciesId, speciesPullDatas);
-				if (!speciesResourceData.isEmpty() || preDataList.isEmpty()) {
+				if (!speciesResourceData.isEmpty()) {
 //					if pull resource worked, we got extra resources attached which we dont want to remove so add them as well
 					if (newResourceList != null) {
 						for (ResourceData data : newResourceList) {
