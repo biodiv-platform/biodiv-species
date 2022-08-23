@@ -959,7 +959,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 				List<SpeciesResourceData> speciesResourceData = new ArrayList<SpeciesResourceData>();
 
 				for (SpeciesResourcesPreData preData : preDataList) {
-					if (preData.getObservationId() != null || preDataList.isEmpty()) {
+					if (preData.getObservationId() != null) {
 						speciesPullDatas.add(new SpeciesPullData(preData.getObservationId(), preData.getResourcesId()));
 					} else {
 						speciesResourceData.add(new SpeciesResourceData(preData.getPath(), preData.getUrl(),
@@ -969,7 +969,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 				}
 
 				List<ResourceData> newResourceList = null;
-				if (!speciesPullDatas.isEmpty())
+				if (!speciesPullDatas.isEmpty() || preDataList.isEmpty() || preDataList == null )
 					newResourceList = pullResource(request, speciesId, speciesPullDatas);
 				if (!speciesResourceData.isEmpty()) {
 //					if pull resource worked, we got extra resources attached which we dont want to remove so add them as well
