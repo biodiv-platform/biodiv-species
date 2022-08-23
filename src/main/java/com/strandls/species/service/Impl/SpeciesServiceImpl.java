@@ -958,7 +958,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 			if (isContributor) {
 				List<SpeciesPullData> speciesPullDatas = new ArrayList<SpeciesPullData>();
 				List<SpeciesResourceData> speciesResourceData = new ArrayList<SpeciesResourceData>();
-
+				List<Reference> empty = new ArrayList <Reference>();
 				for (SpeciesResourcesPreData preData : preDataList) {
 					if (preData.getObservationId() != null) {
 						speciesPullDatas.add(new SpeciesPullData(preData.getObservationId(), preData.getResourcesId()));
@@ -988,6 +988,10 @@ public class SpeciesServiceImpl implements SpeciesServices {
 					}
 
 					updateCreateSpeciesResource(request, "SPECIES", speciesId.toString(), true, speciesResourceData);
+				}
+				if(preDataList.isEmpty()) {
+					// update reference (delete)
+					updateCreateReferences( speciesId, empty);
 				}
 
 				List<ResourceData> resource = getSpeciesResources(request, speciesId);
