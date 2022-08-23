@@ -968,9 +968,9 @@ public class SpeciesServiceImpl implements SpeciesServices {
 				}
 
 				List<ResourceData> newResourceList = null;
-				if (!speciesPullDatas.isEmpty())
+				if (!speciesPullDatas.isEmpty() || preDataList.isEmpty())
 					newResourceList = pullResource(request, speciesId, speciesPullDatas);
-				if (!speciesResourceData.isEmpty()) {
+				if (!speciesResourceData.isEmpty() ) {
 //					if pull resource worked, we got extra resources attached which we dont want to remove so add them as well
 					if (newResourceList != null) {
 						for (ResourceData data : newResourceList) {
