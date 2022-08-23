@@ -957,21 +957,14 @@ public class SpeciesServiceImpl implements SpeciesServices {
 			if (isContributor) {
 				List<SpeciesPullData> speciesPullDatas = new ArrayList<SpeciesPullData>();
 				List<SpeciesResourceData> speciesResourceData = new ArrayList<SpeciesResourceData>();
-				List<Reference> SpeciesDeleteData = new ArrayList <Reference>();
 
-				if(preDataList.isEmpty()) {
-					updateCreateReferences( speciesId, SpeciesDeleteData);
-				}
-				else {
-
-					for (SpeciesResourcesPreData preData : preDataList) {
-						if (preData.getObservationId() != null ) {
-							speciesPullDatas.add(new SpeciesPullData(preData.getObservationId(), preData.getResourcesId()));
-						} else {
-							speciesResourceData.add(new SpeciesResourceData(preData.getPath(), preData.getUrl(),
-									preData.getType(), preData.getCaption(), preData.getRating(), preData.getLicenseId(),
-									preData.getContributor()));
-						}
+				for (SpeciesResourcesPreData preData : preDataList) {
+					if (preData.getObservationId() != null || preDataList.isEmpty()) {
+						speciesPullDatas.add(new SpeciesPullData(preData.getObservationId(), preData.getResourcesId()));
+					} else {
+						speciesResourceData.add(new SpeciesResourceData(preData.getPath(), preData.getUrl(),
+								preData.getType(), preData.getCaption(), preData.getRating(), preData.getLicenseId(),
+								preData.getContributor()));
 					}
 				}
 
