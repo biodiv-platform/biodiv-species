@@ -737,9 +737,10 @@ public class SpeciesServiceImpl implements SpeciesServices {
 			Boolean isEdit, List<SpeciesResourceData> speciesResourceData) {
 
 		try {
+			List<Resource> resources = speciesHelper.createResourceMapping(request, objectType,
+					speciesResourceData);
+
 			if (speciesResourceData != null && !speciesResourceData.isEmpty()) {
-				List<Resource> resources = speciesHelper.createResourceMapping(request, objectType,
-						speciesResourceData);
 
 				if (resources != null && !resources.isEmpty()) {
 					resourceServices = headers.addResourceHeaders(resourceServices,
@@ -753,7 +754,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 					return resources;
 				}
 			} else {
-
+				resources = resourceServices.updateResources(objectType, objectId, resources);
 			}
 
 		} catch (Exception e) {
@@ -971,7 +972,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 				List<ResourceData> newResourceList = null;
 				if (!speciesPullDatas.isEmpty())
 					newResourceList = pullResource(request, speciesId, speciesPullDatas);
-				if (!speciesResourceData.isEmpty()) {
+				if (!speciesResourceData.isEmpty() || preDataList.isEmpty()) {
 //					if pull resource worked, we got extra resources attached which we dont want to remove so add them as well
 					if (newResourceList != null) {
 						for (ResourceData data : newResourceList) {
@@ -987,10 +988,6 @@ public class SpeciesServiceImpl implements SpeciesServices {
 					}
 
 					updateCreateSpeciesResource(request, "SPECIES", speciesId.toString(), true, speciesResourceData);
-				}
-
-				else {
-					removeSpeciesPage(request,speciesId);
 				}
 
 				List<ResourceData> resource = getSpeciesResources(request, speciesId);
@@ -1028,7 +1025,6 @@ public class SpeciesServiceImpl implements SpeciesServices {
 				}
 			}
 		}
-
 
 		Species species = speciesDao.findById(speciesId);
 		species.setHasMedia(hasMedia);
