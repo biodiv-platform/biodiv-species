@@ -737,11 +737,11 @@ public class SpeciesServiceImpl implements SpeciesServices {
 			Boolean isEdit, List<SpeciesResourceData> speciesResourceData) {
 
 		try {
-			if (speciesResourceData != null && !speciesResourceData.isEmpty()) {
+			if (speciesResourceData != null ) {
 				List<Resource> resources = speciesHelper.createResourceMapping(request, objectType,
 						speciesResourceData);
 
-				if (resources != null && !resources.isEmpty()) {
+				if (resources != null ) {
 					resourceServices = headers.addResourceHeaders(resourceServices,
 							request.getHeader(HttpHeaders.AUTHORIZATION));
 
@@ -957,7 +957,6 @@ public class SpeciesServiceImpl implements SpeciesServices {
 			if (isContributor) {
 				List<SpeciesPullData> speciesPullDatas = new ArrayList<SpeciesPullData>();
 				List<SpeciesResourceData> speciesResourceData = new ArrayList<SpeciesResourceData>();
-
 				for (SpeciesResourcesPreData preData : preDataList) {
 					if (preData.getObservationId() != null) {
 						speciesPullDatas.add(new SpeciesPullData(preData.getObservationId(), preData.getResourcesId()));
@@ -969,9 +968,9 @@ public class SpeciesServiceImpl implements SpeciesServices {
 				}
 
 				List<ResourceData> newResourceList = null;
-				if (!speciesPullDatas.isEmpty() || preDataList.isEmpty() || preDataList == null )
+				if (!speciesPullDatas.isEmpty())
 					newResourceList = pullResource(request, speciesId, speciesPullDatas);
-				if (!speciesResourceData.isEmpty()) {
+				if (!speciesResourceData.isEmpty() || preDataList.isEmpty() || preDataList == null) {
 //					if pull resource worked, we got extra resources attached which we dont want to remove so add them as well
 					if (newResourceList != null) {
 						for (ResourceData data : newResourceList) {
