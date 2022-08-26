@@ -927,20 +927,21 @@ public class SpeciesServiceImpl implements SpeciesServices {
 
 	@Override
 	public List<ResourceData> getSpeciesResources(HttpServletRequest request, Long speciesId) {
+		List<ResourceData> noResourceDataList = new ArrayList<>();
 		try {
 			Boolean isContributor = checkIsContributor(request, speciesId);
 			if (!isContributor)
 				isContributor = checkIsObservationCurator(request, speciesId);
 			if (isContributor) {
 				List<ResourceData> resourceData = resourceServices.getImageResource("SPECIES", speciesId.toString());
-				return resourceData;
+				return resourceData != null ? resourceData : noResourceDataList;
 			}
 
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 		}
 
-		return null;
+		return noResourceDataList;
 	}
 
 	@Override
