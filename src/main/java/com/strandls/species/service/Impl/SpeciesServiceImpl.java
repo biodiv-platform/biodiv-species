@@ -737,11 +737,11 @@ public class SpeciesServiceImpl implements SpeciesServices {
 			Boolean isEdit, List<SpeciesResourceData> speciesResourceData) {
 
 		try {
-			if (speciesResourceData != null && !speciesResourceData.isEmpty()) {
+			if (speciesResourceData != null ) {
 				List<Resource> resources = speciesHelper.createResourceMapping(request, objectType,
 						speciesResourceData);
 
-				if (resources != null && !resources.isEmpty()) {
+				if (resources != null ) {
 					resourceServices = headers.addResourceHeaders(resourceServices,
 							request.getHeader(HttpHeaders.AUTHORIZATION));
 
@@ -752,8 +752,6 @@ public class SpeciesServiceImpl implements SpeciesServices {
 					}
 					return resources;
 				}
-			} else {
-
 			}
 
 		} catch (Exception e) {
@@ -929,20 +927,21 @@ public class SpeciesServiceImpl implements SpeciesServices {
 
 	@Override
 	public List<ResourceData> getSpeciesResources(HttpServletRequest request, Long speciesId) {
+		List<ResourceData> noResourceDataList = new ArrayList<>();
 		try {
 			Boolean isContributor = checkIsContributor(request, speciesId);
 			if (!isContributor)
 				isContributor = checkIsObservationCurator(request, speciesId);
 			if (isContributor) {
 				List<ResourceData> resourceData = resourceServices.getImageResource("SPECIES", speciesId.toString());
-				return resourceData;
+				return resourceData != null ? resourceData : noResourceDataList;
 			}
 
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 		}
 
-		return null;
+		return noResourceDataList;
 	}
 
 	@Override
@@ -970,7 +969,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 				List<ResourceData> newResourceList = null;
 				if (!speciesPullDatas.isEmpty())
 					newResourceList = pullResource(request, speciesId, speciesPullDatas);
-				if (!speciesResourceData.isEmpty()) {
+				if (!speciesResourceData.isEmpty() || preDataList.isEmpty()) {
 //					if pull resource worked, we got extra resources attached which we dont want to remove so add them as well
 					if (newResourceList != null) {
 						for (ResourceData data : newResourceList) {
