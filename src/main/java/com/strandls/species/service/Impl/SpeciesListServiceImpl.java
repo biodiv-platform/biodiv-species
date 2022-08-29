@@ -87,7 +87,7 @@ public class SpeciesListServiceImpl implements SpeciesListService {
 			}
 
 			List<SpeciesListTiles> speciesListTile = specieList.stream().map(item -> new SpeciesListTiles(
-					item.getSpecies().getId(), item.getSpecies().getTitle(),
+					item.getSpecies().getId(), item.getTaxonomyDefinition().getItalicisedForm(),
 					item.getSpecies().getReprImageId() != null ? getResourceImageAndContext(item)[1] : null,
 					item.getSpecies().getReprImageId() != null ? getResourceImageAndContext(item)[0] : null,
 					item.getTaxonomyDefinition().getStatus(),
