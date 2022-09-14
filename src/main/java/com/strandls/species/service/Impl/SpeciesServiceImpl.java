@@ -297,9 +297,6 @@ public class SpeciesServiceImpl implements SpeciesServices {
 	private SpeciesFieldData getSpeciesFieldData(SpeciesField speciesField) {
 
 		try {
-
-			System.out.println("speciesID : " + speciesField.getId());
-			System.out.println("field Id : " + speciesField.getFieldId());
 			FieldNew field = fieldNewDao.findById(speciesField.getFieldId());
 			FieldHeader fieldHeader = fieldHeaderDao.findByFieldId(field.getId(), defaultLanguageId);
 
@@ -427,7 +424,6 @@ public class SpeciesServiceImpl implements SpeciesServices {
 			String name = "";
 			Long fieldId = traitsValuePair.getTraits().getFieldId();
 			name = fieldHierarchyString(fieldId);
-			System.out.println(name);
 			if (arrangedPair.containsKey(name)) {
 				List<TraitsValuePair> pairList = arrangedPair.get(name);
 				pairList.add(traitsValuePair);
