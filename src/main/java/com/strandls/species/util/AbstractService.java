@@ -9,7 +9,6 @@ public abstract class AbstractService<T> {
 
 	@SuppressWarnings("unchecked")
 	public AbstractService(AbstractDAO<T, Long> dao) {
-		System.out.println("\nAbstractService constructor");
 		this.dao = dao;
 		entityClass = ((Class<T>) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0]);
 	}

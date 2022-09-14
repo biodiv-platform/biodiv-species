@@ -41,7 +41,6 @@ public class ESUpdate {
 	private ObjectMapper om;
 
 	public void esBulkUpload(String speciesIds) {
-		System.out.println("--------------------species es Bulk Upload Started---------" + speciesIds);
 
 		if (speciesIds == null || speciesIds.isEmpty()) {
 			return;
@@ -70,8 +69,6 @@ public class ESUpdate {
 			if (!ESSpeciesShowList.isEmpty()) {
 
 				esService.bulkUpdate(SpeciesIndex.INDEX.getValue(), SpeciesIndex.TYPE.getValue(), ESSpeciesShowList);
-
-				System.out.println("--------------completed-------------speciesIds");
 
 			}
 
