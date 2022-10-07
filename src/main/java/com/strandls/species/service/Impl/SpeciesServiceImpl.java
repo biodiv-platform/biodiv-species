@@ -715,6 +715,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 //				update existing references
 				Reference ref = referenceDao.findById(reference.getId());
 				ref.setTitle(reference.getTitle());
+				ref.setUrl(reference.getUrl());
 				referenceDao.update(ref);
 				newRefId.add(ref.getId());
 			}
