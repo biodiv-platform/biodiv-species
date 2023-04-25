@@ -112,6 +112,8 @@ public interface SpeciesServices {
 	
 	public void  ESSpeciesUpdate(long speciesId) throws ApiException;
 
-	CommonName updatePrefferedCommonName(HttpServletRequest request, Long speciesId, Long commonNameId);	
+	CommonName updatePrefferedCommonName(HttpServletRequest request, Long speciesId, Long commonNameId);
+	
+	public Activity removeSpeciesComment(HttpServletRequest request, CommentLoggingData comment, String commentId);
 
 }

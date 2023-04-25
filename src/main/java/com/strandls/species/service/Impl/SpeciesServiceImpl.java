@@ -734,11 +734,11 @@ public class SpeciesServiceImpl implements SpeciesServices {
 			Boolean isEdit, List<SpeciesResourceData> speciesResourceData) {
 
 		try {
-			if (speciesResourceData != null ) {
+			if (speciesResourceData != null) {
 				List<Resource> resources = speciesHelper.createResourceMapping(request, objectType,
 						speciesResourceData);
 
-				if (resources != null ) {
+				if (resources != null) {
 					resourceServices = headers.addResourceHeaders(resourceServices,
 							request.getHeader(HttpHeaders.AUTHORIZATION));
 
@@ -1043,6 +1043,23 @@ public class SpeciesServiceImpl implements SpeciesServices {
 	}
 
 	@Override
+	public Activity removeSpeciesComment(HttpServletRequest request, CommentLoggingData comment, String commentId) {
+		try {
+			Species species = speciesDao.findById(comment.getRootHolderId());
+			comment.setMailData(getSpeciesMailData(request, species));
+			activityService = headers.addActivityHeader(activityService, request.getHeader(HttpHeaders.AUTHORIZATION));
+			// Activity result = activityService.deleteComment("observation", comment);
+			Activity result = activityService.deleteComment("species", commentId, comment);
+
+			// updateLastRevised(comment.getRootHolderId());
+			return null;
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return null;
+	}
+
+	@Override
 	public Long checkSpeciesPageExist(HttpServletRequest request, Long taxonId) {
 		Species species = speciesDao.findByTaxonId(taxonId);
 		if (species != null) {
@@ -1095,10 +1112,9 @@ public class SpeciesServiceImpl implements SpeciesServices {
 			SpeciesMailData speciesData = new SpeciesMailData();
 			speciesData.setAuthorId(Long.parseLong(authorId));
 			speciesData.setGroup(speciesGroup != null ? speciesGroup.getName().toLowerCase() : null);
-			speciesData
-					.setIconUrl(resourceData != null && AppUtil.getResourceContext(resourceData.getContext()) != null
-							? AppUtil.getResourceContext(resourceData.getContext()) + "/" + resourceData.getFileName()
-							: null);
+			speciesData.setIconUrl(resourceData != null && AppUtil.getResourceContext(resourceData.getContext()) != null
+					? AppUtil.getResourceContext(resourceData.getContext()) + "/" + resourceData.getFileName()
+					: null);
 			speciesData.setSpeciesId(species.getId());
 			speciesData.setSpeciesName(species.getTitle());
 
