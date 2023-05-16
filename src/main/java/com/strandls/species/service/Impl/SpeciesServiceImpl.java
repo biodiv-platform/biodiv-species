@@ -1048,11 +1048,9 @@ public class SpeciesServiceImpl implements SpeciesServices {
 			Species species = speciesDao.findById(comment.getRootHolderId());
 			comment.setMailData(getSpeciesMailData(request, species));
 			activityService = headers.addActivityHeader(activityService, request.getHeader(HttpHeaders.AUTHORIZATION));
-			// Activity result = activityService.deleteComment("observation", comment);
-			Activity result = activityService.deleteComment("species", commentId, comment);
 
-			// updateLastRevised(comment.getRootHolderId());
-			return null;
+			return activityService.deleteComment("species", commentId, comment);
+
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 		}
