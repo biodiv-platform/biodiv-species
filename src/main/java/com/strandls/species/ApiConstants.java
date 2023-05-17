@@ -48,5 +48,6 @@ public class ApiConstants {
 	public static final String UPDATE = "/update";
 	public static final String USERGROUP = "/usergroup";
 	public static final String SPECIESID = "/speciesid";
+	public static final String DELETE = "/delete";
 
 }
