@@ -6,6 +6,7 @@ package com.strandls.species.service.Impl;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -487,8 +488,8 @@ public class SpeciesServiceImpl implements SpeciesServices {
 			Species species = speciesDao.findById(speciesId);
 			species.setLastUpdated(new Date());
 			speciesDao.update(species);
-			ESSpeciesUpdate(speciesId);
-		} catch (ApiException e) {
+			// ESSpeciesUpdate(speciesId);
+		} catch (Exception e) {
 			logger.error(e.getMessage());
 
 		}
@@ -630,8 +631,15 @@ public class SpeciesServiceImpl implements SpeciesServices {
 				}
 
 				updateLastRevised(speciesId);
+				SpeciesFieldData speciesFieldData = getSpeciesFieldData(speciesField);
 
-				return getSpeciesFieldData(speciesField);
+				Map<String, Object> partialEsDoc = new HashMap<String, Object>();
+				partialEsDoc.put("fieldData", speciesFieldData);
+				partialEsDoc.put("lastUpdated", new Date());
+
+				esService.update("extended_species", "_doc", speciesId.toString(), partialEsDoc);
+
+				return speciesFieldData;
 			}
 		} catch (Exception e) {
 			logger.error(e.getMessage());
