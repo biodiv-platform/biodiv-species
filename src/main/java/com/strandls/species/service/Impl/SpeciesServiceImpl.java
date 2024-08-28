@@ -634,9 +634,22 @@ public class SpeciesServiceImpl implements SpeciesServices {
 
 				updateLastRevised(speciesId);
 				SpeciesFieldData speciesFieldData = getSpeciesFieldData(speciesField);
+				ShowSpeciesPage showPageData = showSpeciesPage(speciesId);
 
+				List<SpeciesFieldData> oldSpeciesFields = showPageData.getFieldData();
 				Map<String, Object> partialEsDoc = new HashMap<String, Object>();
-				partialEsDoc.put("fieldData", speciesFieldData);
+
+				List<SpeciesFieldData> newFieldData = new ArrayList<>();
+
+				for (SpeciesFieldData field : oldSpeciesFields) {
+					if (field.getId().equals(speciesFieldData.getId())) {
+						newFieldData.add(speciesFieldData);
+					} else {
+						newFieldData.add(field);
+					}
+				}
+
+				partialEsDoc.put("fieldData", newFieldData);
 				partialEsDoc.put("lastUpdated", new Date());
 
 				esService.update("extended_species", "_doc", speciesId.toString(), partialEsDoc);
