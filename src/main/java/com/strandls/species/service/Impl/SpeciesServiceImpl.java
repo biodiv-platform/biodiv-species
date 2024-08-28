@@ -23,6 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -222,6 +223,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 	public ShowSpeciesPage showSpeciesPage(Long speciesId) {
 		try {
 			MapDocument m = esService.fetch("extended_species", "_doc", speciesId.toString());
+			om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 			ShowSpeciesPage response = om.readValue(String.valueOf(m.getDocument()), ShowSpeciesPage.class);
 			return response;
 		}
