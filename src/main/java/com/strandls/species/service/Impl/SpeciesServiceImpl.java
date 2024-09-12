@@ -649,8 +649,11 @@ public class SpeciesServiceImpl implements SpeciesServices {
 					}
 				}
 
+				Map<String, Object> speciesObj = new HashMap<>();
+				speciesObj.put("lastUpdated", new Date());
+
 				partialEsDoc.put("fieldData", newFieldData);
-				partialEsDoc.put("lastUpdated", new Date());
+				partialEsDoc.put("species", speciesObj);
 
 				esService.update("extended_species", "_doc", speciesId.toString(), partialEsDoc);
 
