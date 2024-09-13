@@ -733,7 +733,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 
 				updateLastRevised(speciesId);
 				SpeciesFieldData speciesFieldData = getSpeciesFieldData(speciesField);
-				ShowSpeciesPage showPageData = showSpeciesPage(speciesId);
+				ShowSpeciesPage showPageData = showSpeciesPageFromES(speciesId);
 
 				List<SpeciesFieldData> oldSpeciesFields = showPageData.getFieldData();
 				Map<String, Object> partialEsDoc = new HashMap<String, Object>();
