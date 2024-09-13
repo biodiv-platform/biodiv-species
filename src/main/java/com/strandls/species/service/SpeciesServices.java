@@ -115,5 +115,7 @@ public interface SpeciesServices {
 	CommonName updatePrefferedCommonName(HttpServletRequest request, Long speciesId, Long commonNameId);
 	
 	public Activity removeSpeciesComment(HttpServletRequest request, CommentLoggingData comment, String commentId);
+	
+	public ShowSpeciesPage showSpeciesPageFromES(Long speciesId);
 
 }
