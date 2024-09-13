@@ -589,7 +589,19 @@ public class SpeciesServiceImpl implements SpeciesServices {
 			Species species = speciesDao.findById(speciesId);
 			species.setLastUpdated(new Date());
 			speciesDao.update(species);
-			// ESSpeciesUpdate(speciesId);
+			ESSpeciesUpdate(speciesId);
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+
+		}
+	}
+
+	private void partialUpdateLastRevised(Long speciesId) {
+
+		try {
+			Species species = speciesDao.findById(speciesId);
+			species.setLastUpdated(new Date());
+			speciesDao.update(species);
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 
@@ -731,7 +743,6 @@ public class SpeciesServiceImpl implements SpeciesServices {
 							getSpeciesMailData(request, species));
 				}
 
-				updateLastRevised(speciesId);
 				SpeciesFieldData speciesFieldData = getSpeciesFieldData(speciesField);
 				ShowSpeciesPage showPageData = showSpeciesPageFromES(speciesId);
 
@@ -748,13 +759,8 @@ public class SpeciesServiceImpl implements SpeciesServices {
 					}
 				}
 
-				Map<String, Object> speciesObj = new HashMap<>();
-				speciesObj.put("lastUpdated", new Date());
-
 				partialEsDoc.put("fieldData", newFieldData);
-				partialEsDoc.put("species", speciesObj);
-
-				esService.update("extended_species", "_doc", speciesId.toString(), partialEsDoc);
+				partialUpdateEsUtil(speciesId, partialEsDoc);
 
 				return speciesFieldData;
 			}
@@ -762,6 +768,22 @@ public class SpeciesServiceImpl implements SpeciesServices {
 			logger.error(e.getMessage());
 		}
 		return null;
+	}
+
+	private void partialUpdateEsUtil(Long speciesId, Map<String, Object> partialEsDoc) {
+		try {
+			Species species = speciesDao.findById(speciesId);
+			species.setLastUpdated(new Date());
+			speciesDao.update(species);
+			
+			Map<String, Object> speciesObj = new HashMap<>();
+			speciesObj.put("lastUpdated", species.getLastUpdated());
+			partialEsDoc.put("species", speciesObj);
+
+			esService.update("extended_species", "_doc", speciesId.toString(), partialEsDoc);
+		} catch (ApiException e) {
+			logger.error(e.getMessage());
+		}
 	}
 
 	private List<Reference> updateCreateReferences(Long speciesFieldId, List<Reference> referencesList) {
