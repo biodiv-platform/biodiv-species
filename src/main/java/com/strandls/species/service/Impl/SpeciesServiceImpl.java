@@ -268,7 +268,6 @@ public class SpeciesServiceImpl implements SpeciesServices {
 						.getDocumentByTaxonConceptId(species.getTaxonConceptId().toString());
 
 				List<UserGroupIbp> userGroupList = ugService.getSpeciesUserGroup(speciesId.toString());
-
 				List<Featured> featured = ugService.getAllFeatured("species.Species", speciesId.toString());
 
 				// common name and synonyms
