@@ -221,33 +221,25 @@ public class SpeciesServiceImpl implements SpeciesServices {
 
 	@Override
 	public ShowSpeciesPage showSpeciesPage(Long speciesId) {
-
 		try {
-
 			List<ResourceData> resourceData = null;
 
 			Species species = speciesDao.findById(speciesId);
-
 			if (!species.getIsDeleted()) {
 
 				// preffered Common name
-
 				CommonName prefferedCommonName = commonNameService.getPrefferedCommanName(species.getTaxonConceptId());
 
 				// species group
-
 				SpeciesGroup speciesGroup = sgroupServices.getGroupId(species.getTaxonConceptId());
 
 				// resource data
-
 				resourceData = resourceServices.getImageResource("SPECIES", species.getId().toString());
 
 				// traits
-
 				List<FactValuePair> facts = traitService.getFacts("species.Species", speciesId.toString());
 
 				// species Field
-
 				List<SpeciesField> speciesFields = speciesFieldDao.findBySpeciesId(speciesId);
 
 				List<SpeciesFieldData> fieldData = new ArrayList<SpeciesFieldData>();
@@ -255,15 +247,11 @@ public class SpeciesServiceImpl implements SpeciesServices {
 				List<Reference> referencesList = new ArrayList<Reference>();
 
 				// segregating on the basis of multiple data
-
 				for (SpeciesField speciesField : speciesFields) {
 
 					if (!blackListSFId.contains(speciesField.getFieldId())) {
-
 						SpeciesFieldData speciesFieldData = getSpeciesFieldData(speciesField);
-
 						if (speciesFieldData != null)
-
 							fieldData.add(speciesFieldData);
 
 					}
@@ -271,15 +259,12 @@ public class SpeciesServiceImpl implements SpeciesServices {
 				}
 
 				List<BreadCrumb> breadCrumbs = taxonomyTreeServices
-
 						.getTaxonomyBreadCrumb(species.getTaxonConceptId().toString());
 
 				TaxonomyDefinition taxonomyDefinition = taxonomyService
-
 						.getTaxonomyConceptName(species.getTaxonConceptId().toString());
 
 				List<DocumentMeta> documentMetaList = documentService
-
 						.getDocumentByTaxonConceptId(species.getTaxonConceptId().toString());
 
 				List<UserGroupIbp> userGroupList = ugService.getSpeciesUserGroup(speciesId.toString());
@@ -287,21 +272,16 @@ public class SpeciesServiceImpl implements SpeciesServices {
 				List<Featured> featured = ugService.getAllFeatured("species.Species", speciesId.toString());
 
 				// common name and synonyms
-
 				TaxonomicNames names = taxonomyService.getNames(species.getTaxonConceptId().toString());
 
 				// temporal data
-
 				ObservationInfo observationInfo = esService.getObservationInfo("extended_observation", "_doc",
-
 						species.getTaxonConceptId().toString(), false);
 
 				Map<String, Long> temporalData = observationInfo.getMonthAggregation();
 
 				ShowSpeciesPage showSpeciesPage = new ShowSpeciesPage(species, prefferedCommonName, speciesGroup,
-
 						breadCrumbs, taxonomyDefinition, resourceData, fieldData, facts, userGroupList, featured, names,
-
 						temporalData, documentMetaList, referencesList);
 
 				return showSpeciesPage;
@@ -309,13 +289,9 @@ public class SpeciesServiceImpl implements SpeciesServices {
 			}
 
 		} catch (Exception e) {
-
 			logger.error(e.getMessage());
-
 		}
-
 		return null;
-
 	}
 
 	@Override
