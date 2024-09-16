@@ -296,9 +296,9 @@ public class SpeciesServiceImpl implements SpeciesServices {
 	@Override
 	public ShowSpeciesPage showSpeciesPageFromES(Long speciesId) {
 		try {
-			MapDocument m = esService.fetch("extended_species", "_doc", speciesId.toString());
+			MapDocument document = esService.fetch("extended_species", "_doc", speciesId.toString());
 			om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-			ShowSpeciesPage response = om.readValue(String.valueOf(m.getDocument()), ShowSpeciesPage.class);
+			ShowSpeciesPage response = om.readValue(String.valueOf(document.getDocument()), ShowSpeciesPage.class);
 			return response;
 		}
 
@@ -307,7 +307,6 @@ public class SpeciesServiceImpl implements SpeciesServices {
 		}
 
 		return null;
-
 	}
 
 	private SpeciesFieldData getSpeciesFieldData(SpeciesField speciesField) {
