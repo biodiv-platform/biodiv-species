@@ -298,8 +298,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 		try {
 			MapDocument document = esService.fetch("extended_species", "_doc", speciesId.toString());
 			om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-			ShowSpeciesPage response = om.readValue(String.valueOf(document.getDocument()), ShowSpeciesPage.class);
-			return response;
+			return om.readValue(String.valueOf(document.getDocument()), ShowSpeciesPage.class);
 		}
 
 		catch (Exception e) {
