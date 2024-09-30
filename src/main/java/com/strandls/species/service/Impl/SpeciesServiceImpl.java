@@ -23,6 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -226,26 +227,26 @@ public class SpeciesServiceImpl implements SpeciesServices {
 			Species species = speciesDao.findById(speciesId);
 			if (!species.getIsDeleted()) {
 
-//				preffered Common name
+				// preffered Common name
 				CommonName prefferedCommonName = commonNameService.getPrefferedCommanName(species.getTaxonConceptId());
 
-//				species group
+				// species group
 				SpeciesGroup speciesGroup = sgroupServices.getGroupId(species.getTaxonConceptId());
 
-//				resource data
+				// resource data
 				resourceData = resourceServices.getImageResource("SPECIES", species.getId().toString());
 
-//				traits
+				// traits
 				List<FactValuePair> facts = traitService.getFacts("species.Species", speciesId.toString());
 
-//				species Field
+				// species Field
 				List<SpeciesField> speciesFields = speciesFieldDao.findBySpeciesId(speciesId);
 
 				List<SpeciesFieldData> fieldData = new ArrayList<SpeciesFieldData>();
 
 				List<Reference> referencesList = new ArrayList<Reference>();
 
-//				segregating on the basis of multiple data
+				// segregating on the basis of multiple data
 				for (SpeciesField speciesField : speciesFields) {
 
 					if (!blackListSFId.contains(speciesField.getFieldId())) {
@@ -269,10 +270,10 @@ public class SpeciesServiceImpl implements SpeciesServices {
 				List<UserGroupIbp> userGroupList = ugService.getSpeciesUserGroup(speciesId.toString());
 				List<Featured> featured = ugService.getAllFeatured("species.Species", speciesId.toString());
 
-//				common name and synonyms
+				// common name and synonyms
 				TaxonomicNames names = taxonomyService.getNames(species.getTaxonConceptId().toString());
 
-//				temporal data
+				// temporal data
 				ObservationInfo observationInfo = esService.getObservationInfo("extended_observation", "_doc",
 						species.getTaxonConceptId().toString(), false);
 
@@ -289,9 +290,22 @@ public class SpeciesServiceImpl implements SpeciesServices {
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 		}
+		return null;
+	}
+
+	@Override
+	public ShowSpeciesPage showSpeciesPageFromES(Long speciesId) {
+		try {
+			MapDocument document = esService.fetch("extended_species", "_doc", speciesId.toString());
+			om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+			return om.readValue(String.valueOf(document.getDocument()), ShowSpeciesPage.class);
+		}
+
+		catch (Exception e) {
+			logger.error(e.getMessage());
+		}
 
 		return null;
-
 	}
 
 	private SpeciesFieldData getSpeciesFieldData(SpeciesField speciesField) {
