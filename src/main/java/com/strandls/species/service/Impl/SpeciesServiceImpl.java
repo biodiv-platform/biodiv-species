@@ -27,6 +27,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.nimbusds.jose.Payload;
 import com.strandls.activity.controller.ActivitySerivceApi;
 import com.strandls.activity.pojo.Activity;
 import com.strandls.activity.pojo.CommentLoggingData;
@@ -298,7 +299,12 @@ public class SpeciesServiceImpl implements SpeciesServices {
 		try {
 			MapDocument document = esService.fetch("extended_species", "_doc", speciesId.toString());
 			om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-			return om.readValue(String.valueOf(document.getDocument()), ShowSpeciesPage.class);
+			ShowSpeciesPage showPagePayload = om.readValue(String.valueOf(document.getDocument()),
+					ShowSpeciesPage.class);
+			if (showPagePayload.getFacts() == null) {
+				showPagePayload.setFacts(new ArrayList<FactValuePair>());
+			}
+			return showPagePayload;
 		}
 
 		catch (Exception e) {
