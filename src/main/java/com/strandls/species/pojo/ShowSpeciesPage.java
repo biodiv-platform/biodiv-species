@@ -6,7 +6,6 @@ package com.strandls.species.pojo;
 import java.util.List;
 import java.util.Map;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.strandls.document.pojo.DocumentMeta;
 import com.strandls.resource.pojo.ResourceData;
 import com.strandls.taxonomy.pojo.BreadCrumb;
@@ -23,7 +22,6 @@ import com.strandls.userGroup.pojo.UserGroupIbp;
  *
  * 
  */
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class ShowSpeciesPage {
 
 	private Species species;
