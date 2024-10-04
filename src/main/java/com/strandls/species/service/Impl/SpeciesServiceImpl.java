@@ -10,6 +10,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
@@ -27,7 +28,6 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.nimbusds.jose.Payload;
 import com.strandls.activity.controller.ActivitySerivceApi;
 import com.strandls.activity.pojo.Activity;
 import com.strandls.activity.pojo.CommentLoggingData;
@@ -304,6 +304,13 @@ public class SpeciesServiceImpl implements SpeciesServices {
 			if (showPagePayload.getFacts() == null) {
 				showPagePayload.setFacts(new ArrayList<FactValuePair>());
 			}
+
+			for (SpeciesFieldData fieldData : showPagePayload.getFieldData()) {
+				if (fieldData.getReferences().stream().allMatch(Objects::isNull)) {
+					fieldData.setReferences(new ArrayList<Reference>());
+				}
+			}
+
 			return showPagePayload;
 		}
 
