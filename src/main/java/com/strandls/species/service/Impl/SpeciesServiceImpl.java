@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -341,51 +342,51 @@ public class SpeciesServiceImpl implements SpeciesServices {
 //		logger.info("All fields are effectively null for object: " + obj);
 //		return true;
 //	}
-	
+
 	public void removeNullObjects(List<ResourceData> list) {
-        int initialSize = list.size();
-        list.removeIf(this::areAllFieldsNullRecursive);
-        
-        int removedCount = initialSize - list.size();
-        logger.info("Removed " + removedCount + " objects from the list");
-    }
+		int initialSize = list.size();
+		list.removeIf(this::areAllFieldsNullRecursive);
 
-    private boolean areAllFieldsNullRecursive(Object obj) {
-        if (obj == null) {
-            return true;
-        }
+		int removedCount = initialSize - list.size();
+		logger.info("Removed " + removedCount + " objects from the list");
+	}
 
-        for (Field field : obj.getClass().getDeclaredFields()) {
-            field.setAccessible(true);
-            try {
-                Object value = field.get(obj);
-                if (value != null) {
-                    if (value instanceof Collection) {
-                        // Check if the collection is empty
-                        if (!((Collection<?>) value).isEmpty()) {
-                            logger.info("Field " + field.getName() + " is a non-empty collection");
-                            return false;
-                        }
-                    } else if (value.getClass().getPackage() != null
-                            && value.getClass().getPackage().getName().startsWith("java")) {
-                        // For Java standard classes, just check if they're non-null
-                        logger.info("Field " + field.getName() + " is not null: " + value);
-                        return false;
-                    } else {
-                        // For custom classes, recursively check their fields
-                        if (!areAllFieldsNullRecursive(value)) {
-                            return false;
-                        }
-                    }
-                }
-            } catch (IllegalAccessException e) {
-                logger.warn("Cannot access field " + field.getName() + ": " + e.getMessage());
-            }
-        }
+	private boolean areAllFieldsNullRecursive(Object obj) {
+		if (obj == null) {
+			return true;
+		}
 
-        logger.info("All fields are effectively null for object: " + obj);
-        return true;
-    }
+		for (Field field : obj.getClass().getDeclaredFields()) {
+			field.setAccessible(true);
+			try {
+				Object value = field.get(obj);
+				if (value != null) {
+					if (value instanceof Collection) {
+						// Check if the collection is empty
+						if (!((Collection<?>) value).isEmpty()) {
+							logger.info("Field " + field.getName() + " is a non-empty collection");
+							return false;
+						}
+					} else if (value.getClass().getPackage() != null
+							&& value.getClass().getPackage().getName().startsWith("java")) {
+						// For Java standard classes, just check if they're non-null
+						logger.info("Field " + field.getName() + " is not null: " + value);
+						return false;
+					} else {
+						// For custom classes, recursively check their fields
+						if (!areAllFieldsNullRecursive(value)) {
+							return false;
+						}
+					}
+				}
+			} catch (IllegalAccessException e) {
+				logger.warn("Cannot access field " + field.getName() + ": " + e.getMessage());
+			}
+		}
+
+		logger.info("All fields are effectively null for object: " + obj);
+		return true;
+	}
 
 	@Override
 	public ShowSpeciesPage showSpeciesPageFromES(Long speciesId) {
@@ -406,6 +407,18 @@ public class SpeciesServiceImpl implements SpeciesServices {
 				if (fieldData.getSpeciesFieldResource().size() == 0) {
 					fieldData.setSpeciesFieldResource(null);
 				}
+			}
+
+			if (showPagePayload.getTemporalData() == null) {
+				showPagePayload.setTemporalData(new HashMap<String, Long>());
+			}
+
+			if (showPagePayload.getDocumentMetaList() == null) {
+				showPagePayload.setDocumentMetaList(new ArrayList<DocumentMeta>());
+			}
+
+			if (showPagePayload.getReferencesListing() == null) {
+				showPagePayload.setReferencesListing(new ArrayList<Reference>());
 			}
 
 			return showPagePayload;
