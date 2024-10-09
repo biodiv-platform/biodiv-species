@@ -421,6 +421,10 @@ public class SpeciesServiceImpl implements SpeciesServices {
 				showPagePayload.setReferencesListing(new ArrayList<Reference>());
 			}
 
+			if (showPagePayload.getTaxonomicNames().getCommonNames().stream().allMatch(Objects::isNull)) {
+				showPagePayload.getTaxonomicNames().setCommonNames(new ArrayList<CommonName>());
+			}
+
 			return showPagePayload;
 		}
 
