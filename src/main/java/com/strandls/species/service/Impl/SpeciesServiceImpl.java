@@ -403,9 +403,11 @@ public class SpeciesServiceImpl implements SpeciesServices {
 				if (fieldData.getReferences().stream().allMatch(Objects::isNull)) {
 					fieldData.setReferences(new ArrayList<Reference>());
 				}
-				removeNullObjects(fieldData.getSpeciesFieldResource());
-				if (fieldData.getSpeciesFieldResource().size() == 0) {
-					fieldData.setSpeciesFieldResource(null);
+				if (fieldData.getSpeciesFieldResource() != null) {
+					removeNullObjects(fieldData.getSpeciesFieldResource());
+					if (fieldData.getSpeciesFieldResource().size() == 0) {
+						fieldData.setSpeciesFieldResource(null);
+					}
 				}
 			}
 
