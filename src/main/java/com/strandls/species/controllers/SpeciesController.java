@@ -24,6 +24,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.core.Response.Status;
 
+import com.fasterxml.jackson.databind.JsonMappingException.Reference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.strandls.activity.pojo.Activity;
 import com.strandls.activity.pojo.CommentLoggingData;
@@ -41,6 +42,7 @@ import com.strandls.species.es.util.ESUpdate;
 import com.strandls.species.es.util.ESUtility;
 import com.strandls.species.pojo.FieldRender;
 import com.strandls.species.pojo.MapAggregationResponse;
+import com.strandls.species.pojo.ReferenceCreateData;
 import com.strandls.species.pojo.ShowSpeciesPage;
 import com.strandls.species.pojo.SpeciesCreateData;
 import com.strandls.species.pojo.SpeciesFieldData;
@@ -505,7 +507,7 @@ public class SpeciesController {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
 	}
-	
+
 	@POST
 	@Path(ApiConstants.DELETE + ApiConstants.COMMENT + "/{commentId}")
 	@Consumes(MediaType.APPLICATION_JSON)
@@ -848,14 +850,14 @@ public class SpeciesController {
 							&& !bulkAction.isEmpty() && view.equalsIgnoreCase("bulkMapping"))) {
 				mapSearchParams.setFrom(0);
 				mapSearchParams.setLimit(100000);
-				
-				if(request.getHeader(HttpHeaders.AUTHORIZATION) == null) {
+
+				if (request.getHeader(HttpHeaders.AUTHORIZATION) == null) {
 					return Response.status(Status.BAD_REQUEST).build();
 				}
-				
+
 				SpeciesBulkMappingThread bulkMappingThread = new SpeciesBulkMappingThread(selectAll, bulkAction,
-						bulkSpeciesIds, bulkUsergroupIds, mapSearchQuery, ugService, index, type, esService,
-						request, headers, objectMapper, esUpdate);
+						bulkSpeciesIds, bulkUsergroupIds, mapSearchQuery, ugService, index, type, esService, request,
+						headers, objectMapper, esUpdate);
 
 				Thread thread = new Thread(bulkMappingThread);
 				thread.start();
@@ -866,6 +868,29 @@ public class SpeciesController {
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
+	}
+
+	@POST
+	@Path(ApiConstants.ADD + "/reference" + "/{speciesId}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+
+	// @ValidateUser
+
+	@ApiOperation(value = "add reference to a species Page", notes = "add common reference", response = com.strandls.species.pojo.Reference.class)
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "uable to unfollow", response = String.class) })
+
+	public Response createReference(
+			@ApiParam(name = "referenceCreateData") List<ReferenceCreateData> referenceCreateData,
+			@PathParam("speciesId") String speciesId) {
+		try {
+			List<com.strandls.species.pojo.Reference> result = speciesService.createReference(Long.parseLong(speciesId),
+					referenceCreateData);
+			return Response.status(Status.OK).entity(result).build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+
 	}
 
 }

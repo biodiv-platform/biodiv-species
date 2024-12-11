@@ -13,6 +13,8 @@ import com.strandls.esmodule.ApiException;
 import com.strandls.resource.pojo.ResourceData;
 import com.strandls.resource.pojo.SpeciesPull;
 import com.strandls.species.pojo.FieldRender;
+import com.strandls.species.pojo.Reference;
+import com.strandls.species.pojo.ReferenceCreateData;
 import com.strandls.species.pojo.ShowSpeciesPage;
 import com.strandls.species.pojo.SpeciesCreateData;
 import com.strandls.species.pojo.SpeciesFieldData;
@@ -107,15 +109,17 @@ public interface SpeciesServices {
 	public Follow unFollowRequest(HttpServletRequest request, Long speciesId);
 
 	public Boolean removeSpeciesPage(HttpServletRequest request, Long speciesId);
-	
+
 	public String getSpeciesIdFromTaxonId(Long taxonId);
-	
-	public void  ESSpeciesUpdate(long speciesId) throws ApiException;
+
+	public void ESSpeciesUpdate(long speciesId) throws ApiException;
 
 	CommonName updatePrefferedCommonName(HttpServletRequest request, Long speciesId, Long commonNameId);
-	
+
 	public Activity removeSpeciesComment(HttpServletRequest request, CommentLoggingData comment, String commentId);
-	
+
 	public ShowSpeciesPage showSpeciesPageFromES(Long speciesId);
+
+	public List<Reference> createReference(Long speciesId, List<ReferenceCreateData> referenceCreateData);
 
 }

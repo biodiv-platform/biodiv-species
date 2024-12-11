@@ -71,6 +71,7 @@ import com.strandls.species.pojo.FieldHeader;
 import com.strandls.species.pojo.FieldNew;
 import com.strandls.species.pojo.FieldRender;
 import com.strandls.species.pojo.Reference;
+import com.strandls.species.pojo.ReferenceCreateData;
 import com.strandls.species.pojo.ShowSpeciesPage;
 import com.strandls.species.pojo.Species;
 import com.strandls.species.pojo.SpeciesCreateData;
@@ -1530,6 +1531,57 @@ public class SpeciesServiceImpl implements SpeciesServices {
 			logger.error(e.getMessage());
 		}
 		return result;
+	}
+
+	@Override
+	public List<Reference> createReference(Long speciesId, List<ReferenceCreateData> referenceCreateData) {
+		try {
+			List<Reference> newReferences = new ArrayList<Reference>();
+			for (ReferenceCreateData rfCreateData : referenceCreateData) {
+				Reference reference = new Reference();
+				reference.setSpeciesId(rfCreateData.getSpeciesId());
+				reference.setTitle(rfCreateData.getTitle());
+				reference.setUrl(rfCreateData.getUrl());
+
+				Reference response = referenceDao.save(reference);
+				newReferences.add(response);
+			}
+
+			partialESSpeciesUpdateReference(speciesId, newReferences);
+
+			return newReferences;
+
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			return null;
+		}
+	}
+
+	private void partialESSpeciesUpdateReference(Long speciesId, List<Reference> references) throws ApiException {
+		ShowSpeciesPage showData = showSpeciesPageFromES(speciesId);
+		List<Reference> referencesListing = showData.getReferencesListing();
+
+		for (Reference rf : references) {
+			referencesListing.add(rf);
+		}
+
+		showData.setReferencesListing(referencesListing);
+		MapDocument document = new MapDocument();
+		try {
+			String payload = om.writeValueAsString(showData);
+			JsonNode rootNode = om.readTree(payload);
+			if (showData.getTaxonomyDefinition().getDefaultHierarchy() != null
+					&& !showData.getTaxonomyDefinition().getDefaultHierarchy().isEmpty()) {
+				JsonNode child = ((ObjectNode) rootNode).get("taxonomyDefinition");
+				((ObjectNode) child).replace("defaultHierarchy", null);
+			}
+			document.setDocument(om.writeValueAsString(rootNode));
+		} catch (JsonProcessingException e) {
+			logger.error(e.getMessage());
+		}
+
+		esService.create(SpeciesIndex.INDEX.getValue(), SpeciesIndex.TYPE.getValue(),
+				showData.getSpecies().getId().toString(), document);
 	}
 
 }

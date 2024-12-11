@@ -33,6 +33,7 @@ public class Reference implements Serializable {
 	private Long speciesFieldId;
 	private String title;
 	private String url;
+	private Long speciesId;
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
@@ -70,6 +71,15 @@ public class Reference implements Serializable {
 
 	public void setUrl(String url) {
 		this.url = url;
+	}
+
+	@Column(name = "species_id", columnDefinition = "BIGINT")
+	public Long getSpeciesId() {
+		return speciesId;
+	}
+
+	public void setSpeciesId(Long speciesId) {
+		this.speciesId = speciesId;
 	}
 
 }
