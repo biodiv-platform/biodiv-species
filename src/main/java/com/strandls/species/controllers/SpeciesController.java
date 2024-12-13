@@ -893,4 +893,27 @@ public class SpeciesController {
 
 	}
 
+	@PUT
+	@Path(ApiConstants.UPDATE + "/reference" + "/{speciesId}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+
+	@ValidateUser
+
+	@ApiOperation(value = "edit references of a species Page", notes = "edit common reference", response = com.strandls.species.pojo.Reference.class)
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "uable to unfollow", response = String.class) })
+
+	public Response updateReference(@Context HttpServletRequest request,
+			@ApiParam(name = "reference") com.strandls.species.pojo.Reference reference,
+			@PathParam("speciesId") String speciesId) {
+		try {
+			com.strandls.species.pojo.Reference result = speciesService.editReference(request,
+					Long.parseLong(speciesId), reference);
+			return Response.status(Status.OK).entity(result).build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+
+	}
+
 }

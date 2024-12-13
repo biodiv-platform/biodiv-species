@@ -122,4 +122,6 @@ public interface SpeciesServices {
 
 	public List<Reference> createReference(Long speciesId, List<ReferenceCreateData> referenceCreateData);
 
+	public Reference editReference(HttpServletRequest request, Long speciesId, Reference reference);
+
 }

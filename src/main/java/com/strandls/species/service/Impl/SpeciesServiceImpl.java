@@ -1584,4 +1584,51 @@ public class SpeciesServiceImpl implements SpeciesServices {
 				showData.getSpecies().getId().toString(), document);
 	}
 
+	private void partialUpdateReference(Long speciesId, Reference reference) throws ApiException {
+		ShowSpeciesPage showData = showSpeciesPageFromES(speciesId);
+		List<Reference> referencesListing = showData.getReferencesListing();
+
+		for (Reference rf : referencesListing) {
+			if (rf.getId().equals(reference.getId())) {
+
+				rf.setTitle(reference.getTitle());
+				rf.setUrl(reference.getUrl());
+			}
+		}
+
+		showData.setReferencesListing(referencesListing);
+		MapDocument document = new MapDocument();
+		try {
+			String payload = om.writeValueAsString(showData);
+			JsonNode rootNode = om.readTree(payload);
+			if (showData.getTaxonomyDefinition().getDefaultHierarchy() != null
+					&& !showData.getTaxonomyDefinition().getDefaultHierarchy().isEmpty()) {
+				JsonNode child = ((ObjectNode) rootNode).get("taxonomyDefinition");
+				((ObjectNode) child).replace("defaultHierarchy", null);
+			}
+			document.setDocument(om.writeValueAsString(rootNode));
+		} catch (JsonProcessingException e) {
+			logger.error(e.getMessage());
+		}
+
+		esService.create(SpeciesIndex.INDEX.getValue(), SpeciesIndex.TYPE.getValue(),
+				showData.getSpecies().getId().toString(), document);
+	}
+
+	@Override
+	public Reference editReference(HttpServletRequest request, Long speciesId, Reference reference) {
+
+		Boolean isContributor = checkIsContributor(request, speciesId);
+		try {
+			if (isContributor) {
+				Reference response = referenceDao.update(reference);
+				partialUpdateReference(speciesId, reference);
+				return response;
+			}
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return null;
+	}
+
 }
