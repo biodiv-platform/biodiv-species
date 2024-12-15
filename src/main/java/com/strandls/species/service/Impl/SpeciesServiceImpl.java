@@ -1534,27 +1534,30 @@ public class SpeciesServiceImpl implements SpeciesServices {
 	}
 
 	@Override
-	public List<Reference> createReference(Long speciesId, List<ReferenceCreateData> referenceCreateData) {
+	public List<Reference> createReference(HttpServletRequest request, Long speciesId,
+			List<ReferenceCreateData> referenceCreateData) {
 		try {
-			List<Reference> newReferences = new ArrayList<Reference>();
-			for (ReferenceCreateData rfCreateData : referenceCreateData) {
-				Reference reference = new Reference();
-				reference.setSpeciesId(rfCreateData.getSpeciesId());
-				reference.setTitle(rfCreateData.getTitle());
-				reference.setUrl(rfCreateData.getUrl());
 
-				Reference response = referenceDao.save(reference);
-				newReferences.add(response);
+			Boolean isContributor = checkIsContributor(request, speciesId);
+
+			if (isContributor) {
+				List<Reference> newReferences = new ArrayList<Reference>();
+				for (ReferenceCreateData rfCreateData : referenceCreateData) {
+					Reference reference = new Reference();
+					reference.setSpeciesId(rfCreateData.getSpeciesId());
+					reference.setTitle(rfCreateData.getTitle());
+					reference.setUrl(rfCreateData.getUrl());
+
+					Reference response = referenceDao.save(reference);
+					newReferences.add(response);
+				}
+				partialESSpeciesUpdateReference(speciesId, newReferences);
+				return newReferences;
 			}
-
-			partialESSpeciesUpdateReference(speciesId, newReferences);
-
-			return newReferences;
-
 		} catch (Exception e) {
 			logger.error(e.getMessage());
-			return null;
 		}
+		return null;
 	}
 
 	private void partialESSpeciesUpdateReference(Long speciesId, List<Reference> references) throws ApiException {

@@ -875,17 +875,17 @@ public class SpeciesController {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 
-	// @ValidateUser
+	@ValidateUser
 
 	@ApiOperation(value = "add reference to a species Page", notes = "add common reference", response = com.strandls.species.pojo.Reference.class)
 	@ApiResponses(value = { @ApiResponse(code = 400, message = "uable to unfollow", response = String.class) })
 
-	public Response createReference(
+	public Response createReference(@Context HttpServletRequest request,
 			@ApiParam(name = "referenceCreateData") List<ReferenceCreateData> referenceCreateData,
 			@PathParam("speciesId") String speciesId) {
 		try {
-			List<com.strandls.species.pojo.Reference> result = speciesService.createReference(Long.parseLong(speciesId),
-					referenceCreateData);
+			List<com.strandls.species.pojo.Reference> result = speciesService.createReference(request,
+					Long.parseLong(speciesId), referenceCreateData);
 			return Response.status(Status.OK).entity(result).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
