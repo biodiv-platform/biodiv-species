@@ -344,7 +344,29 @@ public class SpeciesServiceImpl implements SpeciesServices {
 //		return true;
 //	}
 
-	public void removeNullObjects(List<ResourceData> list) {
+//	public void removeNullObjects(List<ResourceData> list) {
+//		int initialSize = list.size();
+//		list.removeIf(this::areAllFieldsNullRecursive);
+//
+//		int removedCount = initialSize - list.size();
+//		logger.info("Removed " + removedCount + " objects from the list");
+//	}
+//
+//	public void removeNullObjectsSynonyms(List<TaxonomyDefinition> list) {
+//		int initialSize = list.size();
+//		list.removeIf(this::areAllFieldsNullRecursive);
+//
+//		int removedCount = initialSize - list.size();
+//		logger.info("Removed " + removedCount + " objects from the list");
+//	}
+
+	/**
+	 * Removes objects from the list where all fields are null recursively
+	 * 
+	 * @param list The list to process
+	 * @param <T>  The type of objects in the list
+	 */
+	public <T> void removeNullObjects(List<T> list) {
 		int initialSize = list.size();
 		list.removeIf(this::areAllFieldsNullRecursive);
 
@@ -410,6 +432,14 @@ public class SpeciesServiceImpl implements SpeciesServices {
 						fieldData.setSpeciesFieldResource(null);
 					}
 				}
+
+				if (fieldData.getContributor() != null) {
+					removeNullObjects(fieldData.getContributor());
+				}
+			}
+
+			if (showPagePayload.getTaxonomicNames().getSynonyms() != null) {
+				removeNullObjects(showPagePayload.getTaxonomicNames().getSynonyms());
 			}
 
 			if (showPagePayload.getTemporalData() == null) {
