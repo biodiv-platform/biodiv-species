@@ -249,7 +249,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 
 				List<SpeciesFieldData> fieldData = new ArrayList<SpeciesFieldData>();
 
-				List<Reference> referencesList = new ArrayList<Reference>();
+				List<Reference> referencesList = referenceDao.findBySpeciesId(speciesId);
 
 				// segregating on the basis of multiple data
 				for (SpeciesField speciesField : speciesFields) {

@@ -64,4 +64,21 @@ public class ReferenceDao extends AbstractDAO<Reference, Long> {
 		return result;
 	}
 
+	@SuppressWarnings("unchecked")
+	public List<Reference> findBySpeciesId(Long speciesId) {
+		String qry = "from Reference where speciesId  = :speciesId";
+		Session session = sessionFactory.openSession();
+		List<Reference> result = null;
+		try {
+			Query<Reference> query = session.createQuery(qry);
+			query.setParameter("speciesId", speciesId);
+			result = query.getResultList();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		} finally {
+			session.close();
+		}
+		return result;
+	}
+
 }
