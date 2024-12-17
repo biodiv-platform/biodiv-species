@@ -3,13 +3,18 @@
  */
 package com.strandls.species.service.Impl;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
@@ -67,6 +72,7 @@ import com.strandls.species.pojo.FieldHeader;
 import com.strandls.species.pojo.FieldNew;
 import com.strandls.species.pojo.FieldRender;
 import com.strandls.species.pojo.Reference;
+import com.strandls.species.pojo.ReferenceCreateData;
 import com.strandls.species.pojo.ShowSpeciesPage;
 import com.strandls.species.pojo.Species;
 import com.strandls.species.pojo.SpeciesCreateData;
@@ -219,6 +225,10 @@ public class SpeciesServiceImpl implements SpeciesServices {
 	private List<Long> blackListSFId = Arrays.asList(blackList.split(",")).stream().map(s -> Long.parseLong(s.trim()))
 			.collect(Collectors.toList());
 
+	public enum ReferenceOperation {
+		ADD, UPDATE
+	}
+
 	@Override
 	public ShowSpeciesPage showSpeciesPage(Long speciesId) {
 		try {
@@ -244,7 +254,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 
 				List<SpeciesFieldData> fieldData = new ArrayList<SpeciesFieldData>();
 
-				List<Reference> referencesList = new ArrayList<Reference>();
+				List<Reference> referencesList = referenceDao.findBySpeciesId(speciesId);
 
 				// segregating on the basis of multiple data
 				for (SpeciesField speciesField : speciesFields) {
@@ -293,12 +303,105 @@ public class SpeciesServiceImpl implements SpeciesServices {
 		return null;
 	}
 
+	/**
+	 * Removes objects from the list where all fields are null recursively
+	 * 
+	 * @param list The list to process
+	 * @param <T>  The type of objects in the list
+	 */
+	public <T> void removeNullObjects(List<T> list) {
+		int initialSize = list.size();
+		list.removeIf(this::areAllFieldsNullRecursive);
+
+		int removedCount = initialSize - list.size();
+		logger.info("Removed " + removedCount + " objects from the list");
+	}
+
+	private boolean areAllFieldsNullRecursive(Object obj) {
+		if (obj == null) {
+			return true;
+		}
+
+		for (Field field : obj.getClass().getDeclaredFields()) {
+			field.setAccessible(true);
+			try {
+				Object value = field.get(obj);
+				if (value != null) {
+					if (value instanceof Collection) {
+						// Check if the collection is empty
+						if (!((Collection<?>) value).isEmpty()) {
+							logger.info("Field " + field.getName() + " is a non-empty collection");
+							return false;
+						}
+					} else if (value.getClass().getPackage() != null
+							&& value.getClass().getPackage().getName().startsWith("java")) {
+						// For Java standard classes, just check if they're non-null
+						logger.info("Field " + field.getName() + " is not null: " + value);
+						return false;
+					} else {
+						// For custom classes, recursively check their fields
+						if (!areAllFieldsNullRecursive(value)) {
+							return false;
+						}
+					}
+				}
+			} catch (IllegalAccessException e) {
+				logger.warn("Cannot access field " + field.getName() + ": " + e.getMessage());
+			}
+		}
+
+		logger.info("All fields are effectively null for object: " + obj);
+		return true;
+	}
+
 	@Override
 	public ShowSpeciesPage showSpeciesPageFromES(Long speciesId) {
 		try {
 			MapDocument document = esService.fetch("extended_species", "_doc", speciesId.toString());
 			om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-			return om.readValue(String.valueOf(document.getDocument()), ShowSpeciesPage.class);
+			ShowSpeciesPage showPagePayload = om.readValue(String.valueOf(document.getDocument()),
+					ShowSpeciesPage.class);
+			if (showPagePayload.getFacts() == null) {
+				showPagePayload.setFacts(new ArrayList<FactValuePair>());
+			}
+
+			for (SpeciesFieldData fieldData : showPagePayload.getFieldData()) {
+				if (fieldData.getReferences().stream().allMatch(Objects::isNull)) {
+					fieldData.setReferences(new ArrayList<Reference>());
+				}
+				if (fieldData.getSpeciesFieldResource() != null) {
+					removeNullObjects(fieldData.getSpeciesFieldResource());
+					if (fieldData.getSpeciesFieldResource().size() == 0) {
+						fieldData.setSpeciesFieldResource(null);
+					}
+				}
+
+				if (fieldData.getContributor() != null) {
+					removeNullObjects(fieldData.getContributor());
+				}
+			}
+
+			if (showPagePayload.getTaxonomicNames().getSynonyms() != null) {
+				removeNullObjects(showPagePayload.getTaxonomicNames().getSynonyms());
+			}
+
+			if (showPagePayload.getTemporalData() == null) {
+				showPagePayload.setTemporalData(new HashMap<String, Long>());
+			}
+
+			if (showPagePayload.getDocumentMetaList() == null) {
+				showPagePayload.setDocumentMetaList(new ArrayList<DocumentMeta>());
+			}
+
+			if (showPagePayload.getReferencesListing() == null) {
+				showPagePayload.setReferencesListing(new ArrayList<Reference>());
+			}
+
+			if (showPagePayload.getTaxonomicNames().getCommonNames().stream().allMatch(Objects::isNull)) {
+				showPagePayload.getTaxonomicNames().setCommonNames(new ArrayList<CommonName>());
+			}
+
+			return showPagePayload;
 		}
 
 		catch (Exception e) {
@@ -1401,6 +1504,89 @@ public class SpeciesServiceImpl implements SpeciesServices {
 			logger.error(e.getMessage());
 		}
 		return result;
+	}
+
+	@Override
+	public List<Reference> createReference(HttpServletRequest request, Long speciesId,
+			List<ReferenceCreateData> referenceCreateData) {
+		try {
+
+			Boolean isContributor = checkIsContributor(request, speciesId);
+
+			if (isContributor) {
+				List<Reference> newReferences = new ArrayList<Reference>();
+				for (ReferenceCreateData rfCreateData : referenceCreateData) {
+					Reference reference = new Reference();
+					reference.setSpeciesId(rfCreateData.getSpeciesId());
+					reference.setTitle(rfCreateData.getTitle());
+					reference.setUrl(rfCreateData.getUrl());
+
+					Reference response = referenceDao.save(reference);
+					newReferences.add(response);
+				}
+				handleSpeciesReferences(speciesId, newReferences, ReferenceOperation.ADD);
+
+				return newReferences;
+			}
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return null;
+	}
+
+	private void handleSpeciesReferences(Long speciesId, List<Reference> references, ReferenceOperation operation)
+			throws ApiException {
+		ShowSpeciesPage showData = showSpeciesPageFromES(speciesId);
+		List<Reference> referencesListing = showData.getReferencesListing();
+
+		switch (operation) {
+		case ADD:
+			referencesListing.addAll(references);
+			break;
+		case UPDATE:
+			for (Reference newRef : references) {
+				referencesListing.stream().filter(existingRef -> existingRef.getId().equals(newRef.getId())).findFirst()
+						.ifPresent(existingRef -> {
+							existingRef.setTitle(newRef.getTitle());
+							existingRef.setUrl(newRef.getUrl());
+						});
+			}
+			break;
+		}
+
+		showData.setReferencesListing(referencesListing);
+		MapDocument document = new MapDocument();
+		try {
+			String payload = om.writeValueAsString(showData);
+			JsonNode rootNode = om.readTree(payload);
+			if (showData.getTaxonomyDefinition().getDefaultHierarchy() != null
+					&& !showData.getTaxonomyDefinition().getDefaultHierarchy().isEmpty()) {
+				JsonNode child = ((ObjectNode) rootNode).get("taxonomyDefinition");
+				((ObjectNode) child).replace("defaultHierarchy", null);
+			}
+			document.setDocument(om.writeValueAsString(rootNode));
+		} catch (JsonProcessingException e) {
+			logger.error(e.getMessage());
+		}
+
+		esService.create(SpeciesIndex.INDEX.getValue(), SpeciesIndex.TYPE.getValue(),
+				showData.getSpecies().getId().toString(), document);
+	}
+
+	@Override
+	public Reference editReference(HttpServletRequest request, Long speciesId, Reference reference) {
+
+		Boolean isContributor = checkIsContributor(request, speciesId);
+		try {
+			if (isContributor) {
+				Reference response = referenceDao.update(reference);
+				handleSpeciesReferences(speciesId, Collections.singletonList(reference), ReferenceOperation.UPDATE);
+				return response;
+			}
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return null;
 	}
 
 }
