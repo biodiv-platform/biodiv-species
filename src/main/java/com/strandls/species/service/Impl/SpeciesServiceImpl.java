@@ -298,68 +298,6 @@ public class SpeciesServiceImpl implements SpeciesServices {
 		return null;
 	}
 
-//	public void removeNullObjects(List<ResourceData> list) {
-//		int initialSize = list.size();
-//		list.removeIf(resourceData -> {
-//			if (resourceData == null) {
-//				logger.info("Removing null ResourceData object");
-//				return true;
-//			}
-//
-//			return areAllFieldsNullRecursive(resourceData);
-//		});
-//
-//		int removedCount = initialSize - list.size();
-//		logger.info("Removed " + removedCount + " objects from the list");
-//	}
-//
-//	private boolean areAllFieldsNullRecursive(Object obj) {
-//		if (obj == null) {
-//			return true;
-//		}
-//
-//		for (Field field : obj.getClass().getDeclaredFields()) {
-//			field.setAccessible(true);
-//			try {
-//				Object value = field.get(obj);
-//				if (value != null) {
-//					if (value.getClass().getPackage() != null
-//							&& value.getClass().getPackage().getName().startsWith("java")) {
-//						// For Java standard classes, just check if they're non-null
-//						logger.info("Field " + field.getName() + " is not null: " + value);
-//						return false;
-//					} else {
-//						// For custom classes, recursively check their fields
-//						if (!areAllFieldsNullRecursive(value)) {
-//							return false;
-//						}
-//					}
-//				}
-//			} catch (IllegalAccessException e) {
-//				logger.warn("Cannot access field " + field.getName() + ": " + e.getMessage());
-//			}
-//		}
-//
-//		logger.info("All fields are effectively null for object: " + obj);
-//		return true;
-//	}
-
-//	public void removeNullObjects(List<ResourceData> list) {
-//		int initialSize = list.size();
-//		list.removeIf(this::areAllFieldsNullRecursive);
-//
-//		int removedCount = initialSize - list.size();
-//		logger.info("Removed " + removedCount + " objects from the list");
-//	}
-//
-//	public void removeNullObjectsSynonyms(List<TaxonomyDefinition> list) {
-//		int initialSize = list.size();
-//		list.removeIf(this::areAllFieldsNullRecursive);
-//
-//		int removedCount = initialSize - list.size();
-//		logger.info("Removed " + removedCount + " objects from the list");
-//	}
-
 	/**
 	 * Removes objects from the list where all fields are null recursively
 	 * 
