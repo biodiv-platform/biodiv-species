@@ -1524,7 +1524,6 @@ public class SpeciesServiceImpl implements SpeciesServices {
 					Reference response = referenceDao.save(reference);
 					newReferences.add(response);
 				}
-				// partialESSpeciesUpdateReference(speciesId, newReferences);
 				handleSpeciesReferences(speciesId, newReferences, ReferenceOperation.ADD);
 
 				return newReferences;
@@ -1534,64 +1533,6 @@ public class SpeciesServiceImpl implements SpeciesServices {
 		}
 		return null;
 	}
-
-//	private void partialESSpeciesUpdateReference(Long speciesId, List<Reference> references) throws ApiException {
-//		ShowSpeciesPage showData = showSpeciesPageFromES(speciesId);
-//		List<Reference> referencesListing = showData.getReferencesListing();
-//
-//		for (Reference rf : references) {
-//			referencesListing.add(rf);
-//		}
-//
-//		showData.setReferencesListing(referencesListing);
-//		MapDocument document = new MapDocument();
-//		try {
-//			String payload = om.writeValueAsString(showData);
-//			JsonNode rootNode = om.readTree(payload);
-//			if (showData.getTaxonomyDefinition().getDefaultHierarchy() != null
-//					&& !showData.getTaxonomyDefinition().getDefaultHierarchy().isEmpty()) {
-//				JsonNode child = ((ObjectNode) rootNode).get("taxonomyDefinition");
-//				((ObjectNode) child).replace("defaultHierarchy", null);
-//			}
-//			document.setDocument(om.writeValueAsString(rootNode));
-//		} catch (JsonProcessingException e) {
-//			logger.error(e.getMessage());
-//		}
-//
-//		esService.create(SpeciesIndex.INDEX.getValue(), SpeciesIndex.TYPE.getValue(),
-//				showData.getSpecies().getId().toString(), document);
-//	}
-//
-//	private void partialUpdateReference(Long speciesId, Reference reference) throws ApiException {
-//		ShowSpeciesPage showData = showSpeciesPageFromES(speciesId);
-//		List<Reference> referencesListing = showData.getReferencesListing();
-//
-//		for (Reference rf : referencesListing) {
-//			if (rf.getId().equals(reference.getId())) {
-//
-//				rf.setTitle(reference.getTitle());
-//				rf.setUrl(reference.getUrl());
-//			}
-//		}
-//
-//		showData.setReferencesListing(referencesListing);
-//		MapDocument document = new MapDocument();
-//		try {
-//			String payload = om.writeValueAsString(showData);
-//			JsonNode rootNode = om.readTree(payload);
-//			if (showData.getTaxonomyDefinition().getDefaultHierarchy() != null
-//					&& !showData.getTaxonomyDefinition().getDefaultHierarchy().isEmpty()) {
-//				JsonNode child = ((ObjectNode) rootNode).get("taxonomyDefinition");
-//				((ObjectNode) child).replace("defaultHierarchy", null);
-//			}
-//			document.setDocument(om.writeValueAsString(rootNode));
-//		} catch (JsonProcessingException e) {
-//			logger.error(e.getMessage());
-//		}
-//
-//		esService.create(SpeciesIndex.INDEX.getValue(), SpeciesIndex.TYPE.getValue(),
-//				showData.getSpecies().getId().toString(), document);
-//	}
 
 	private void handleSpeciesReferences(Long speciesId, List<Reference> references, ReferenceOperation operation)
 			throws ApiException {
@@ -1639,7 +1580,6 @@ public class SpeciesServiceImpl implements SpeciesServices {
 		try {
 			if (isContributor) {
 				Reference response = referenceDao.update(reference);
-				// partialUpdateReference(speciesId, reference);
 				handleSpeciesReferences(speciesId, Collections.singletonList(reference), ReferenceOperation.UPDATE);
 				return response;
 			}
