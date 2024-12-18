@@ -145,7 +145,7 @@ public class SpeciesController {
 	public Response getSpeciesShowPage(@PathParam("speciesId") String sId) {
 		try {
 			Long speciesId = Long.parseLong(sId);
-			ShowSpeciesPage result = speciesService.showSpeciesPage(speciesId);
+			ShowSpeciesPage result = speciesService.showSpeciesPageFromES(speciesId);
 			if (result != null)
 				return Response.status(Status.OK).entity(result).build();
 			return Response.status(Status.NOT_FOUND).build();
