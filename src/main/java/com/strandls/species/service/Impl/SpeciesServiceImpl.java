@@ -361,8 +361,19 @@ public class SpeciesServiceImpl implements SpeciesServices {
 			om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 			ShowSpeciesPage showPagePayload = om.readValue(String.valueOf(document.getDocument()),
 					ShowSpeciesPage.class);
+
+			List<DocumentMeta> documentMetaList = documentService
+					.getDocumentByTaxonConceptId(showPagePayload.getSpecies().getTaxonConceptId().toString());
+
+			showPagePayload.setDocumentMetaList(documentMetaList);
+
 			if (showPagePayload.getFacts() == null) {
 				showPagePayload.setFacts(new ArrayList<FactValuePair>());
+			}
+
+			if (showPagePayload.getFieldData() == null) {
+				showPagePayload.setFieldData(new ArrayList<SpeciesFieldData>());
+				return showPagePayload;
 			}
 
 			for (SpeciesFieldData fieldData : showPagePayload.getFieldData()) {
@@ -401,10 +412,9 @@ public class SpeciesServiceImpl implements SpeciesServices {
 				showPagePayload.getTaxonomicNames().setCommonNames(new ArrayList<CommonName>());
 			}
 
-			List<DocumentMeta> documentMetaList = documentService
-					.getDocumentByTaxonConceptId(showPagePayload.getSpecies().getTaxonConceptId().toString());
-
-			showPagePayload.setDocumentMetaList(documentMetaList);
+			if (showPagePayload.getFieldData() == null) {
+				showPagePayload.setFieldData(new ArrayList<SpeciesFieldData>());
+			}
 
 			return showPagePayload;
 		}
