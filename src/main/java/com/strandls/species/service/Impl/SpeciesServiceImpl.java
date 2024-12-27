@@ -401,6 +401,11 @@ public class SpeciesServiceImpl implements SpeciesServices {
 				showPagePayload.getTaxonomicNames().setCommonNames(new ArrayList<CommonName>());
 			}
 
+			List<DocumentMeta> documentMetaList = documentService
+					.getDocumentByTaxonConceptId(showPagePayload.getSpecies().getTaxonConceptId().toString());
+
+			showPagePayload.setDocumentMetaList(documentMetaList);
+
 			return showPagePayload;
 		}
 
