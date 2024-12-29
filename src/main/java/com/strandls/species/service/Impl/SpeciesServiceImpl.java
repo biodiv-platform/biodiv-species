@@ -371,27 +371,6 @@ public class SpeciesServiceImpl implements SpeciesServices {
 				showPagePayload.setFacts(new ArrayList<FactValuePair>());
 			}
 
-			if (showPagePayload.getFieldData() == null) {
-				showPagePayload.setFieldData(new ArrayList<SpeciesFieldData>());
-				return showPagePayload;
-			}
-
-			for (SpeciesFieldData fieldData : showPagePayload.getFieldData()) {
-				if (fieldData.getReferences().stream().allMatch(Objects::isNull)) {
-					fieldData.setReferences(new ArrayList<Reference>());
-				}
-				if (fieldData.getSpeciesFieldResource() != null) {
-					removeNullObjects(fieldData.getSpeciesFieldResource());
-					if (fieldData.getSpeciesFieldResource().size() == 0) {
-						fieldData.setSpeciesFieldResource(null);
-					}
-				}
-
-				if (fieldData.getContributor() != null) {
-					removeNullObjects(fieldData.getContributor());
-				}
-			}
-
 			if (showPagePayload.getTaxonomicNames().getSynonyms() != null) {
 				removeNullObjects(showPagePayload.getTaxonomicNames().getSynonyms());
 			}
@@ -414,6 +393,27 @@ public class SpeciesServiceImpl implements SpeciesServices {
 
 			if (showPagePayload.getFieldData() == null) {
 				showPagePayload.setFieldData(new ArrayList<SpeciesFieldData>());
+			}
+
+			if (showPagePayload.getFieldData() == null) {
+				showPagePayload.setFieldData(new ArrayList<SpeciesFieldData>());
+				return showPagePayload;
+			}
+
+			for (SpeciesFieldData fieldData : showPagePayload.getFieldData()) {
+				if (fieldData.getReferences().stream().allMatch(Objects::isNull)) {
+					fieldData.setReferences(new ArrayList<Reference>());
+				}
+				if (fieldData.getSpeciesFieldResource() != null) {
+					removeNullObjects(fieldData.getSpeciesFieldResource());
+					if (fieldData.getSpeciesFieldResource().size() == 0) {
+						fieldData.setSpeciesFieldResource(null);
+					}
+				}
+
+				if (fieldData.getContributor() != null) {
+					removeNullObjects(fieldData.getContributor());
+				}
 			}
 
 			return showPagePayload;
