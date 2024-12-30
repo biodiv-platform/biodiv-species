@@ -361,24 +361,14 @@ public class SpeciesServiceImpl implements SpeciesServices {
 			om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 			ShowSpeciesPage showPagePayload = om.readValue(String.valueOf(document.getDocument()),
 					ShowSpeciesPage.class);
+
+			List<DocumentMeta> documentMetaList = documentService
+					.getDocumentByTaxonConceptId(showPagePayload.getSpecies().getTaxonConceptId().toString());
+
+			showPagePayload.setDocumentMetaList(documentMetaList);
+
 			if (showPagePayload.getFacts() == null) {
 				showPagePayload.setFacts(new ArrayList<FactValuePair>());
-			}
-
-			for (SpeciesFieldData fieldData : showPagePayload.getFieldData()) {
-				if (fieldData.getReferences().stream().allMatch(Objects::isNull)) {
-					fieldData.setReferences(new ArrayList<Reference>());
-				}
-				if (fieldData.getSpeciesFieldResource() != null) {
-					removeNullObjects(fieldData.getSpeciesFieldResource());
-					if (fieldData.getSpeciesFieldResource().size() == 0) {
-						fieldData.setSpeciesFieldResource(null);
-					}
-				}
-
-				if (fieldData.getContributor() != null) {
-					removeNullObjects(fieldData.getContributor());
-				}
 			}
 
 			if (showPagePayload.getTaxonomicNames().getSynonyms() != null) {
@@ -399,6 +389,31 @@ public class SpeciesServiceImpl implements SpeciesServices {
 
 			if (showPagePayload.getTaxonomicNames().getCommonNames().stream().allMatch(Objects::isNull)) {
 				showPagePayload.getTaxonomicNames().setCommonNames(new ArrayList<CommonName>());
+			}
+
+			if (showPagePayload.getFieldData() == null) {
+				showPagePayload.setFieldData(new ArrayList<SpeciesFieldData>());
+			}
+
+			if (showPagePayload.getFieldData() == null) {
+				showPagePayload.setFieldData(new ArrayList<SpeciesFieldData>());
+				return showPagePayload;
+			}
+
+			for (SpeciesFieldData fieldData : showPagePayload.getFieldData()) {
+				if (fieldData.getReferences().stream().allMatch(Objects::isNull)) {
+					fieldData.setReferences(new ArrayList<Reference>());
+				}
+				if (fieldData.getSpeciesFieldResource() != null) {
+					removeNullObjects(fieldData.getSpeciesFieldResource());
+					if (fieldData.getSpeciesFieldResource().size() == 0) {
+						fieldData.setSpeciesFieldResource(null);
+					}
+				}
+
+				if (fieldData.getContributor() != null) {
+					removeNullObjects(fieldData.getContributor());
+				}
 			}
 
 			return showPagePayload;
