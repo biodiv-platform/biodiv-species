@@ -120,6 +120,7 @@ import com.strandls.userGroup.pojo.FeaturedCreateData;
 import com.strandls.userGroup.pojo.UserGroupIbp;
 import com.strandls.userGroup.pojo.UserGroupMappingCreateData;
 import com.strandls.userGroup.pojo.UserGroupSpeciesCreateData;
+import com.strandls.userGroup.pojo.UsergroupSpeciesFieldMapping;
 
 import net.minidev.json.JSONArray;
 
@@ -400,7 +401,18 @@ public class SpeciesServiceImpl implements SpeciesServices {
 				return showPagePayload;
 			}
 
+			// filter species fields by usergroup here
+			List<UsergroupSpeciesFieldMapping> ugSpeciesFields = ugService.getSpeciesFieldsByUserGroupId("40");
+
+			List<Long> ugFieldIds = new ArrayList<Long>();
+
+			for (UsergroupSpeciesFieldMapping ugMapping : ugSpeciesFields) {
+				ugFieldIds.add(ugMapping.getSpeciesFieldId());
+			}
+
+			List<SpeciesFieldData> filteredFields = new ArrayList<SpeciesFieldData>();
 			for (SpeciesFieldData fieldData : showPagePayload.getFieldData()) {
+
 				if (fieldData.getReferences().stream().allMatch(Objects::isNull)) {
 					fieldData.setReferences(new ArrayList<Reference>());
 				}
@@ -414,7 +426,14 @@ public class SpeciesServiceImpl implements SpeciesServices {
 				if (fieldData.getContributor() != null) {
 					removeNullObjects(fieldData.getContributor());
 				}
+
+				if (ugFieldIds.contains(fieldData.getFieldId())) {
+					filteredFields.add(fieldData);
+				}
+
 			}
+
+			showPagePayload.setFieldData(filteredFields);
 
 			return showPagePayload;
 		}
@@ -488,10 +507,23 @@ public class SpeciesServiceImpl implements SpeciesServices {
 //		extract all the concept fields in display order
 		List<FieldNew> concpetFields = fieldNewDao.findNullParent();
 
+		List<UsergroupSpeciesFieldMapping> ugSpeciesFields = new ArrayList<>();
+		try {
+			ugSpeciesFields = ugService.getSpeciesFieldsByUserGroupId("40");
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+
+		List<Long> ugFieldIds = new ArrayList<Long>();
+
+		for (UsergroupSpeciesFieldMapping ugMapping : ugSpeciesFields) {
+			ugFieldIds.add(ugMapping.getSpeciesFieldId());
+		}
+
 		for (FieldNew concpetField : concpetFields) {
 
 //			check if the concept is itslef blacklisted
-			if (!blackListSFId.contains(concpetField.getId())) {
+			if (!blackListSFId.contains(concpetField.getId()) && ugFieldIds.contains(concpetField.getId())) {
 
 				List<FieldDisplay> categorySubCat = new ArrayList<FieldDisplay>();
 				fieldHeader = fieldHeaderDao.findByFieldId(concpetField.getId(), langId);
