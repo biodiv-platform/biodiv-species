@@ -535,7 +535,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 				for (FieldNew catField : categoryFields) {
 
 //					check if category is blacklisted
-					if (!blackListSFId.contains(catField.getId())) {
+					if (!blackListSFId.contains(catField.getId()) && ugFieldIds.contains(catField.getId())) {
 
 						fieldHeader = fieldHeaderDao.findByFieldId(catField.getId(), langId);
 						catField.setHeader(fieldHeader.getHeader());
@@ -545,7 +545,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 						if (subCatField != null) {
 							for (FieldNew subCat : subCatField) {
 //								checking for blacklisted sub category
-								if (!blackListSFId.contains(subCat.getId())) {
+								if (!blackListSFId.contains(subCat.getId()) && ugFieldIds.contains(subCat.getId())) {
 									fieldHeader = fieldHeaderDao.findByFieldId(subCat.getId(), langId);
 									subCat.setHeader(fieldHeader.getHeader());
 									qualifiedsubCatField.add(subCat);
