@@ -552,7 +552,8 @@ public class SpeciesServiceImpl implements SpeciesServices {
 						if (subCatField != null) {
 							for (FieldNew subCat : subCatField) {
 //								checking for blacklisted sub category
-								if (!blackListSFId.contains(subCat.getId()) && ugFieldIds.contains(subCat.getId())) {
+								if (!blackListSFId.contains(subCat.getId())
+										&& (ugFieldIds.contains(subCat.getId()) || ugFieldIds.isEmpty())) {
 									fieldHeader = fieldHeaderDao.findByFieldId(subCat.getId(), langId);
 									subCat.setHeader(fieldHeader.getHeader());
 									qualifiedsubCatField.add(subCat);
