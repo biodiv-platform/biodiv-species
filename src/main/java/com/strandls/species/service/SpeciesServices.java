@@ -47,7 +47,7 @@ public interface SpeciesServices {
 
 	public ShowSpeciesPage showSpeciesPage(Long speciesId);
 
-	public List<FieldRender> getFields(Long langId);
+	public List<FieldRender> getFields(Long langId, String userGroupId);
 
 	public List<SpeciesTrait> getSpeciesTraitsByTaxonomyId(Long taxonomyId);
 
@@ -118,7 +118,7 @@ public interface SpeciesServices {
 
 	public Activity removeSpeciesComment(HttpServletRequest request, CommentLoggingData comment, String commentId);
 
-	public ShowSpeciesPage showSpeciesPageFromES(Long speciesId);
+	public ShowSpeciesPage showSpeciesPageFromES(Long speciesId, UserGroupIbp userGroup);
 
 	public List<Reference> createReference(HttpServletRequest request, Long speciesId,
 			List<ReferenceCreateData> referenceCreateData);

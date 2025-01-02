@@ -356,7 +356,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 	}
 
 	@Override
-	public ShowSpeciesPage showSpeciesPageFromES(Long speciesId) {
+	public ShowSpeciesPage showSpeciesPageFromES(Long speciesId, UserGroupIbp userGroup) {
 		try {
 			MapDocument document = esService.fetch("extended_species", "_doc", speciesId.toString());
 			om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -401,8 +401,10 @@ public class SpeciesServiceImpl implements SpeciesServices {
 				return showPagePayload;
 			}
 
-			// filter species fields by usergroup here
-			List<UsergroupSpeciesFieldMapping> ugSpeciesFields = ugService.getSpeciesFieldsByUserGroupId("40");
+			List<UsergroupSpeciesFieldMapping> ugSpeciesFields = new ArrayList<UsergroupSpeciesFieldMapping>();
+			if (userGroup != null) {
+				ugSpeciesFields = ugService.getSpeciesFieldsByUserGroupId(userGroup.getId().toString());
+			}
 
 			List<Long> ugFieldIds = new ArrayList<Long>();
 
@@ -427,7 +429,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 					removeNullObjects(fieldData.getContributor());
 				}
 
-				if (ugFieldIds.contains(fieldData.getFieldId())) {
+				if (ugFieldIds.contains(fieldData.getFieldId()) || ugFieldIds.isEmpty()) {
 					filteredFields.add(fieldData);
 				}
 
@@ -495,7 +497,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 	}
 
 	@Override
-	public List<FieldRender> getFields(Long langId) {
+	public List<FieldRender> getFields(Long langId, String userGroupId) {
 
 		if (langId == null)
 			langId = defaultLanguageId;
@@ -508,10 +510,13 @@ public class SpeciesServiceImpl implements SpeciesServices {
 		List<FieldNew> concpetFields = fieldNewDao.findNullParent();
 
 		List<UsergroupSpeciesFieldMapping> ugSpeciesFields = new ArrayList<>();
-		try {
-			ugSpeciesFields = ugService.getSpeciesFieldsByUserGroupId("40");
-		} catch (Exception e) {
-			logger.error(e.getMessage());
+
+		if (userGroupId != null) {
+			try {
+				ugSpeciesFields = ugService.getSpeciesFieldsByUserGroupId(userGroupId);
+			} catch (Exception e) {
+				logger.error(e.getMessage());
+			}
 		}
 
 		List<Long> ugFieldIds = new ArrayList<Long>();
@@ -523,7 +528,8 @@ public class SpeciesServiceImpl implements SpeciesServices {
 		for (FieldNew concpetField : concpetFields) {
 
 //			check if the concept is itslef blacklisted
-			if (!blackListSFId.contains(concpetField.getId()) && ugFieldIds.contains(concpetField.getId())) {
+			if (!blackListSFId.contains(concpetField.getId())
+					&& (ugFieldIds.contains(concpetField.getId()) || ugFieldIds.isEmpty())) {
 
 				List<FieldDisplay> categorySubCat = new ArrayList<FieldDisplay>();
 				fieldHeader = fieldHeaderDao.findByFieldId(concpetField.getId(), langId);
@@ -535,7 +541,8 @@ public class SpeciesServiceImpl implements SpeciesServices {
 				for (FieldNew catField : categoryFields) {
 
 //					check if category is blacklisted
-					if (!blackListSFId.contains(catField.getId()) && ugFieldIds.contains(catField.getId())) {
+					if (!blackListSFId.contains(catField.getId())
+							&& (ugFieldIds.contains(catField.getId()) || ugFieldIds.isEmpty())) {
 
 						fieldHeader = fieldHeaderDao.findByFieldId(catField.getId(), langId);
 						catField.setHeader(fieldHeader.getHeader());
@@ -1583,7 +1590,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 
 	private void handleSpeciesReferences(Long speciesId, List<Reference> references, ReferenceOperation operation)
 			throws ApiException {
-		ShowSpeciesPage showData = showSpeciesPageFromES(speciesId);
+		ShowSpeciesPage showData = showSpeciesPageFromES(speciesId, null);
 		List<Reference> referencesListing = showData.getReferencesListing();
 
 		switch (operation) {
