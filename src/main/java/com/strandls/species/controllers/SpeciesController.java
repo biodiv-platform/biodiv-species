@@ -24,6 +24,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.core.Response.Status;
 
+import com.fasterxml.jackson.annotation.JacksonInject.Value;
 import com.fasterxml.jackson.databind.JsonMappingException.Reference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.strandls.activity.pojo.Activity;
@@ -40,6 +41,7 @@ import com.strandls.species.ApiConstants;
 import com.strandls.species.Headers;
 import com.strandls.species.es.util.ESUpdate;
 import com.strandls.species.es.util.ESUtility;
+import com.strandls.species.pojo.FieldNew;
 import com.strandls.species.pojo.FieldRender;
 import com.strandls.species.pojo.MapAggregationResponse;
 import com.strandls.species.pojo.ReferenceCreateData;
@@ -169,6 +171,23 @@ public class SpeciesController {
 			if (langId != null)
 				languageId = Long.parseLong(langId);
 			List<FieldRender> result = speciesService.getFields(languageId, userGroupId);
+			return Response.status(Status.OK).entity(result).build();
+
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+	}
+
+	@GET
+	@Path(ApiConstants.FIELDS + "/leafNodes")
+	@Produces(MediaType.APPLICATION_JSON)
+	@ApiOperation(value = "get all the fields with no children", notes = "returns the leaf node fields", response = FieldNew.class, responseContainer = "List")
+	@ApiResponses(value = {
+			@ApiResponse(code = 400, message = "unable to get the leaf node fields", response = String.class) })
+
+	public Response getLeafNodeFields() {
+		try {
+			List<FieldNew> result = speciesService.fetchLeafNodes();
 			return Response.status(Status.OK).entity(result).build();
 
 		} catch (Exception e) {

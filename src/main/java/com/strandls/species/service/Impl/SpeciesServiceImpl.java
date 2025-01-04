@@ -497,6 +497,17 @@ public class SpeciesServiceImpl implements SpeciesServices {
 	}
 
 	@Override
+	public List<FieldNew> fetchLeafNodes() {
+		List<FieldNew> result = new ArrayList<FieldNew>();
+		try {
+			result = fieldNewDao.getLeafNodes();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return result;
+	}
+
+	@Override
 	public List<FieldRender> getFields(Long langId, String userGroupId) {
 
 		if (langId == null)
