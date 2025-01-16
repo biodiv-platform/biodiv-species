@@ -1535,6 +1535,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 					reference.setSpeciesId(rfCreateData.getSpeciesId());
 					reference.setTitle(rfCreateData.getTitle());
 					reference.setUrl(rfCreateData.getUrl());
+					reference.setIsDeleted(false);
 
 					Reference response = referenceDao.save(reference);
 					newReferences.add(response);
@@ -1564,6 +1565,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 						.ifPresent(existingRef -> {
 							existingRef.setTitle(newRef.getTitle());
 							existingRef.setUrl(newRef.getUrl());
+							existingRef.setIsDeleted(newRef.getIsDeleted());
 						});
 			}
 			break;
@@ -1597,6 +1599,24 @@ public class SpeciesServiceImpl implements SpeciesServices {
 				Reference response = referenceDao.update(reference);
 				handleSpeciesReferences(speciesId, Collections.singletonList(reference), ReferenceOperation.UPDATE);
 				return response;
+			}
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return null;
+	}
+
+	public Reference deleteReference(HttpServletRequest request, Long referenceId) {
+
+		Reference reference = referenceDao.findById(referenceId);
+		Boolean isContributor = checkIsContributor(request, reference.getSpeciesId());
+		try {
+			if (isContributor) {
+				reference.setIsDeleted(true);
+				referenceDao.update(reference);
+				handleSpeciesReferences(reference.getSpeciesId(), Collections.singletonList(reference),
+						ReferenceOperation.UPDATE);
+				return reference;
 			}
 		} catch (Exception e) {
 			logger.error(e.getMessage());
