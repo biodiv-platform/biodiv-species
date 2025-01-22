@@ -9,6 +9,7 @@ import javax.inject.Inject;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
 import org.hibernate.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -74,6 +75,36 @@ public class ReferenceDao extends AbstractDAO<Reference, Long> {
 			query.setParameter("speciesId", speciesId);
 			result = query.getResultList();
 		} catch (Exception e) {
+			logger.error(e.getMessage());
+		} finally {
+			session.close();
+		}
+		return result;
+	}
+
+	@SuppressWarnings("unchecked")
+	public Reference updateIsDeleted(Long referenceId) {
+		Session session = sessionFactory.openSession();
+		Transaction tx = null;
+		Reference result = null;
+		try {
+			tx = session.beginTransaction();
+			String qry = "update Reference set isDeleted = true where id = :referenceId";
+			Query<Reference> query = session.createQuery(qry);
+			query.setParameter("referenceId", referenceId);
+			query.executeUpdate();
+
+			// Get the updated reference
+			String fetchQry = "from Reference where id = :referenceId";
+			Query<Reference> fetchQuery = session.createQuery(fetchQry);
+			fetchQuery.setParameter("referenceId", referenceId);
+			result = fetchQuery.getSingleResult();
+
+			tx.commit();
+		} catch (Exception e) {
+			if (tx != null && tx.isActive()) {
+				tx.rollback();
+			}
 			logger.error(e.getMessage());
 		} finally {
 			session.close();
