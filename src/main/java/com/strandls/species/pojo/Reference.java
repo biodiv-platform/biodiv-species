@@ -12,6 +12,8 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
+import org.hibernate.annotations.ColumnDefault;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 /**
@@ -34,6 +36,7 @@ public class Reference implements Serializable {
 	private String title;
 	private String url;
 	private Long speciesId;
+	private Boolean isDeleted;
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
@@ -80,6 +83,16 @@ public class Reference implements Serializable {
 
 	public void setSpeciesId(Long speciesId) {
 		this.speciesId = speciesId;
+	}
+
+	@Column(name = "is_deleted")
+	@ColumnDefault("false")
+	public Boolean getIsDeleted() {
+		return isDeleted;
+	}
+
+	public void setIsDeleted(Boolean isDeleted) {
+		this.isDeleted = isDeleted;
 	}
 
 }

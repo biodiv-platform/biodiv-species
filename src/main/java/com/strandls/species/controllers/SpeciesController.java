@@ -936,4 +936,24 @@ public class SpeciesController {
 
 	}
 
+	@PUT
+	@Path(ApiConstants.DELETE + "/reference" + "/{referenceId}")
+	@Produces(MediaType.APPLICATION_JSON)
+
+	@ValidateUser
+
+	@ApiOperation(value = "delete a reference of a species Page", notes = "delete common reference", response = com.strandls.species.pojo.Reference.class)
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "unable to delete", response = String.class) })
+
+	public Response deleteReference(@Context HttpServletRequest request, @PathParam("referenceId") String referenceId) {
+		try {
+			com.strandls.species.pojo.Reference result = speciesService.deleteReference(request,
+					Long.valueOf(referenceId));
+			return Response.status(Status.OK).entity(result).build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+
+	}
+
 }

@@ -128,4 +128,6 @@ public interface SpeciesServices {
 
 	public Reference editReference(HttpServletRequest request, Long speciesId, Reference reference);
 
+	public Reference deleteReference(HttpServletRequest request, Long referenceId);
+
 }
