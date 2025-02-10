@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
@@ -117,6 +118,7 @@ import com.strandls.userGroup.controller.UserGroupSerivceApi;
 import com.strandls.userGroup.pojo.Featured;
 import com.strandls.userGroup.pojo.FeaturedCreate;
 import com.strandls.userGroup.pojo.FeaturedCreateData;
+import com.strandls.userGroup.pojo.SpeciesFieldValuesDTO;
 import com.strandls.userGroup.pojo.UserGroupIbp;
 import com.strandls.userGroup.pojo.UserGroupMappingCreateData;
 import com.strandls.userGroup.pojo.UserGroupSpeciesCreateData;
@@ -315,7 +317,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 		list.removeIf(this::areAllFieldsNullRecursive);
 
 		int removedCount = initialSize - list.size();
-		logger.info("Removed " + removedCount + " objects from the list");
+		// logger.info("Removed " + removedCount + " objects from the list");
 	}
 
 	private boolean areAllFieldsNullRecursive(Object obj) {
@@ -331,13 +333,13 @@ public class SpeciesServiceImpl implements SpeciesServices {
 					if (value instanceof Collection) {
 						// Check if the collection is empty
 						if (!((Collection<?>) value).isEmpty()) {
-							logger.info("Field " + field.getName() + " is a non-empty collection");
+							// logger.info("Field " + field.getName() + " is a non-empty collection");
 							return false;
 						}
 					} else if (value.getClass().getPackage() != null
 							&& value.getClass().getPackage().getName().startsWith("java")) {
 						// For Java standard classes, just check if they're non-null
-						logger.info("Field " + field.getName() + " is not null: " + value);
+						// logger.info("Field " + field.getName() + " is not null: " + value);
 						return false;
 					} else {
 						// For custom classes, recursively check their fields
@@ -347,11 +349,12 @@ public class SpeciesServiceImpl implements SpeciesServices {
 					}
 				}
 			} catch (IllegalAccessException e) {
-				logger.warn("Cannot access field " + field.getName() + ": " + e.getMessage());
+				// logger.warn("Cannot access field " + field.getName() + ": " +
+				// e.getMessage());
 			}
 		}
 
-		logger.info("All fields are effectively null for object: " + obj);
+		// logger.info("All fields are effectively null for object: " + obj);
 		return true;
 	}
 
@@ -401,14 +404,14 @@ public class SpeciesServiceImpl implements SpeciesServices {
 				return showPagePayload;
 			}
 
-			List<UsergroupSpeciesFieldMapping> ugSpeciesFields = new ArrayList<UsergroupSpeciesFieldMapping>();
+			List<SpeciesFieldValuesDTO> ugSpeciesFields = new ArrayList<SpeciesFieldValuesDTO>();
 			if (userGroup != null) {
 				ugSpeciesFields = ugService.getSpeciesFieldsByUserGroupId(userGroup.getId().toString());
 			}
 
 			List<Long> ugFieldIds = new ArrayList<Long>();
 
-			for (UsergroupSpeciesFieldMapping ugMapping : ugSpeciesFields) {
+			for (SpeciesFieldValuesDTO ugMapping : ugSpeciesFields) {
 				ugFieldIds.add(ugMapping.getSpeciesFieldId());
 			}
 
@@ -429,14 +432,27 @@ public class SpeciesServiceImpl implements SpeciesServices {
 					removeNullObjects(fieldData.getContributor());
 				}
 
-				if (ugFieldIds.contains(fieldData.getFieldId()) || ugFieldIds.isEmpty()) {
+				Optional<SpeciesFieldValuesDTO> sfFilteredValues = ugSpeciesFields.stream()
+						.filter(sf -> sf.getSpeciesFieldId() == fieldData.getFieldId()).findFirst();
+
+				SpeciesFieldValuesDTO sf = sfFilteredValues.orElse(new SpeciesFieldValuesDTO());
+				Map<String, List<Long>> values = sf.getValues();
+				List<Long> contributors = new ArrayList<>();
+				if (values != null) {
+					contributors = values.get("contributor");
+				}
+
+				List<Long> sfContributors = fieldData.getContributor().stream().map(c -> c.getId())
+						.collect(Collectors.toList());
+
+				if (ugFieldIds.isEmpty() || (ugFieldIds.contains(fieldData.getFieldId())
+						&& (contributors.isEmpty() || sfContributors.stream().anyMatch(contributors::contains)))) {
 					filteredFields.add(fieldData);
 				}
 
 			}
 
 			showPagePayload.setFieldData(filteredFields);
-
 			return showPagePayload;
 		}
 
@@ -520,7 +536,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 //		extract all the concept fields in display order
 		List<FieldNew> concpetFields = fieldNewDao.findNullParent();
 
-		List<UsergroupSpeciesFieldMapping> ugSpeciesFields = new ArrayList<>();
+		List<SpeciesFieldValuesDTO> ugSpeciesFields = new ArrayList<>();
 
 		if (userGroupId != null) {
 			try {
@@ -532,7 +548,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 
 		List<Long> ugFieldIds = new ArrayList<Long>();
 
-		for (UsergroupSpeciesFieldMapping ugMapping : ugSpeciesFields) {
+		for (SpeciesFieldValuesDTO ugMapping : ugSpeciesFields) {
 			ugFieldIds.add(ugMapping.getSpeciesFieldId());
 		}
 
