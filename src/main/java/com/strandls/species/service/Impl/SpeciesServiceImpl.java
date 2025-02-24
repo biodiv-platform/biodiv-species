@@ -18,6 +18,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
@@ -122,6 +123,7 @@ import com.strandls.userGroup.pojo.SpeciesFieldValuesDTO;
 import com.strandls.userGroup.pojo.UserGroupIbp;
 import com.strandls.userGroup.pojo.UserGroupMappingCreateData;
 import com.strandls.userGroup.pojo.UserGroupSpeciesCreateData;
+import com.strandls.userGroup.pojo.UserGroupSpeciesFieldMeta;
 import com.strandls.userGroup.pojo.UsergroupSpeciesFieldMapping;
 
 import net.minidev.json.JSONArray;
@@ -438,9 +440,10 @@ public class SpeciesServiceImpl implements SpeciesServices {
 				SpeciesFieldValuesDTO sf = sfFilteredValues.orElse(new SpeciesFieldValuesDTO());
 				Map<String, List<Long>> values = sf.getValues();
 				List<Long> contributors = new ArrayList<>();
-				if (values != null) {
-					contributors = values.get("contributor");
-				}
+
+				List<UserGroupSpeciesFieldMeta> sfMetaData = ugService.getSpeciesFieldMetadata(userGroup.getId());
+				contributors = sfMetaData.stream().filter(m -> m.getValueType() == "contributor")
+						.map(m -> m.getValueId()).collect(Collectors.toList());
 
 				List<Long> sfContributors = fieldData.getContributor().stream().map(c -> c.getId())
 						.collect(Collectors.toList());
