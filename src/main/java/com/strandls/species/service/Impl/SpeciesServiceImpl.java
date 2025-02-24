@@ -439,18 +439,28 @@ public class SpeciesServiceImpl implements SpeciesServices {
 
 				SpeciesFieldValuesDTO sf = sfFilteredValues.orElse(new SpeciesFieldValuesDTO());
 				Map<String, List<Long>> values = sf.getValues();
-				List<Long> contributors = new ArrayList<>();
+				// List<Long> contributors = new ArrayList<>();
 
-				List<UserGroupSpeciesFieldMeta> sfMetaData = ugService.getSpeciesFieldMetadata(userGroup.getId());
-				contributors = sfMetaData.stream().filter(m -> m.getValueType() == "contributor")
-						.map(m -> m.getValueId()).collect(Collectors.toList());
+				List<UserGroupSpeciesFieldMeta> sfMetaData = new ArrayList<>();
+				if (userGroup != null) {
+					sfMetaData = ugService.getSpeciesFieldMetadata(userGroup.getId());
+				}
 
 				List<Long> sfContributors = fieldData.getContributor().stream().map(c -> c.getId())
 						.collect(Collectors.toList());
 
-				if (ugFieldIds.isEmpty() || (ugFieldIds.contains(fieldData.getFieldId())
-						&& (contributors.isEmpty() || sfContributors.stream().anyMatch(contributors::contains)))) {
+				// UserGroup specific logic
+				if (userGroup == null || (ugFieldIds.isEmpty() && sfMetaData.isEmpty())) {
 					filteredFields.add(fieldData);
+				} else if (ugFieldIds.isEmpty() && !sfMetaData.isEmpty()) {
+					if (isMetaDataFilterTrue(sfMetaData, sfContributors)) {
+						filteredFields.add(fieldData);
+					}
+				} else if (!ugFieldIds.isEmpty() && !sfMetaData.isEmpty()) {
+					if (ugFieldIds.contains(fieldData.getFieldId())
+							&& isMetaDataFilterTrue(sfMetaData, sfContributors)) {
+						filteredFields.add(fieldData);
+					}
 				}
 
 			}
@@ -464,6 +474,18 @@ public class SpeciesServiceImpl implements SpeciesServices {
 		}
 
 		return null;
+	}
+
+	private boolean isMetaDataFilterTrue(List<UserGroupSpeciesFieldMeta> sfMetaData, List<Long> sfContributors) {
+		List<Long> ugContributors = new ArrayList<>();
+		ugContributors = sfMetaData.stream().filter(m -> m.getValueType().equalsIgnoreCase("contributor"))
+				.map(m -> m.getValueId()).collect(Collectors.toList());
+
+		if (sfContributors.stream().anyMatch(ugContributors::contains)) {
+			return true;
+		}
+
+		return false;
 	}
 
 	private SpeciesFieldData getSpeciesFieldData(SpeciesField speciesField) {
