@@ -179,7 +179,7 @@ public class SpeciesController {
 	}
 
 	@GET
-	@Path(ApiConstants.FIELDS + "/leafNodes")
+	@Path(ApiConstants.FIELDS + ApiConstants.LEAFNODES)
 	@Produces(MediaType.APPLICATION_JSON)
 	@ApiOperation(value = "get all the fields with no children", notes = "returns the leaf node fields", response = FieldNew.class, responseContainer = "List")
 	@ApiResponses(value = {

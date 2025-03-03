@@ -319,7 +319,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 		list.removeIf(this::areAllFieldsNullRecursive);
 
 		int removedCount = initialSize - list.size();
-		// logger.info("Removed " + removedCount + " objects from the list");
+		logger.info("Removed " + removedCount + " objects from the list");
 	}
 
 	private boolean areAllFieldsNullRecursive(Object obj) {
@@ -335,13 +335,13 @@ public class SpeciesServiceImpl implements SpeciesServices {
 					if (value instanceof Collection) {
 						// Check if the collection is empty
 						if (!((Collection<?>) value).isEmpty()) {
-							// logger.info("Field " + field.getName() + " is a non-empty collection");
+							logger.info("Field " + field.getName() + " is a non-empty collection");
 							return false;
 						}
 					} else if (value.getClass().getPackage() != null
 							&& value.getClass().getPackage().getName().startsWith("java")) {
 						// For Java standard classes, just check if they're non-null
-						// logger.info("Field " + field.getName() + " is not null: " + value);
+						logger.info("Field " + field.getName() + " is not null: " + value);
 						return false;
 					} else {
 						// For custom classes, recursively check their fields
@@ -351,12 +351,10 @@ public class SpeciesServiceImpl implements SpeciesServices {
 					}
 				}
 			} catch (IllegalAccessException e) {
-				// logger.warn("Cannot access field " + field.getName() + ": " +
-				// e.getMessage());
+				logger.warn("Cannot access field " + field.getName() + ": " + e.getMessage());
 			}
 		}
 
-		// logger.info("All fields are effectively null for object: " + obj);
 		return true;
 	}
 
@@ -439,7 +437,6 @@ public class SpeciesServiceImpl implements SpeciesServices {
 
 				SpeciesFieldValuesDTO sf = sfFilteredValues.orElse(new SpeciesFieldValuesDTO());
 				Map<String, List<Long>> values = sf.getValues();
-				// List<Long> contributors = new ArrayList<>();
 
 				List<UserGroupSpeciesFieldMeta> sfMetaData = new ArrayList<>();
 				if (userGroup != null) {
