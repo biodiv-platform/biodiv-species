@@ -401,18 +401,18 @@ public class SpeciesServiceImpl implements SpeciesServices {
 				return showPagePayload;
 			}
 
-			List<SpeciesFieldValuesDTO> ugSpeciesFields = new ArrayList<SpeciesFieldValuesDTO>();
+			List<SpeciesFieldValuesDTO> ugSpeciesFields = new ArrayList<>();
 			if (userGroup != null) {
 				ugSpeciesFields = ugService.getSpeciesFieldsByUserGroupId(userGroup.getId().toString());
 			}
 
-			List<Long> ugFieldIds = new ArrayList<Long>();
+			List<Long> ugFieldIds = new ArrayList<>();
 
 			for (SpeciesFieldValuesDTO ugMapping : ugSpeciesFields) {
 				ugFieldIds.add(ugMapping.getSpeciesFieldId());
 			}
 
-			List<SpeciesFieldData> filteredFields = new ArrayList<SpeciesFieldData>();
+			List<SpeciesFieldData> filteredFields = new ArrayList<>();
 			for (SpeciesFieldData fieldData : showPagePayload.getFieldData()) {
 
 				if (fieldData.getReferences().stream().allMatch(Objects::isNull)) {
@@ -527,7 +527,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 
 	@Override
 	public List<FieldNew> fetchLeafNodes() {
-		List<FieldNew> result = new ArrayList<FieldNew>();
+		List<FieldNew> result = new ArrayList<>();
 		try {
 			result = fieldNewDao.getLeafNodes();
 		} catch (Exception e) {
@@ -559,7 +559,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 			}
 		}
 
-		List<Long> ugFieldIds = new ArrayList<Long>();
+		List<Long> ugFieldIds = new ArrayList<>();
 
 		for (SpeciesFieldValuesDTO ugMapping : ugSpeciesFields) {
 			ugFieldIds.add(ugMapping.getSpeciesFieldId());
