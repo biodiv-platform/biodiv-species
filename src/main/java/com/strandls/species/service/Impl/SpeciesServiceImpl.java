@@ -433,7 +433,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 				}
 
 				Optional<SpeciesFieldValuesDTO> sfFilteredValues = ugSpeciesFields.stream()
-						.filter(sf -> sf.getSpeciesFieldId() == fieldData.getFieldId()).findFirst();
+						.filter(sf -> sf.getSpeciesFieldId().equals(fieldData.getFieldId())).findFirst();
 
 				SpeciesFieldValuesDTO sf = sfFilteredValues.orElse(new SpeciesFieldValuesDTO());
 				Map<String, List<Long>> values = sf.getValues();
