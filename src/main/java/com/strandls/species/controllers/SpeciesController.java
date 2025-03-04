@@ -24,7 +24,6 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.core.Response.Status;
 
-import com.fasterxml.jackson.databind.JsonMappingException.Reference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.strandls.activity.pojo.Activity;
 import com.strandls.activity.pojo.CommentLoggingData;
@@ -40,6 +39,7 @@ import com.strandls.species.ApiConstants;
 import com.strandls.species.Headers;
 import com.strandls.species.es.util.ESUpdate;
 import com.strandls.species.es.util.ESUtility;
+import com.strandls.species.pojo.FieldNew;
 import com.strandls.species.pojo.FieldRender;
 import com.strandls.species.pojo.MapAggregationResponse;
 import com.strandls.species.pojo.ReferenceCreateData;
@@ -133,19 +133,20 @@ public class SpeciesController {
 
 	}
 
-	@GET
+	@POST
 	@Path(ApiConstants.SHOW + "/{speciesId}")
-	@Consumes(MediaType.TEXT_PLAIN)
+	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 
 	@ApiOperation(value = "provide the show page of speices", notes = "Returns the species Show page", response = ShowSpeciesPage.class)
 	@ApiResponses(value = {
 			@ApiResponse(code = 400, message = "unable to fetch the show page", response = String.class) })
 
-	public Response getSpeciesShowPage(@PathParam("speciesId") String sId) {
+	public Response getSpeciesShowPage(@PathParam("speciesId") String sId,
+			@ApiParam(name = "userGroupIbp") UserGroupIbp userGroupIbp) {
 		try {
 			Long speciesId = Long.parseLong(sId);
-			ShowSpeciesPage result = speciesService.showSpeciesPageFromES(speciesId);
+			ShowSpeciesPage result = speciesService.showSpeciesPageFromES(speciesId, userGroupIbp);
 			if (result != null)
 				return Response.status(Status.OK).entity(result).build();
 			return Response.status(Status.NOT_FOUND).build();
@@ -162,12 +163,29 @@ public class SpeciesController {
 	@ApiResponses(value = {
 			@ApiResponse(code = 400, message = "unable to get the fields framework", response = String.class) })
 
-	public Response renderFields(@QueryParam("langId") String langId) {
+	public Response renderFields(@QueryParam("langId") String langId, @QueryParam("userGroupId") String userGroupId) {
 		try {
 			Long languageId = null;
 			if (langId != null)
 				languageId = Long.parseLong(langId);
-			List<FieldRender> result = speciesService.getFields(languageId);
+			List<FieldRender> result = speciesService.getFields(languageId, userGroupId);
+			return Response.status(Status.OK).entity(result).build();
+
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+	}
+
+	@GET
+	@Path(ApiConstants.FIELDS + ApiConstants.LEAFNODES)
+	@Produces(MediaType.APPLICATION_JSON)
+	@ApiOperation(value = "get all the fields with no children", notes = "returns the leaf node fields", response = FieldNew.class, responseContainer = "List")
+	@ApiResponses(value = {
+			@ApiResponse(code = 400, message = "unable to get the leaf node fields", response = String.class) })
+
+	public Response getLeafNodeFields() {
+		try {
+			List<FieldNew> result = speciesService.fetchLeafNodes();
 			return Response.status(Status.OK).entity(result).build();
 
 		} catch (Exception e) {

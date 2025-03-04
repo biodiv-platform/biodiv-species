@@ -117,9 +117,11 @@ import com.strandls.userGroup.controller.UserGroupSerivceApi;
 import com.strandls.userGroup.pojo.Featured;
 import com.strandls.userGroup.pojo.FeaturedCreate;
 import com.strandls.userGroup.pojo.FeaturedCreateData;
+import com.strandls.userGroup.pojo.SpeciesFieldValuesDTO;
 import com.strandls.userGroup.pojo.UserGroupIbp;
 import com.strandls.userGroup.pojo.UserGroupMappingCreateData;
 import com.strandls.userGroup.pojo.UserGroupSpeciesCreateData;
+import com.strandls.userGroup.pojo.UserGroupSpeciesFieldMeta;
 
 import net.minidev.json.JSONArray;
 
@@ -350,12 +352,11 @@ public class SpeciesServiceImpl implements SpeciesServices {
 			}
 		}
 
-		logger.info("All fields are effectively null for object: " + obj);
 		return true;
 	}
 
 	@Override
-	public ShowSpeciesPage showSpeciesPageFromES(Long speciesId) {
+	public ShowSpeciesPage showSpeciesPageFromES(Long speciesId, UserGroupIbp userGroup) {
 		try {
 			MapDocument document = esService.fetch("extended_species", "_doc", speciesId.toString());
 			om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -400,7 +401,20 @@ public class SpeciesServiceImpl implements SpeciesServices {
 				return showPagePayload;
 			}
 
+			List<SpeciesFieldValuesDTO> ugSpeciesFields = new ArrayList<>();
+			if (userGroup != null) {
+				ugSpeciesFields = ugService.getSpeciesFieldsByUserGroupId(userGroup.getId().toString());
+			}
+
+			List<Long> ugFieldIds = new ArrayList<>();
+
+			for (SpeciesFieldValuesDTO ugMapping : ugSpeciesFields) {
+				ugFieldIds.add(ugMapping.getSpeciesFieldId());
+			}
+
+			List<SpeciesFieldData> filteredFields = new ArrayList<>();
 			for (SpeciesFieldData fieldData : showPagePayload.getFieldData()) {
+
 				if (fieldData.getReferences().stream().allMatch(Objects::isNull)) {
 					fieldData.setReferences(new ArrayList<Reference>());
 				}
@@ -414,8 +428,32 @@ public class SpeciesServiceImpl implements SpeciesServices {
 				if (fieldData.getContributor() != null) {
 					removeNullObjects(fieldData.getContributor());
 				}
+
+				List<UserGroupSpeciesFieldMeta> sfMetaData = new ArrayList<>();
+				if (userGroup != null) {
+					sfMetaData = ugService.getSpeciesFieldMetadata(userGroup.getId());
+				}
+
+				List<Long> sfContributors = fieldData.getContributor().stream().map(c -> c.getId())
+						.collect(Collectors.toList());
+
+				// UserGroup specific logic
+				if (userGroup == null || (ugFieldIds.isEmpty() && sfMetaData.isEmpty())) {
+					filteredFields.add(fieldData);
+				} else if (ugFieldIds.isEmpty() && !sfMetaData.isEmpty()) {
+					if (isMetaDataFilterTrue(sfMetaData, sfContributors)) {
+						filteredFields.add(fieldData);
+					}
+				} else if (!ugFieldIds.isEmpty() && !sfMetaData.isEmpty()) {
+					if (ugFieldIds.contains(fieldData.getFieldId())
+							&& isMetaDataFilterTrue(sfMetaData, sfContributors)) {
+						filteredFields.add(fieldData);
+					}
+				}
+
 			}
 
+			showPagePayload.setFieldData(filteredFields);
 			return showPagePayload;
 		}
 
@@ -424,6 +462,18 @@ public class SpeciesServiceImpl implements SpeciesServices {
 		}
 
 		return null;
+	}
+
+	private boolean isMetaDataFilterTrue(List<UserGroupSpeciesFieldMeta> sfMetaData, List<Long> sfContributors) {
+		List<Long> ugContributors = new ArrayList<>();
+		ugContributors = sfMetaData.stream().filter(m -> m.getValueType().equalsIgnoreCase("contributor"))
+				.map(m -> m.getValueId()).collect(Collectors.toList());
+
+		if (sfContributors.stream().anyMatch(ugContributors::contains)) {
+			return true;
+		}
+
+		return false;
 	}
 
 	private SpeciesFieldData getSpeciesFieldData(SpeciesField speciesField) {
@@ -476,7 +526,18 @@ public class SpeciesServiceImpl implements SpeciesServices {
 	}
 
 	@Override
-	public List<FieldRender> getFields(Long langId) {
+	public List<FieldNew> fetchLeafNodes() {
+		List<FieldNew> result = new ArrayList<>();
+		try {
+			result = fieldNewDao.getLeafNodes();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return result;
+	}
+
+	@Override
+	public List<FieldRender> getFields(Long langId, String userGroupId) {
 
 		if (langId == null)
 			langId = defaultLanguageId;
@@ -488,10 +549,27 @@ public class SpeciesServiceImpl implements SpeciesServices {
 //		extract all the concept fields in display order
 		List<FieldNew> concpetFields = fieldNewDao.findNullParent();
 
+		List<SpeciesFieldValuesDTO> ugSpeciesFields = new ArrayList<>();
+
+		if (userGroupId != null) {
+			try {
+				ugSpeciesFields = ugService.getSpeciesFieldsByUserGroupId(userGroupId);
+			} catch (Exception e) {
+				logger.error(e.getMessage());
+			}
+		}
+
+		List<Long> ugFieldIds = new ArrayList<>();
+
+		for (SpeciesFieldValuesDTO ugMapping : ugSpeciesFields) {
+			ugFieldIds.add(ugMapping.getSpeciesFieldId());
+		}
+
 		for (FieldNew concpetField : concpetFields) {
 
 //			check if the concept is itslef blacklisted
-			if (!blackListSFId.contains(concpetField.getId())) {
+			if (!blackListSFId.contains(concpetField.getId())
+					&& (ugFieldIds.contains(concpetField.getId()) || ugFieldIds.isEmpty())) {
 
 				List<FieldDisplay> categorySubCat = new ArrayList<FieldDisplay>();
 				fieldHeader = fieldHeaderDao.findByFieldId(concpetField.getId(), langId);
@@ -503,7 +581,8 @@ public class SpeciesServiceImpl implements SpeciesServices {
 				for (FieldNew catField : categoryFields) {
 
 //					check if category is blacklisted
-					if (!blackListSFId.contains(catField.getId())) {
+					if (!blackListSFId.contains(catField.getId())
+							&& (ugFieldIds.contains(catField.getId()) || ugFieldIds.isEmpty())) {
 
 						fieldHeader = fieldHeaderDao.findByFieldId(catField.getId(), langId);
 						catField.setHeader(fieldHeader.getHeader());
@@ -513,7 +592,8 @@ public class SpeciesServiceImpl implements SpeciesServices {
 						if (subCatField != null) {
 							for (FieldNew subCat : subCatField) {
 //								checking for blacklisted sub category
-								if (!blackListSFId.contains(subCat.getId())) {
+								if (!blackListSFId.contains(subCat.getId())
+										&& (ugFieldIds.contains(subCat.getId()) || ugFieldIds.isEmpty())) {
 									fieldHeader = fieldHeaderDao.findByFieldId(subCat.getId(), langId);
 									subCat.setHeader(fieldHeader.getHeader());
 									qualifiedsubCatField.add(subCat);
@@ -1552,7 +1632,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 
 	private void handleSpeciesReferences(Long speciesId, List<Reference> references, ReferenceOperation operation)
 			throws ApiException {
-		ShowSpeciesPage showData = showSpeciesPageFromES(speciesId);
+		ShowSpeciesPage showData = showSpeciesPageFromES(speciesId, null);
 		List<Reference> referencesListing = showData.getReferencesListing();
 
 		switch (operation) {

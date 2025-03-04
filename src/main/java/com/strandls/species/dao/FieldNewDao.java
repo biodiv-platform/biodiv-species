@@ -80,4 +80,22 @@ public class FieldNewDao extends AbstractDAO<FieldNew, Long> {
 		return result;
 	}
 
+	@SuppressWarnings("unchecked")
+	public List<FieldNew> getLeafNodes() {
+		List<FieldNew> result = null;
+		String qry = "from FieldNew f " + "where f.id not in ( " + "    select distinct fn.parentId "
+				+ "    from FieldNew fn " + "    where fn.parentId is not null " + ") " + "order by f.id";
+
+		Session session = sessionFactory.openSession();
+		try {
+			Query<FieldNew> query = session.createQuery(qry);
+			result = query.getResultList();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		} finally {
+			session.close();
+		}
+		return result;
+	}
+
 }
