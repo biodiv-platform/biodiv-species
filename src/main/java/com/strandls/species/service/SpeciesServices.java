@@ -130,4 +130,6 @@ public interface SpeciesServices {
 
 	public Reference deleteReference(HttpServletRequest request, Long referenceId);
 
+	public FieldNew createField(HttpServletRequest request, FieldCreateData fieldData);
+
 }

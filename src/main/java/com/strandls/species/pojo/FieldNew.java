@@ -5,6 +5,8 @@ package com.strandls.species.pojo;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
@@ -31,18 +33,19 @@ public class FieldNew {
 		super();
 	}
 
-	public FieldNew(Long id, Long parentId, Long displayOrder, String label, String header,String path) {
+	public FieldNew(Long id, Long parentId, Long displayOrder, String label, String header, String path) {
 		super();
 		this.id = id;
 		this.parentId = parentId;
 		this.displayOrder = displayOrder;
 		this.label = label;
 		this.header = header;
-		this.path = path;	
+		this.path = path;
 	}
 
 	@Id
 	@Column(name = "id")
+	@GeneratedValue(strategy = GenerationType.SEQUENCE)
 	public Long getId() {
 		return id;
 	}
@@ -86,8 +89,9 @@ public class FieldNew {
 	public void setHeader(String header) {
 		this.header = header;
 	}
-	
+
 	@Column(name = "path", columnDefinition = "ltree")
+	@Type(type = "com.strandls.species.util.LTreeType")
 	public String getPath() {
 		return path;
 	}
@@ -95,6 +99,5 @@ public class FieldNew {
 	public void setPath(String path) {
 		this.path = path;
 	}
-
 
 }

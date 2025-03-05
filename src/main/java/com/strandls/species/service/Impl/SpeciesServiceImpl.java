@@ -67,6 +67,7 @@ import com.strandls.species.dao.SpeciesFieldLicenseDao;
 import com.strandls.species.dao.SpeciesFieldUserDao;
 import com.strandls.species.es.util.SpeciesIndex;
 import com.strandls.species.pojo.Contributor;
+import com.strandls.species.pojo.FieldCreateData;
 import com.strandls.species.pojo.FieldDisplay;
 import com.strandls.species.pojo.FieldHeader;
 import com.strandls.species.pojo.FieldNew;
@@ -1702,6 +1703,135 @@ public class SpeciesServiceImpl implements SpeciesServices {
 			logger.error(e.getMessage());
 		}
 		return null;
+	}
+
+	// @Override
+//	public FieldNew createField(HttpServletRequest request, FieldCreateData fieldData) {
+//		try {
+//			// Validate user permissions
+//			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
+//			JSONArray userRoles = (JSONArray) profile.getAttribute("roles");
+//			if (!userRoles.contains("ROLE_ADMIN")) {
+//				throw new Exception("User not authorized to create fields");
+//			}
+//
+//			// Create new field
+//			FieldNew field = new FieldNew();
+//			field.setHeader(fieldData.getHeader());
+//			field.setParentId(fieldData.getParentId());
+//			
+//			// Determine label based on hierarchy level
+//			if (fieldData.getParentId() == null) {
+//				field.setLabel("Concept");
+//			} else {
+//				FieldNew parentField = fieldNewDao.findById(fieldData.getParentId());
+//				if (parentField == null) {
+//					throw new Exception("Parent field not found");
+//				}
+//				
+//				if ("Concept".equals(parentField.getLabel())) {
+//					field.setLabel("Category");
+//				} else if ("Category".equals(parentField.getLabel())) {
+//					field.setLabel("SubCategory");
+//				} else {
+//					throw new Exception("Invalid parent field type. Cannot create subcategory under a subcategory.");
+//				}
+//			}
+//			
+//			// Set display order
+//			if (fieldData.getDisplayOrder() != null) {
+//				field.setDisplayOrder(fieldData.getDisplayOrder());
+//			} else {
+//				Long maxDisplayOrder = fieldNewDao.getMaxDisplayOrderForParent(fieldData.getParentId());
+//				field.setDisplayOrder(maxDisplayOrder + 1);
+//			}
+//			
+//			// First save the field without path
+//			field = fieldNewDao.save(field);
+//			
+//			// Then update the path separately
+//			fieldNewDao.updatePath(field);
+//			
+//			// Reload the field to get the updated path
+//			field = fieldNewDao.findById(field.getId());
+//			
+//			// Create field header
+//			FieldHeader header = new FieldHeader();
+//			header.setFieldId(field.getId());
+//			header.setHeader(fieldData.getHeader());
+//			header.setDescription(fieldData.getDescription());
+//			header.setUrlIdentifier(fieldData.getUrlIdentifier());
+//			header.setLanguageId(fieldData.getLanguageId());
+//			
+//			fieldHeaderDao.save(header);
+//			
+//			return field;
+//		} catch (Exception e) {
+//			logger.error(e.getMessage());
+//			return null;
+//		}
+//	}
+
+	@Override
+	public FieldNew createField(HttpServletRequest request, FieldCreateData fieldData) {
+		try {
+			// Validate user permissions
+			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
+			JSONArray userRoles = (JSONArray) profile.getAttribute("roles");
+			if (!userRoles.contains("ROLE_ADMIN")) {
+				throw new Exception("User not authorized to create fields");
+			}
+
+			// Create new field
+			FieldNew field = new FieldNew();
+			field.setHeader(fieldData.getHeader());
+			field.setParentId(fieldData.getParentId());
+
+			// Determine label based on hierarchy level
+			if (fieldData.getParentId() == null) {
+				field.setLabel("Concept");
+			} else {
+				FieldNew parentField = fieldNewDao.findById(fieldData.getParentId());
+				if (parentField == null) {
+					throw new Exception("Parent field not found");
+				}
+
+				if ("Concept".equals(parentField.getLabel())) {
+					field.setLabel("Category");
+				} else if ("Category".equals(parentField.getLabel())) {
+					field.setLabel("SubCategory");
+				} else {
+					throw new Exception("Invalid parent field type. Cannot create subcategory under a subcategory.");
+				}
+			}
+
+			// Set display order
+			if (fieldData.getDisplayOrder() != null) {
+				field.setDisplayOrder(fieldData.getDisplayOrder());
+			} else {
+				Long maxDisplayOrder = fieldNewDao.getMaxDisplayOrderForParent(fieldData.getParentId());
+				field.setDisplayOrder(maxDisplayOrder + 1);
+			}
+
+			// Save the field - our custom save method now handles both insert and path
+			// update
+			field = fieldNewDao.save(field);
+
+			// Create field header
+			FieldHeader header = new FieldHeader();
+			header.setFieldId(field.getId());
+			header.setHeader(fieldData.getHeader());
+			header.setDescription(fieldData.getDescription());
+			header.setUrlIdentifier(fieldData.getUrlIdentifier());
+			header.setLanguageId(fieldData.getLanguageId());
+
+			fieldHeaderDao.save(header);
+
+			return field;
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			return null;
+		}
 	}
 
 }

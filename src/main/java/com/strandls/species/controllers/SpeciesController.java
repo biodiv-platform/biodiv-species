@@ -954,4 +954,22 @@ public class SpeciesController {
 
 	}
 
+	@POST
+	@Path("/create" + "/field")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	@ValidateUser
+	@ApiOperation(value = "Create a new species field", notes = "Returns the created field", response = FieldNew.class)
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "Unable to create the field", response = String.class),
+			@ApiResponse(code = 401, message = "User not authorized to create field", response = String.class) })
+	public Response createField(@Context HttpServletRequest request,
+			@ApiParam(name = "fieldData", value = "Field Data to create", required = true) FieldCreateData fieldData) {
+		try {
+			FieldNew result = speciesService.createField(request, fieldData);
+			return Response.status(Status.OK).entity(result).build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+	}
+
 }
