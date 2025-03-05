@@ -12,6 +12,8 @@ import com.strandls.activity.pojo.CommentLoggingData;
 import com.strandls.esmodule.ApiException;
 import com.strandls.resource.pojo.ResourceData;
 import com.strandls.resource.pojo.SpeciesPull;
+import com.strandls.species.pojo.FieldCreateData;
+import com.strandls.species.pojo.FieldNew;
 import com.strandls.species.pojo.FieldRender;
 import com.strandls.species.pojo.Reference;
 import com.strandls.species.pojo.ReferenceCreateData;
@@ -126,5 +128,7 @@ public interface SpeciesServices {
 	public Reference editReference(HttpServletRequest request, Long speciesId, Reference reference);
 
 	public Reference deleteReference(HttpServletRequest request, Long referenceId);
+
+	public FieldNew createField(HttpServletRequest request, FieldCreateData fieldData);
 
 }
