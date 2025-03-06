@@ -12,6 +12,7 @@ import com.strandls.activity.pojo.CommentLoggingData;
 import com.strandls.esmodule.ApiException;
 import com.strandls.resource.pojo.ResourceData;
 import com.strandls.resource.pojo.SpeciesPull;
+import com.strandls.species.pojo.FieldNew;
 import com.strandls.species.pojo.FieldRender;
 import com.strandls.species.pojo.Reference;
 import com.strandls.species.pojo.ReferenceCreateData;
@@ -47,7 +48,7 @@ public interface SpeciesServices {
 
 	public ShowSpeciesPage showSpeciesPage(Long speciesId);
 
-	public List<FieldRender> getFields(Long langId);
+	public List<FieldRender> getFields(Long langId, String userGroupId);
 
 	public List<SpeciesTrait> getSpeciesTraitsByTaxonomyId(Long taxonomyId);
 
@@ -118,7 +119,9 @@ public interface SpeciesServices {
 
 	public Activity removeSpeciesComment(HttpServletRequest request, CommentLoggingData comment, String commentId);
 
-	public ShowSpeciesPage showSpeciesPageFromES(Long speciesId);
+	public ShowSpeciesPage showSpeciesPageFromES(Long speciesId, UserGroupIbp userGroup);
+
+	public List<FieldNew> fetchLeafNodes();
 
 	public List<Reference> createReference(HttpServletRequest request, Long speciesId,
 			List<ReferenceCreateData> referenceCreateData);
