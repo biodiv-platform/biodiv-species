@@ -97,6 +97,8 @@ public class FieldNewDao extends AbstractDAO<FieldNew, Long> {
 			session.close();
 		}
 		return result;
+	}
+
 	public Long getMaxDisplayOrderForParent(Long parentId) {
 		String query = "SELECT MAX(displayOrder) FROM FieldNew WHERE parentId "
 				+ (parentId == null ? "IS NULL" : "= :parentId");

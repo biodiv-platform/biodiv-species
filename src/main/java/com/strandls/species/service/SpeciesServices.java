@@ -12,6 +12,7 @@ import com.strandls.activity.pojo.CommentLoggingData;
 import com.strandls.esmodule.ApiException;
 import com.strandls.resource.pojo.ResourceData;
 import com.strandls.resource.pojo.SpeciesPull;
+import com.strandls.species.pojo.FieldCreateData;
 import com.strandls.species.pojo.FieldNew;
 import com.strandls.species.pojo.FieldRender;
 import com.strandls.species.pojo.Reference;

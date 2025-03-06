@@ -39,6 +39,7 @@ import com.strandls.species.ApiConstants;
 import com.strandls.species.Headers;
 import com.strandls.species.es.util.ESUpdate;
 import com.strandls.species.es.util.ESUtility;
+import com.strandls.species.pojo.FieldCreateData;
 import com.strandls.species.pojo.FieldNew;
 import com.strandls.species.pojo.FieldRender;
 import com.strandls.species.pojo.MapAggregationResponse;
