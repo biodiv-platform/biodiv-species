@@ -40,6 +40,7 @@ import com.strandls.species.Headers;
 import com.strandls.species.es.util.ESUpdate;
 import com.strandls.species.es.util.ESUtility;
 import com.strandls.species.pojo.FieldCreateData;
+import com.strandls.species.pojo.FieldHeader;
 import com.strandls.species.pojo.FieldNew;
 import com.strandls.species.pojo.FieldRender;
 import com.strandls.species.pojo.MapAggregationResponse;
@@ -968,6 +969,38 @@ public class SpeciesController {
 		try {
 			FieldNew result = speciesService.createField(request, fieldData);
 			return Response.status(Status.OK).entity(result).build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+	}
+
+	@GET
+	@Path("/field/{fieldId}/translations")
+	@Produces(MediaType.APPLICATION_JSON)
+	@ApiOperation(value = "Get all translations for a field", notes = "Returns list of field headers for all available languages", response = FieldHeader.class, responseContainer = "List")
+	public Response getFieldTranslations(
+			@PathParam("fieldId") @ApiParam(value = "Field ID", required = true) Long fieldId) {
+		try {
+			List<FieldHeader> translations = speciesService.getFieldTranslations(fieldId);
+			return Response.ok().entity(translations).build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+	}
+
+	@GET
+	@Path("/field/{fieldId}/translation/{languageId}")
+	@Produces(MediaType.APPLICATION_JSON)
+	@ApiOperation(value = "Get specific translation for a field", notes = "Returns field header for the specified language", response = FieldHeader.class)
+	public Response getFieldTranslation(
+			@PathParam("fieldId") @ApiParam(value = "Field ID", required = true) Long fieldId,
+			@PathParam("languageId") @ApiParam(value = "Language ID", required = true) Long languageId) {
+		try {
+			FieldHeader translation = speciesService.getFieldTranslation(fieldId, languageId);
+			if (translation == null) {
+				return Response.status(Status.NOT_FOUND).build();
+			}
+			return Response.ok().entity(translation).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}

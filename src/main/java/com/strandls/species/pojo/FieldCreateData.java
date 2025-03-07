@@ -1,9 +1,12 @@
 package com.strandls.species.pojo;
 
+import java.util.List;
+
 public class FieldCreateData {
 	private String header; // The actual field name entered by user
 	private Long parentId; // null for "No Parent (Top level)"
 	private Long displayOrder;
+	private List<FieldHeaderData> translations; // List of translations
 
 	// Fields from FieldHeader
 	private String description;
@@ -73,5 +76,13 @@ public class FieldCreateData {
 
 	public void setLanguageId(Long languageId) {
 		this.languageId = languageId;
+	}
+
+	public List<FieldHeaderData> getTranslations() {
+		return translations;
+	}
+
+	public void setTranslations(List<FieldHeaderData> translations) {
+		this.translations = translations;
 	}
 }

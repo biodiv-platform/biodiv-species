@@ -13,6 +13,7 @@ import com.strandls.esmodule.ApiException;
 import com.strandls.resource.pojo.ResourceData;
 import com.strandls.resource.pojo.SpeciesPull;
 import com.strandls.species.pojo.FieldCreateData;
+import com.strandls.species.pojo.FieldHeader;
 import com.strandls.species.pojo.FieldNew;
 import com.strandls.species.pojo.FieldRender;
 import com.strandls.species.pojo.Reference;
@@ -132,5 +133,9 @@ public interface SpeciesServices {
 	public Reference deleteReference(HttpServletRequest request, Long referenceId);
 
 	public FieldNew createField(HttpServletRequest request, FieldCreateData fieldData);
+	
+	public List<FieldHeader> getFieldTranslations(Long fieldId);
+	
+	public FieldHeader getFieldTranslation(Long fieldId, Long languageId);
 
 }

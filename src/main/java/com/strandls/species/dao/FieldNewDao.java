@@ -182,7 +182,7 @@ public class FieldNewDao extends AbstractDAO<FieldNew, Long> {
 						: entity.getParentId().toString();
 				entity.setPath(newPath);
 
-				// Update in the database
+				// Update in the database - use concatenation instead of inline cast
 				String updateQuery = "UPDATE field_new SET path = text2ltree(:path) WHERE id = :id";
 				Query query = session.createNativeQuery(updateQuery);
 				query.setParameter("path", newPath);
@@ -191,13 +191,13 @@ public class FieldNewDao extends AbstractDAO<FieldNew, Long> {
 			} else {
 				// Top level node - just use the ID
 				// String newPath = entity.getId().toString();
-				String newPath = null;
-				entity.setPath(newPath);
+				//String newPath = null;
+				//entity.setPath(newPath);
 
-				// Update in the database
-				String updateQuery = "UPDATE field_new SET path = text2ltree(:path) WHERE id = :id";
+				// Update in the database - handle null path
+				String updateQuery = "UPDATE field_new SET path = NULL WHERE id = :id";
 				Query query = session.createNativeQuery(updateQuery);
-				query.setParameter("path", newPath);
+				//query.setParameter("path", newPath);
 				query.setParameter("id", entity.getId());
 				query.executeUpdate();
 			}
