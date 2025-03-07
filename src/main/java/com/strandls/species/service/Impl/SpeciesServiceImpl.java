@@ -616,9 +616,9 @@ public class SpeciesServiceImpl implements SpeciesServices {
 	}
 
 	@Override
-	public List<SpeciesTrait> getSpeciesTraitsByTaxonomyId(Long taxonomyId) {
+	public List<SpeciesTrait> getSpeciesTraitsByTaxonomyId(Long taxonomyId, Long language) {
 		try {
-			List<TraitsValuePair> traitValuePairLIst = traitService.getSpeciesTraits(taxonomyId.toString());
+			List<TraitsValuePair> traitValuePairLIst = traitService.getSpeciesTraits(taxonomyId.toString(), language.toString());
 			List<SpeciesTrait> arranged = arrangeTraits(traitValuePairLIst);
 			return arranged;
 
@@ -671,9 +671,9 @@ public class SpeciesServiceImpl implements SpeciesServices {
 	}
 
 	@Override
-	public List<SpeciesTrait> getAllSpeciesTraits() {
+	public List<SpeciesTrait> getAllSpeciesTraits(Long language) {
 		try {
-			List<TraitsValuePair> traitsValuePairList = traitService.getAllSpeciesTraits();
+			List<TraitsValuePair> traitsValuePairList = traitService.getAllSpeciesTraits(language.toString());
 			List<SpeciesTrait> arranged = arrangeTraits(traitsValuePairList);
 			return arranged;
 		} catch (Exception e) {
