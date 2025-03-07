@@ -50,9 +50,9 @@ public interface SpeciesServices {
 
 	public List<FieldRender> getFields(Long langId, String userGroupId);
 
-	public List<SpeciesTrait> getSpeciesTraitsByTaxonomyId(Long taxonomyId);
+	public List<SpeciesTrait> getSpeciesTraitsByTaxonomyId(Long taxonomyId, Long language);
 
-	public List<SpeciesTrait> getAllSpeciesTraits();
+	public List<SpeciesTrait> getAllSpeciesTraits(Long language);
 
 //	edits in speceis show page
 
