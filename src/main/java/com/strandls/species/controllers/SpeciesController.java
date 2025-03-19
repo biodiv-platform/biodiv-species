@@ -209,6 +209,23 @@ public class SpeciesController {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
 	}
+	
+	@GET
+	@Path(ApiConstants.TRAITS + "/{languageId}")
+	@Produces(MediaType.APPLICATION_JSON)
+
+	@ApiOperation(value = "Get all the species traits field wise", notes = "returns all the traits CategoryWise", response = SpeciesTrait.class, responseContainer = "List")
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "Unable to fetch the traits", response = String.class) })
+
+	public Response getAllTraits(@PathParam("languageId") String languageId) {
+		Long language = Long.parseLong(languageId);
+		try {
+			List<SpeciesTrait> result = speciesService.getAllTraits(language);
+			return Response.status(Status.OK).entity(result).build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+	}
 
 	@GET
 	@Path(ApiConstants.TRAITS + ApiConstants.TAXONOMY + "/{taxonomyId}/{languageId}")

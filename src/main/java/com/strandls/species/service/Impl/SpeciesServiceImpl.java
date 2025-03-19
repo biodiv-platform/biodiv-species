@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -682,6 +683,19 @@ public class SpeciesServiceImpl implements SpeciesServices {
 
 		return null;
 	}
+	
+	@Override
+	public List<SpeciesTrait> getAllTraits(Long language) {
+		try {
+			List<TraitsValuePair> traitsValuePairList = traitService.getAllTraitsList(language.toString());
+			List<SpeciesTrait> arranged = arrangeTraits(traitsValuePairList);
+			return arranged;
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+
+		return null;
+	}
 
 	@Override
 	public List<UserGroupIbp> updateUserGroup(HttpServletRequest request, String speciesId,
@@ -775,12 +789,40 @@ public class SpeciesServiceImpl implements SpeciesServices {
 				traitService = headers.addTraitsHeader(traitService, request.getHeader(HttpHeaders.AUTHORIZATION));
 				List<FactValuePair> result = traitService.updateTraits("species.Species", speciesId, traitId,
 						factsUpdateData);
+				ShowSpeciesPage showData = showSpeciesPageFromES(Long.parseLong(speciesId), null);
+				List<FactValuePair> existingFacts = showData.getFacts();
+				Iterator<FactValuePair> iterator = existingFacts.iterator();
+				while (iterator.hasNext()) {
+				    FactValuePair f = iterator.next();
+				    if (f.getNameId().equals(Long.parseLong(traitId))) {
+				        iterator.remove(); 
+				    }
+				}
+				existingFacts.addAll(result);
+				showData.setFacts(existingFacts);;
+				MapDocument document = new MapDocument();
+				try {
+					String payload = om.writeValueAsString(showData);
+					JsonNode rootNode = om.readTree(payload);
+					if (showData.getTaxonomyDefinition().getDefaultHierarchy() != null
+							&& !showData.getTaxonomyDefinition().getDefaultHierarchy().isEmpty()) {
+						JsonNode child = ((ObjectNode) rootNode).get("taxonomyDefinition");
+						((ObjectNode) child).replace("defaultHierarchy", null);
+					}
+					document.setDocument(om.writeValueAsString(rootNode));
+				} catch (JsonProcessingException e) {
+					logger.error(e.getMessage());
+				}
+
+				esService.create(SpeciesIndex.INDEX.getValue(), SpeciesIndex.TYPE.getValue(),
+						showData.getSpecies().getId().toString(), document);
 				updateLastRevised(Long.parseLong(speciesId));
-				return result;
+				return existingFacts;
 			}
 
 		} catch (Exception e) {
 			logger.error(e.getMessage());
+			e.printStackTrace();
 		}
 		return null;
 
