@@ -12,7 +12,7 @@ import java.util.List;
  */
 public class FieldRender {
 
-	private FieldNew parentField;
+	private FieldNewExtended parentField;
 	private List<FieldDisplay> childField;
 
 	/**
@@ -26,7 +26,7 @@ public class FieldRender {
 	 * @param parentField
 	 * @param childField
 	 */
-	public FieldRender(FieldNew parentField, List<FieldDisplay> childField) {
+	public FieldRender(FieldNewExtended parentField, List<FieldDisplay> childField) {
 		super();
 		this.parentField = parentField;
 		this.childField = childField;
@@ -36,7 +36,7 @@ public class FieldRender {
 		return parentField;
 	}
 
-	public void setParentField(FieldNew parentField) {
+	public void setParentField(FieldNewExtended parentField) {
 		this.parentField = parentField;
 	}
 

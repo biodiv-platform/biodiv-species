@@ -72,6 +72,7 @@ import com.strandls.species.pojo.FieldDisplay;
 import com.strandls.species.pojo.FieldHeader;
 import com.strandls.species.pojo.FieldHeaderData;
 import com.strandls.species.pojo.FieldNew;
+import com.strandls.species.pojo.FieldNewExtended;
 import com.strandls.species.pojo.FieldRender;
 import com.strandls.species.pojo.Reference;
 import com.strandls.species.pojo.ReferenceCreateData;
@@ -577,6 +578,16 @@ public class SpeciesServiceImpl implements SpeciesServices {
 				fieldHeader = fieldHeaderDao.findByFieldId(concpetField.getId(), langId);
 				concpetField.setHeader(fieldHeader.getHeader());
 
+				FieldNewExtended conceptFieldExtended = new FieldNewExtended();
+				conceptFieldExtended.setDescription(fieldHeader.getDescription());
+				conceptFieldExtended.setUrlIdentifier(fieldHeader.getUrlIdentifier());
+				conceptFieldExtended.setHeader(fieldHeader.getHeader());
+				conceptFieldExtended.setDisplayOrder(concpetField.getDisplayOrder());
+				conceptFieldExtended.setId(concpetField.getId());
+				conceptFieldExtended.setLabel(concpetField.getLabel());
+				conceptFieldExtended.setParentId(concpetField.getParentId());
+				conceptFieldExtended.setPath(concpetField.getPath());
+
 //				extract all the category fields in display order
 				List<FieldNew> categoryFields = fieldNewDao.findByParentId(concpetField.getId());
 
@@ -587,10 +598,23 @@ public class SpeciesServiceImpl implements SpeciesServices {
 							&& (ugFieldIds.contains(catField.getId()) || ugFieldIds.isEmpty())) {
 
 						fieldHeader = fieldHeaderDao.findByFieldId(catField.getId(), langId);
+						FieldNewExtended catFieldExtended = new FieldNewExtended();
 						catField.setHeader(fieldHeader.getHeader());
+
+						catFieldExtended.setDescription(fieldHeader.getDescription());
+						catFieldExtended.setUrlIdentifier(fieldHeader.getUrlIdentifier());
+
+						catFieldExtended.setHeader(fieldHeader.getHeader());
+						catFieldExtended.setDisplayOrder(catField.getDisplayOrder());
+						catFieldExtended.setId(catField.getId());
+						catFieldExtended.setLabel(catField.getLabel());
+						catFieldExtended.setParentId(catField.getParentId());
+						catFieldExtended.setPath(catField.getPath());
+
 //						extract all the subCategory fields in display order
 						List<FieldNew> subCatField = fieldNewDao.findByParentId(catField.getId());
-						List<FieldNew> qualifiedsubCatField = new ArrayList<FieldNew>();
+						List<FieldNewExtended> qualifiedsubCatField = new ArrayList<FieldNewExtended>();
+
 						if (subCatField != null) {
 							for (FieldNew subCat : subCatField) {
 //								checking for blacklisted sub category
@@ -598,16 +622,27 @@ public class SpeciesServiceImpl implements SpeciesServices {
 										&& (ugFieldIds.contains(subCat.getId()) || ugFieldIds.isEmpty())) {
 									fieldHeader = fieldHeaderDao.findByFieldId(subCat.getId(), langId);
 									subCat.setHeader(fieldHeader.getHeader());
-									qualifiedsubCatField.add(subCat);
+
+									FieldNewExtended subCatExtended = new FieldNewExtended();
+									subCatExtended.setHeader(fieldHeader.getHeader());
+									subCatExtended.setDescription(fieldHeader.getDescription());
+									subCatExtended.setUrlIdentifier(fieldHeader.getUrlIdentifier());
+									subCatExtended.setDisplayOrder(subCat.getDisplayOrder());
+									subCatExtended.setId(subCat.getId());
+									subCatExtended.setLabel(subCat.getLabel());
+									subCatExtended.setParentId(subCat.getParentId());
+									subCatExtended.setPath(subCat.getPath());
+
+									qualifiedsubCatField.add(subCatExtended);
 
 								}
 							}
 						}
-						categorySubCat.add(new FieldDisplay(catField, qualifiedsubCatField));
+						categorySubCat.add(new FieldDisplay(catFieldExtended, qualifiedsubCatField));
 					}
 
 				}
-				renderList.add(new FieldRender(concpetField, categorySubCat));
+				renderList.add(new FieldRender(conceptFieldExtended, categorySubCat));
 
 			}
 
@@ -1728,7 +1763,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 			FieldNew field = new FieldNew();
 			field.setHeader(defaultTranslation.getHeader()); // Use first translation as default
 			field.setParentId(fieldData.getParentId());
-			
+
 			// Determine label based on hierarchy level
 			if (fieldData.getParentId() == null) {
 				field.setLabel("Concept");
@@ -1737,7 +1772,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 				if (parentField == null) {
 					throw new Exception("Parent field not found");
 				}
-				
+
 				if ("Concept".equals(parentField.getLabel())) {
 					field.setLabel("Category");
 				} else if ("Category".equals(parentField.getLabel())) {
@@ -1746,7 +1781,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 					throw new Exception("Invalid parent field type. Cannot create subcategory under a subcategory.");
 				}
 			}
-			
+
 			// Set display order
 			if (fieldData.getDisplayOrder() != null) {
 				field.setDisplayOrder(fieldData.getDisplayOrder());
@@ -1754,10 +1789,10 @@ public class SpeciesServiceImpl implements SpeciesServices {
 				Long maxDisplayOrder = fieldNewDao.getMaxDisplayOrderForParent(fieldData.getParentId());
 				field.setDisplayOrder(maxDisplayOrder + 1);
 			}
-			
+
 			// Save the field
 			field = fieldNewDao.save(field);
-			
+
 			// Create field headers for all translations
 			for (FieldHeaderData translation : fieldData.getTranslations()) {
 				FieldHeader header = new FieldHeader();
@@ -1766,10 +1801,10 @@ public class SpeciesServiceImpl implements SpeciesServices {
 				header.setDescription(translation.getDescription());
 				header.setUrlIdentifier(translation.getUrlIdentifier());
 				header.setLanguageId(translation.getLanguageId());
-				
+
 				fieldHeaderDao.save(header);
 			}
-			
+
 			return field;
 		} catch (Exception e) {
 			logger.error(e.getMessage());
