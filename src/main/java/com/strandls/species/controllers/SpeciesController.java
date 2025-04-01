@@ -71,6 +71,8 @@ import com.strandls.userGroup.pojo.Featured;
 import com.strandls.userGroup.pojo.FeaturedCreate;
 import com.strandls.userGroup.pojo.UserGroupIbp;
 import com.strandls.userGroup.pojo.UserGroupSpeciesCreateData;
+import com.strandls.species.pojo.FieldTranslation;
+import com.strandls.species.pojo.FieldTranslationUpdateData;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -1001,6 +1003,28 @@ public class SpeciesController {
 				return Response.status(Status.NOT_FOUND).build();
 			}
 			return Response.ok().entity(translation).build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+	}
+
+	@PUT
+	@Path("/field/translations")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	@ValidateUser
+	@ApiOperation(value = "Update translations for multiple fields", notes = "Returns updated field headers", response = FieldHeader.class, responseContainer = "List")
+	@ApiResponses(value = {
+			@ApiResponse(code = 400, message = "Unable to update translations", response = String.class),
+			@ApiResponse(code = 401, message = "User not authorized to update translations", response = String.class)
+	})
+	public Response updateFieldTranslations(
+			@Context HttpServletRequest request,
+			@ApiParam(name = "translationData", value = "List of fields with their translations", required = true) 
+			List<FieldTranslationUpdateData> translationData) {
+		try {
+			List<FieldHeader> result = speciesService.updateFieldTranslations(request, translationData);
+			return Response.ok().entity(result).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}

@@ -74,6 +74,8 @@ import com.strandls.species.pojo.FieldHeaderData;
 import com.strandls.species.pojo.FieldNew;
 import com.strandls.species.pojo.FieldNewExtended;
 import com.strandls.species.pojo.FieldRender;
+import com.strandls.species.pojo.FieldTranslation;
+import com.strandls.species.pojo.FieldTranslationUpdateData;
 import com.strandls.species.pojo.Reference;
 import com.strandls.species.pojo.ReferenceCreateData;
 import com.strandls.species.pojo.ShowSpeciesPage;
@@ -1820,6 +1822,47 @@ public class SpeciesServiceImpl implements SpeciesServices {
 	@Override
 	public FieldHeader getFieldTranslation(Long fieldId, Long languageId) {
 		return fieldHeaderDao.findByFieldIdAndLanguageId(fieldId, languageId);
+	}
+	
+	@Override
+	public List<FieldHeader> updateFieldTranslations(HttpServletRequest request, List<FieldTranslationUpdateData> translationData) throws Exception {
+	    // Validate user permissions
+	    CommonProfile profile = AuthUtil.getProfileFromRequest(request);
+	    if (profile == null) {
+	        throw new Exception("User not authorized to update translations");
+	    }
+	    
+	    List<FieldHeader> updatedHeaders = new ArrayList<>();
+	    
+	    try {
+	        for (FieldTranslationUpdateData fieldData : translationData) {
+	            // Validate field exists
+	            FieldNew field = fieldNewDao.findById(fieldData.getFieldId());
+	            if (field == null) {
+	                logger.error("Field not found with id: " + fieldData.getFieldId());
+	                continue;
+	            }
+	            
+	            // Process each translation
+	            for (FieldTranslation translation : fieldData.getTranslations()) {
+	                FieldHeader header = new FieldHeader();
+	                header.setFieldId(fieldData.getFieldId());
+	                header.setLanguageId(translation.getLangId());
+	                header.setHeader(translation.getHeader());
+	                header.setDescription(translation.getDescription());
+	                header.setUrlIdentifier(translation.getUrlIdentifier());
+	                
+	                // Update or create translation
+	                FieldHeader updated = fieldHeaderDao.updateOrCreate(header);
+	                updatedHeaders.add(updated);
+	            }
+	        }
+	        
+	        return updatedHeaders;
+	    } catch (Exception e) {
+	        logger.error(e.getMessage());
+	        throw new RuntimeException("Error updating field translations: " + e.getMessage());
+	    }
 	}
 
 }
