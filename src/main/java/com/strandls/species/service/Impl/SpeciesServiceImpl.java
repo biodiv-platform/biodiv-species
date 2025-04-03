@@ -822,7 +822,6 @@ public class SpeciesServiceImpl implements SpeciesServices {
 
 		} catch (Exception e) {
 			logger.error(e.getMessage());
-			e.printStackTrace();
 		}
 		return null;
 
