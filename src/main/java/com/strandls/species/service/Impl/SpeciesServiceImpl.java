@@ -320,6 +320,25 @@ public class SpeciesServiceImpl implements SpeciesServices {
 		logger.info("Removed " + removedCount + " objects from the list");
 	}
 
+	public void speciesEsUpdate(ShowSpeciesPage showData, String speciesId) {
+		MapDocument document = new MapDocument();
+		try {
+			String payload = om.writeValueAsString(showData);
+			JsonNode rootNode = om.readTree(payload);
+			if (showData.getTaxonomyDefinition().getDefaultHierarchy() != null
+					&& !showData.getTaxonomyDefinition().getDefaultHierarchy().isEmpty()) {
+				JsonNode child = ((ObjectNode) rootNode).get("taxonomyDefinition");
+				((ObjectNode) child).replace("defaultHierarchy", null);
+			}
+			document.setDocument(om.writeValueAsString(rootNode));
+			esService.create(SpeciesIndex.INDEX.getValue(), SpeciesIndex.TYPE.getValue(),
+					showData.getSpecies().getId().toString(), document);
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		updateLastRevised(Long.parseLong(speciesId));
+	}
+
 	private boolean areAllFieldsNullRecursive(Object obj) {
 		if (obj == null) {
 			return true;
@@ -619,7 +638,8 @@ public class SpeciesServiceImpl implements SpeciesServices {
 	@Override
 	public List<SpeciesTrait> getSpeciesTraitsByTaxonomyId(Long taxonomyId, Long language) {
 		try {
-			List<TraitsValuePair> traitValuePairLIst = traitService.getSpeciesTraits(taxonomyId.toString(), language.toString());
+			List<TraitsValuePair> traitValuePairLIst = traitService.getSpeciesTraits(taxonomyId.toString(),
+					language.toString());
 			List<SpeciesTrait> arranged = arrangeTraits(traitValuePairLIst);
 			return arranged;
 
@@ -683,7 +703,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 
 		return null;
 	}
-	
+
 	@Override
 	public List<SpeciesTrait> getAllTraits(Long language) {
 		try {
@@ -793,30 +813,15 @@ public class SpeciesServiceImpl implements SpeciesServices {
 				List<FactValuePair> existingFacts = showData.getFacts();
 				Iterator<FactValuePair> iterator = existingFacts.iterator();
 				while (iterator.hasNext()) {
-				    FactValuePair f = iterator.next();
-				    if (f.getNameId().equals(Long.parseLong(traitId))) {
-				        iterator.remove(); 
-				    }
+					FactValuePair f = iterator.next();
+					if (f.getNameId().equals(Long.parseLong(traitId))) {
+						iterator.remove();
+					}
 				}
 				existingFacts.addAll(result);
-				showData.setFacts(existingFacts);;
-				MapDocument document = new MapDocument();
-				try {
-					String payload = om.writeValueAsString(showData);
-					JsonNode rootNode = om.readTree(payload);
-					if (showData.getTaxonomyDefinition().getDefaultHierarchy() != null
-							&& !showData.getTaxonomyDefinition().getDefaultHierarchy().isEmpty()) {
-						JsonNode child = ((ObjectNode) rootNode).get("taxonomyDefinition");
-						((ObjectNode) child).replace("defaultHierarchy", null);
-					}
-					document.setDocument(om.writeValueAsString(rootNode));
-				} catch (JsonProcessingException e) {
-					logger.error(e.getMessage());
-				}
-
-				esService.create(SpeciesIndex.INDEX.getValue(), SpeciesIndex.TYPE.getValue(),
-						showData.getSpecies().getId().toString(), document);
-				updateLastRevised(Long.parseLong(speciesId));
+				showData.setFacts(existingFacts);
+				;
+				speciesEsUpdate(showData, speciesId);
 				return existingFacts;
 			}
 
@@ -1607,22 +1612,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 	@Override
 	public void ESSpeciesUpdate(long speciesId) throws ApiException {
 		ShowSpeciesPage showData = showSpeciesPage(speciesId);
-		MapDocument document = new MapDocument();
-		try {
-			String payload = om.writeValueAsString(showData);
-			JsonNode rootNode = om.readTree(payload);
-			if (showData.getTaxonomyDefinition().getDefaultHierarchy() != null
-					&& !showData.getTaxonomyDefinition().getDefaultHierarchy().isEmpty()) {
-				JsonNode child = ((ObjectNode) rootNode).get("taxonomyDefinition");
-				((ObjectNode) child).replace("defaultHierarchy", null);
-			}
-			document.setDocument(om.writeValueAsString(rootNode));
-		} catch (JsonProcessingException e) {
-			logger.error(e.getMessage());
-		}
-
-		esService.create(SpeciesIndex.INDEX.getValue(), SpeciesIndex.TYPE.getValue(),
-				showData.getSpecies().getId().toString(), document);
+		speciesEsUpdate(showData,String.valueOf(speciesId));
 	}
 
 	@Override
@@ -1693,22 +1683,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 		}
 
 		showData.setReferencesListing(referencesListing);
-		MapDocument document = new MapDocument();
-		try {
-			String payload = om.writeValueAsString(showData);
-			JsonNode rootNode = om.readTree(payload);
-			if (showData.getTaxonomyDefinition().getDefaultHierarchy() != null
-					&& !showData.getTaxonomyDefinition().getDefaultHierarchy().isEmpty()) {
-				JsonNode child = ((ObjectNode) rootNode).get("taxonomyDefinition");
-				((ObjectNode) child).replace("defaultHierarchy", null);
-			}
-			document.setDocument(om.writeValueAsString(rootNode));
-		} catch (JsonProcessingException e) {
-			logger.error(e.getMessage());
-		}
-
-		esService.create(SpeciesIndex.INDEX.getValue(), SpeciesIndex.TYPE.getValue(),
-				showData.getSpecies().getId().toString(), document);
+		speciesEsUpdate(showData,speciesId.toString());
 	}
 
 	@Override
