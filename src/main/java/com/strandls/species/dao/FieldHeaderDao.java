@@ -48,20 +48,50 @@ public class FieldHeaderDao extends AbstractDAO<FieldHeader, Long> {
 		return result;
 	}
 
+//	@SuppressWarnings("unchecked")
+//	public FieldHeader findByFieldId(Long fieldId, Long languageId) {
+//		String qry = "from FieldHeader where fieldId = :fieldId and languageId = :languageId ";
+//		Session session = sessionFactory.openSession();
+//		FieldHeader result = null;
+//		try {
+//			Query<FieldHeader> query = session.createQuery(qry);
+//			query.setParameter("fieldId", fieldId);
+//			query.setParameter("languageId", languageId);
+//			result = query.getSingleResult();
+//		} catch (Exception e) {
+//			logger.error(e.getMessage());
+//		}
+//		return result;
+//	}
+	
 	@SuppressWarnings("unchecked")
 	public FieldHeader findByFieldId(Long fieldId, Long languageId) {
-		String qry = "from FieldHeader where fieldId = :fieldId and languageId = :languageId ";
-		Session session = sessionFactory.openSession();
-		FieldHeader result = null;
-		try {
-			Query<FieldHeader> query = session.createQuery(qry);
-			query.setParameter("fieldId", fieldId);
-			query.setParameter("languageId", languageId);
-			result = query.getSingleResult();
-		} catch (Exception e) {
-			logger.error(e.getMessage());
-		}
-		return result;
+	    String qry = "from FieldHeader where fieldId = :fieldId and languageId = :languageId ";
+	    Session session = sessionFactory.openSession();
+	    FieldHeader result = null;
+	    try {
+	        Query<FieldHeader> query = session.createQuery(qry);
+	        query.setParameter("fieldId", fieldId);
+	        query.setParameter("languageId", languageId);
+	        result = query.getSingleResult();
+	    } catch (Exception e) {
+	        logger.error(e.getMessage());
+	        
+	        // Fallback to languageId 205 if no result found
+	        try {
+	            Query<FieldHeader> fallbackQuery = session.createQuery(qry);
+	            fallbackQuery.setParameter("fieldId", fieldId);
+	            fallbackQuery.setParameter("languageId", 205L);
+	            result = fallbackQuery.getSingleResult();
+	        } catch (Exception fallbackException) {
+	            logger.error("Fallback query also failed: " + fallbackException.getMessage());
+	        }
+	    } finally {
+	        if (session != null && session.isOpen()) {
+	            session.close();
+	        }
+	    }
+	    return result;
 	}
 
 	@SuppressWarnings("unchecked")
