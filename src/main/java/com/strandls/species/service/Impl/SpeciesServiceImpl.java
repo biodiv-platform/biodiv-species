@@ -12,6 +12,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -716,6 +717,48 @@ public class SpeciesServiceImpl implements SpeciesServices {
 		return result;
 
 	}
+	
+	private List<SpeciesTrait> arrangeHierarchyTraits(List<TraitsValuePair> traitValuePairList) {
+
+		LinkedHashMap<String, List<TraitsValuePair>> arrangedPair = new LinkedHashMap<>();
+		Map<Long,String> fields = new LinkedHashMap<>();
+		List<FieldNew> conceptFields = fieldNewDao.findNullParent();
+		for (FieldNew concept:conceptFields) {
+			String conceptName = fieldHeaderDao.findByFieldId(concept.getId(), defaultLanguageId).getHeader();
+			List<FieldNew> categoryFields = fieldNewDao.findByParentId(concept.getId());
+			for (FieldNew cat: categoryFields) {
+				String catName = fieldHeaderDao.findByFieldId(cat.getId(), defaultLanguageId).getHeader();
+				List<FieldNew> subCategoryFields = fieldNewDao.findByParentId(cat.getId());
+				if(subCategoryFields.size()==0) {
+				fields.put(cat.getId(), conceptName+" > "+catName);
+				} else {
+					for (FieldNew subCat: subCategoryFields) {
+						String subCatName = fieldHeaderDao.findByFieldId(subCat.getId(), defaultLanguageId).getHeader();
+						fields.put(cat.getId(), conceptName+" > "+catName+" > "+subCatName);
+					}
+				}
+			}
+		}
+
+
+		for (Entry<Long, String> field: fields.entrySet()) {
+			List<TraitsValuePair> matchingTraits = traitValuePairList.stream()
+			        .filter(trait -> trait.getTraits().getFieldId().equals(field.getKey()))
+			        .collect(Collectors.toList());
+
+			    if (!matchingTraits.isEmpty()) {
+			        arrangedPair.put(field.getValue(), matchingTraits);
+			    }
+		}
+
+		List<SpeciesTrait> result = new ArrayList<SpeciesTrait>();
+		for (Entry<String, List<TraitsValuePair>> entry : arrangedPair.entrySet()) {
+			result.add(new SpeciesTrait(entry.getKey(), entry.getValue()));
+		}
+		return result;
+
+	}
+
 
 	private String fieldHierarchyString(Long fieldId) {
 		FieldNew fieldNew = null;
@@ -747,7 +790,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 	public List<SpeciesTrait> getAllTraits(Long language) {
 		try {
 			List<TraitsValuePair> traitsValuePairList = traitService.getAllTraitsList(language.toString());
-			List<SpeciesTrait> arranged = arrangeTraits(traitsValuePairList);
+			List<SpeciesTrait> arranged = arrangeHierarchyTraits(traitsValuePairList);
 			return arranged;
 		} catch (Exception e) {
 			logger.error(e.getMessage());
