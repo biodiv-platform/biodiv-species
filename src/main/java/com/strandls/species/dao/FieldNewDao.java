@@ -215,4 +215,20 @@ public class FieldNewDao extends AbstractDAO<FieldNew, Long> {
 		}
 	}
 
+	@SuppressWarnings("unchecked")
+	public List<FieldNew> findAll() {
+		List<FieldNew> result = null;
+		String qry = "from FieldNew order by displayOrder";
+		Session session = sessionFactory.openSession();
+		try {
+			Query<FieldNew> query = session.createQuery(qry);
+			result = query.getResultList();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		} finally {
+			session.close();
+		}
+		return result;
+	}
+
 }

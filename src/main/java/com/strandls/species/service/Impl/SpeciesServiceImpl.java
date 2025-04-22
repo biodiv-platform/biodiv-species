@@ -422,10 +422,8 @@ public class SpeciesServiceImpl implements SpeciesServices {
 				showPagePayload.setFieldData(new ArrayList<SpeciesFieldData>());
 			}
 
-			if (showPagePayload.getFieldData() == null) {
-				showPagePayload.setFieldData(new ArrayList<SpeciesFieldData>());
-				return showPagePayload;
-			}
+			// Add newly created fields from database that might not be in ElasticSearch yet
+			enrichSpeciesPageWithNewFields(showPagePayload, speciesId);
 
 			List<SpeciesFieldValuesDTO> ugSpeciesFields = new ArrayList<>();
 			if (userGroup != null) {
@@ -488,6 +486,94 @@ public class SpeciesServiceImpl implements SpeciesServices {
 		}
 
 		return null;
+	}
+
+	/**
+	 * Enriches the species page with fields from the database that might not be in ElasticSearch yet
+	 * @param showPagePayload The species page payload from ElasticSearch
+	 * @param speciesId The ID of the species
+	 */
+	private void enrichSpeciesPageWithNewFields(ShowSpeciesPage showPagePayload, Long speciesId) {
+		try {
+			// Get existing field IDs from the ES response
+			Set<Long> existingFieldIds = showPagePayload.getFieldData().stream()
+					.map(SpeciesFieldData::getFieldId)
+					.collect(Collectors.toSet());
+
+			// Get all fields for this species from the database
+			List<SpeciesField> allSpeciesFields = speciesFieldDao.findBySpeciesId(speciesId);
+			
+			// For each field in the database that's not in ES yet
+			for (SpeciesField speciesField : allSpeciesFields) {
+				// Skip deleted fields and fields already in the ES response
+				if (speciesField.getIsDeleted() || existingFieldIds.contains(speciesField.getFieldId())) {
+					continue;
+				}
+				
+				// Skip blacklisted fields
+				if (blackListSFId.contains(speciesField.getFieldId())) {
+					continue;
+				}
+				
+				// Create a minimal SpeciesFieldData object directly
+				SpeciesFieldData fieldData = createMinimalSpeciesFieldData(speciesField);
+				
+				// Add it to the payload
+				if (fieldData != null) {
+					showPagePayload.getFieldData().add(fieldData);
+				}
+			}
+		} catch (Exception e) {
+			logger.error("Error enriching species page with new fields: " + e.getMessage());
+		}
+	}
+
+	/**
+	 * Creates a minimal SpeciesFieldData object with just enough information to display
+	 * @param speciesField The SpeciesField from the database
+	 * @return A minimal SpeciesFieldData object
+	 */
+	private SpeciesFieldData createMinimalSpeciesFieldData(SpeciesField speciesField) {
+		try {
+			// Get the field definition
+			FieldNew fieldNew = fieldNewDao.findById(speciesField.getFieldId());
+			if (fieldNew == null) {
+				return null;
+			}
+			
+			// Get basic field header info (just for the name)
+			FieldHeader fieldHeader = null;
+			List<FieldHeader> headers = fieldHeaderDao.findAllByFieldId(fieldNew.getId());
+			if (headers != null && !headers.isEmpty()) {
+				// Get the default language header or first available
+				fieldHeader = headers.stream()
+					.filter(h -> h.getLanguageId().equals(defaultLanguageId))
+					.findFirst()
+					.orElse(headers.get(0));
+			}
+			
+			// Create the minimal SpeciesFieldData
+			SpeciesFieldData fieldData = new SpeciesFieldData();
+			fieldData.setFieldId(fieldNew.getId());
+			fieldData.setDisplayOrder(fieldNew.getDisplayOrder());
+			fieldData.setLabel(fieldNew.getLabel());
+			fieldData.setHeader(fieldHeader != null ? fieldHeader.getHeader() : fieldNew.getHeader());
+			fieldData.setPath(fieldNew.getPath());
+			
+			// Set the field data
+			fieldData.setFieldData(speciesField);
+			fieldData.setFieldDescription(speciesField.getDescription());
+			
+			// Initialize empty collections
+			fieldData.setReferences(new ArrayList<>());
+			fieldData.setContributor(new ArrayList<>());
+			fieldData.setSpeciesFieldResource(new ArrayList<>());
+			
+			return fieldData;
+		} catch (Exception e) {
+			logger.error("Error creating minimal species field data: " + e.getMessage());
+			return null;
+		}
 	}
 
 	private boolean isMetaDataFilterTrue(List<UserGroupSpeciesFieldMeta> sfMetaData, List<Long> sfContributors) {
@@ -717,38 +803,37 @@ public class SpeciesServiceImpl implements SpeciesServices {
 		return result;
 
 	}
-	
+
 	private List<SpeciesTrait> arrangeHierarchyTraits(List<TraitsValuePair> traitValuePairList) {
 
 		LinkedHashMap<String, List<TraitsValuePair>> arrangedPair = new LinkedHashMap<>();
-		Map<Long,String> fields = new LinkedHashMap<>();
+		Map<Long, String> fields = new LinkedHashMap<>();
 		List<FieldNew> conceptFields = fieldNewDao.findNullParent();
-		for (FieldNew concept:conceptFields) {
+		for (FieldNew concept : conceptFields) {
 			String conceptName = fieldHeaderDao.findByFieldId(concept.getId(), defaultLanguageId).getHeader();
 			List<FieldNew> categoryFields = fieldNewDao.findByParentId(concept.getId());
-			for (FieldNew cat: categoryFields) {
+			for (FieldNew cat : categoryFields) {
 				String catName = fieldHeaderDao.findByFieldId(cat.getId(), defaultLanguageId).getHeader();
 				List<FieldNew> subCategoryFields = fieldNewDao.findByParentId(cat.getId());
-				if(subCategoryFields.size()==0) {
-				fields.put(cat.getId(), conceptName+" > "+catName);
+				if (subCategoryFields.size() == 0) {
+					fields.put(cat.getId(), conceptName + " > " + catName);
 				} else {
-					for (FieldNew subCat: subCategoryFields) {
+					for (FieldNew subCat : subCategoryFields) {
 						String subCatName = fieldHeaderDao.findByFieldId(subCat.getId(), defaultLanguageId).getHeader();
-						fields.put(cat.getId(), conceptName+" > "+catName+" > "+subCatName);
+						fields.put(cat.getId(), conceptName + " > " + catName + " > " + subCatName);
 					}
 				}
 			}
 		}
 
-
-		for (Entry<Long, String> field: fields.entrySet()) {
+		for (Entry<Long, String> field : fields.entrySet()) {
 			List<TraitsValuePair> matchingTraits = traitValuePairList.stream()
-			        .filter(trait -> trait.getTraits().getFieldId().equals(field.getKey()))
-			        .collect(Collectors.toList());
+					.filter(trait -> trait.getTraits().getFieldId().equals(field.getKey()))
+					.collect(Collectors.toList());
 
-			    if (!matchingTraits.isEmpty()) {
-			        arrangedPair.put(field.getValue(), matchingTraits);
-			    }
+			if (!matchingTraits.isEmpty()) {
+				arrangedPair.put(field.getValue(), matchingTraits);
+			}
 		}
 
 		List<SpeciesTrait> result = new ArrayList<SpeciesTrait>();
@@ -758,7 +843,6 @@ public class SpeciesServiceImpl implements SpeciesServices {
 		return result;
 
 	}
-
 
 	private String fieldHierarchyString(Long fieldId) {
 		FieldNew fieldNew = null;
@@ -1694,7 +1778,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 	@Override
 	public void ESSpeciesUpdate(long speciesId) throws ApiException {
 		ShowSpeciesPage showData = showSpeciesPage(speciesId);
-		speciesEsUpdate(showData,String.valueOf(speciesId));
+		speciesEsUpdate(showData, String.valueOf(speciesId));
 	}
 
 	@Override
@@ -1765,7 +1849,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 		}
 
 		showData.setReferencesListing(referencesListing);
-		speciesEsUpdate(showData,speciesId.toString());
+		speciesEsUpdate(showData, speciesId.toString());
 	}
 
 	@Override
@@ -1882,46 +1966,47 @@ public class SpeciesServiceImpl implements SpeciesServices {
 	public FieldHeader getFieldTranslation(Long fieldId, Long languageId) {
 		return fieldHeaderDao.findByFieldIdAndLanguageId(fieldId, languageId);
 	}
-	
+
 	@Override
-	public List<FieldHeader> updateFieldTranslations(HttpServletRequest request, List<FieldTranslationUpdateData> translationData) throws Exception {
-	    // Validate user permissions
-	    CommonProfile profile = AuthUtil.getProfileFromRequest(request);
-	    if (profile == null) {
-	        throw new Exception("User not authorized to update translations");
-	    }
-	    
-	    List<FieldHeader> updatedHeaders = new ArrayList<>();
-	    
-	    try {
-	        for (FieldTranslationUpdateData fieldData : translationData) {
-	            // Validate field exists
-	            FieldNew field = fieldNewDao.findById(fieldData.getFieldId());
-	            if (field == null) {
-	                logger.error("Field not found with id: " + fieldData.getFieldId());
-	                continue;
-	            }
-	            
-	            // Process each translation
-	            for (FieldTranslation translation : fieldData.getTranslations()) {
-	                FieldHeader header = new FieldHeader();
-	                header.setFieldId(fieldData.getFieldId());
-	                header.setLanguageId(translation.getLangId());
-	                header.setHeader(translation.getHeader());
-	                header.setDescription(translation.getDescription());
-	                header.setUrlIdentifier(translation.getUrlIdentifier());
-	                
-	                // Update or create translation
-	                FieldHeader updated = fieldHeaderDao.updateOrCreate(header);
-	                updatedHeaders.add(updated);
-	            }
-	        }
-	        
-	        return updatedHeaders;
-	    } catch (Exception e) {
-	        logger.error(e.getMessage());
-	        throw new RuntimeException("Error updating field translations: " + e.getMessage());
-	    }
+	public List<FieldHeader> updateFieldTranslations(HttpServletRequest request,
+			List<FieldTranslationUpdateData> translationData) throws Exception {
+		// Validate user permissions
+		CommonProfile profile = AuthUtil.getProfileFromRequest(request);
+		if (profile == null) {
+			throw new Exception("User not authorized to update translations");
+		}
+
+		List<FieldHeader> updatedHeaders = new ArrayList<>();
+
+		try {
+			for (FieldTranslationUpdateData fieldData : translationData) {
+				// Validate field exists
+				FieldNew field = fieldNewDao.findById(fieldData.getFieldId());
+				if (field == null) {
+					logger.error("Field not found with id: " + fieldData.getFieldId());
+					continue;
+				}
+
+				// Process each translation
+				for (FieldTranslation translation : fieldData.getTranslations()) {
+					FieldHeader header = new FieldHeader();
+					header.setFieldId(fieldData.getFieldId());
+					header.setLanguageId(translation.getLangId());
+					header.setHeader(translation.getHeader());
+					header.setDescription(translation.getDescription());
+					header.setUrlIdentifier(translation.getUrlIdentifier());
+
+					// Update or create translation
+					FieldHeader updated = fieldHeaderDao.updateOrCreate(header);
+					updatedHeaders.add(updated);
+				}
+			}
+
+			return updatedHeaders;
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			throw new RuntimeException("Error updating field translations: " + e.getMessage());
+		}
 	}
 
 }
