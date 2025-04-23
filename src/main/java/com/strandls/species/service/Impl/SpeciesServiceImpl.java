@@ -423,7 +423,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 			}
 
 			// Add newly created fields from database that might not be in ElasticSearch yet
-			enrichSpeciesPageWithNewFields(showPagePayload, speciesId);
+			
 
 			List<SpeciesFieldValuesDTO> ugSpeciesFields = new ArrayList<>();
 			if (userGroup != null) {
@@ -478,6 +478,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 			}
 
 			showPagePayload.setFieldData(filteredFields);
+			enrichSpeciesPageWithNewFields(showPagePayload, speciesId);
 			return showPagePayload;
 		}
 
