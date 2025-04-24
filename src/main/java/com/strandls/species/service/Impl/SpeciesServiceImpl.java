@@ -423,7 +423,6 @@ public class SpeciesServiceImpl implements SpeciesServices {
 			}
 
 			// Add newly created fields from database that might not be in ElasticSearch yet
-			
 
 			List<SpeciesFieldValuesDTO> ugSpeciesFields = new ArrayList<>();
 			if (userGroup != null) {
@@ -490,35 +489,36 @@ public class SpeciesServiceImpl implements SpeciesServices {
 	}
 
 	/**
-	 * Enriches the species page with fields from the database that might not be in ElasticSearch yet
+	 * Enriches the species page with fields from the database that might not be in
+	 * ElasticSearch yet
+	 * 
 	 * @param showPagePayload The species page payload from ElasticSearch
-	 * @param speciesId The ID of the species
+	 * @param speciesId       The ID of the species
 	 */
 	private void enrichSpeciesPageWithNewFields(ShowSpeciesPage showPagePayload, Long speciesId) {
 		try {
 			// Get existing field IDs from the ES response
-			Set<Long> existingFieldIds = showPagePayload.getFieldData().stream()
-					.map(SpeciesFieldData::getFieldId)
+			Set<Long> existingFieldIds = showPagePayload.getFieldData().stream().map(SpeciesFieldData::getFieldId)
 					.collect(Collectors.toSet());
 
-			// Get all fields for this species from the database
-			List<SpeciesField> allSpeciesFields = speciesFieldDao.findBySpeciesId(speciesId);
-			
-			// For each field in the database that's not in ES yet
-			for (SpeciesField speciesField : allSpeciesFields) {
-				// Skip deleted fields and fields already in the ES response
-				if (speciesField.getIsDeleted() || existingFieldIds.contains(speciesField.getFieldId())) {
+			// Get all fields from the database, not just fields for this species
+			List<FieldNew> allFields = fieldNewDao.findAll();
+
+			// For each field definition in the database
+			for (FieldNew fieldNew : allFields) {
+				// Skip fields already in the ES response
+				if (existingFieldIds.contains(fieldNew.getId())) {
 					continue;
 				}
-				
+
 				// Skip blacklisted fields
-				if (blackListSFId.contains(speciesField.getFieldId())) {
+				if (blackListSFId.contains(fieldNew.getId())) {
 					continue;
 				}
-				
-				// Create a minimal SpeciesFieldData object directly
-				SpeciesFieldData fieldData = createMinimalSpeciesFieldData(speciesField);
-				
+
+				// Create a minimal SpeciesFieldData object for this field definition
+				SpeciesFieldData fieldData = createMinimalFieldData(fieldNew, speciesId);
+
 				// Add it to the payload
 				if (fieldData != null) {
 					showPagePayload.getFieldData().add(fieldData);
@@ -530,29 +530,24 @@ public class SpeciesServiceImpl implements SpeciesServices {
 	}
 
 	/**
-	 * Creates a minimal SpeciesFieldData object with just enough information to display
-	 * @param speciesField The SpeciesField from the database
+	 * Creates a minimal SpeciesFieldData object with just enough information to
+	 * display an empty field
+	 * 
+	 * @param fieldNew The FieldNew definition from the database
+	 * @param speciesId The ID of the species
 	 * @return A minimal SpeciesFieldData object
 	 */
-	private SpeciesFieldData createMinimalSpeciesFieldData(SpeciesField speciesField) {
+	private SpeciesFieldData createMinimalFieldData(FieldNew fieldNew, Long speciesId) {
 		try {
-			// Get the field definition
-			FieldNew fieldNew = fieldNewDao.findById(speciesField.getFieldId());
-			if (fieldNew == null) {
-				return null;
-			}
-			
 			// Get basic field header info (just for the name)
 			FieldHeader fieldHeader = null;
 			List<FieldHeader> headers = fieldHeaderDao.findAllByFieldId(fieldNew.getId());
 			if (headers != null && !headers.isEmpty()) {
 				// Get the default language header or first available
-				fieldHeader = headers.stream()
-					.filter(h -> h.getLanguageId().equals(defaultLanguageId))
-					.findFirst()
-					.orElse(headers.get(0));
+				fieldHeader = headers.stream().filter(h -> h.getLanguageId().equals(defaultLanguageId)).findFirst()
+						.orElse(headers.get(0));
 			}
-			
+
 			// Create the minimal SpeciesFieldData
 			SpeciesFieldData fieldData = new SpeciesFieldData();
 			fieldData.setFieldId(fieldNew.getId());
@@ -560,19 +555,16 @@ public class SpeciesServiceImpl implements SpeciesServices {
 			fieldData.setLabel(fieldNew.getLabel());
 			fieldData.setHeader(fieldHeader != null ? fieldHeader.getHeader() : fieldNew.getHeader());
 			fieldData.setPath(fieldNew.getPath());
-			
-			// Set the field data
-			fieldData.setFieldData(speciesField);
-			fieldData.setFieldDescription(speciesField.getDescription());
-			
-			// Initialize empty collections
+
+			// Since this is an empty field, we don't have species field data
+			// but we need to initialize the collections to prevent NPEs
 			fieldData.setReferences(new ArrayList<>());
 			fieldData.setContributor(new ArrayList<>());
 			fieldData.setSpeciesFieldResource(new ArrayList<>());
-			
+
 			return fieldData;
 		} catch (Exception e) {
-			logger.error("Error creating minimal species field data: " + e.getMessage());
+			logger.error("Error creating minimal field data: " + e.getMessage());
 			return null;
 		}
 	}
