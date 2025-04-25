@@ -342,7 +342,6 @@ public class SpeciesServiceImpl implements SpeciesServices {
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 		}
-		updateLastRevised(Long.parseLong(speciesId));
 	}
 
 	private boolean areAllFieldsNullRecursive(Object obj) {
