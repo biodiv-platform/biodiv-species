@@ -100,16 +100,21 @@ public class FieldNewDao extends AbstractDAO<FieldNew, Long> {
 	}
 
 	public Long getMaxDisplayOrderForParent(Long parentId) {
-		String query = "SELECT MAX(displayOrder) FROM FieldNew WHERE parentId "
-				+ (parentId == null ? "IS NULL" : "= :parentId");
 		Session session = sessionFactory.openSession();
 		try {
-			Query<Long> q = session.createQuery(query, Long.class);
-			if (parentId != null) {
+			String query;
+			if (parentId == null) {
+				query = "SELECT MAX(displayOrder) FROM FieldNew WHERE parentId IS NULL";
+				Query<Long> q = session.createQuery(query, Long.class);
+				Long result = q.uniqueResult();
+				return result != null ? result : 0L;
+			} else {
+				query = "SELECT MAX(displayOrder) FROM FieldNew WHERE parentId = :parentId";
+				Query<Long> q = session.createQuery(query, Long.class);
 				q.setParameter("parentId", parentId);
+				Long result = q.uniqueResult();
+				return result != null ? result : 0L;
 			}
-			Long result = q.uniqueResult();
-			return result != null ? result : 0L;
 		} finally {
 			session.close();
 		}
@@ -191,13 +196,13 @@ public class FieldNewDao extends AbstractDAO<FieldNew, Long> {
 			} else {
 				// Top level node - just use the ID
 				// String newPath = entity.getId().toString();
-				//String newPath = null;
-				//entity.setPath(newPath);
+				// String newPath = null;
+				// entity.setPath(newPath);
 
 				// Update in the database - handle null path
 				String updateQuery = "UPDATE field_new SET path = NULL WHERE id = :id";
 				Query query = session.createNativeQuery(updateQuery);
-				//query.setParameter("path", newPath);
+				// query.setParameter("path", newPath);
 				query.setParameter("id", entity.getId());
 				query.executeUpdate();
 			}
