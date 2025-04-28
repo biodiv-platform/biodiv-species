@@ -39,6 +39,8 @@ import com.strandls.species.ApiConstants;
 import com.strandls.species.Headers;
 import com.strandls.species.es.util.ESUpdate;
 import com.strandls.species.es.util.ESUtility;
+import com.strandls.species.pojo.FieldCreateData;
+import com.strandls.species.pojo.FieldHeader;
 import com.strandls.species.pojo.FieldNew;
 import com.strandls.species.pojo.FieldRender;
 import com.strandls.species.pojo.MapAggregationResponse;
@@ -69,6 +71,8 @@ import com.strandls.userGroup.pojo.Featured;
 import com.strandls.userGroup.pojo.FeaturedCreate;
 import com.strandls.userGroup.pojo.UserGroupIbp;
 import com.strandls.userGroup.pojo.UserGroupSpeciesCreateData;
+import com.strandls.species.pojo.FieldTranslation;
+import com.strandls.species.pojo.FieldTranslationUpdateData;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -971,6 +975,78 @@ public class SpeciesController {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
 
+	}
+
+	@POST
+	@Path("/create" + "/field")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	@ValidateUser
+	@ApiOperation(value = "Create a new species field", notes = "Returns the created field", response = FieldNew.class)
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "Unable to create the field", response = String.class),
+			@ApiResponse(code = 401, message = "User not authorized to create field", response = String.class) })
+	public Response createField(@Context HttpServletRequest request,
+			@ApiParam(name = "fieldData", value = "Field Data to create", required = true) FieldCreateData fieldData) {
+		try {
+			FieldNew result = speciesService.createField(request, fieldData);
+			return Response.status(Status.OK).entity(result).build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+	}
+
+	@GET
+	@Path("/field/{fieldId}/translations")
+	@Produces(MediaType.APPLICATION_JSON)
+	@ApiOperation(value = "Get all translations for a field", notes = "Returns list of field headers for all available languages", response = FieldHeader.class, responseContainer = "List")
+	public Response getFieldTranslations(
+			@PathParam("fieldId") @ApiParam(value = "Field ID", required = true) Long fieldId) {
+		try {
+			List<FieldHeader> translations = speciesService.getFieldTranslations(fieldId);
+			return Response.ok().entity(translations).build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+	}
+
+	@GET
+	@Path("/field/{fieldId}/translation/{languageId}")
+	@Produces(MediaType.APPLICATION_JSON)
+	@ApiOperation(value = "Get specific translation for a field", notes = "Returns field header for the specified language", response = FieldHeader.class)
+	public Response getFieldTranslation(
+			@PathParam("fieldId") @ApiParam(value = "Field ID", required = true) Long fieldId,
+			@PathParam("languageId") @ApiParam(value = "Language ID", required = true) Long languageId) {
+		try {
+			FieldHeader translation = speciesService.getFieldTranslation(fieldId, languageId);
+			if (translation == null) {
+				return Response.status(Status.NOT_FOUND).build();
+			}
+			return Response.ok().entity(translation).build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+	}
+
+	@PUT
+	@Path("/field/translations")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	@ValidateUser
+	@ApiOperation(value = "Update translations for multiple fields", notes = "Returns updated field headers", response = FieldHeader.class, responseContainer = "List")
+	@ApiResponses(value = {
+			@ApiResponse(code = 400, message = "Unable to update translations", response = String.class),
+			@ApiResponse(code = 401, message = "User not authorized to update translations", response = String.class)
+	})
+	public Response updateFieldTranslations(
+			@Context HttpServletRequest request,
+			@ApiParam(name = "translationData", value = "List of fields with their translations", required = true) 
+			List<FieldTranslationUpdateData> translationData) {
+		try {
+			List<FieldHeader> result = speciesService.updateFieldTranslations(request, translationData);
+			return Response.ok().entity(result).build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
 	}
 
 }

@@ -12,8 +12,11 @@ import com.strandls.activity.pojo.CommentLoggingData;
 import com.strandls.esmodule.ApiException;
 import com.strandls.resource.pojo.ResourceData;
 import com.strandls.resource.pojo.SpeciesPull;
+import com.strandls.species.pojo.FieldCreateData;
+import com.strandls.species.pojo.FieldHeader;
 import com.strandls.species.pojo.FieldNew;
 import com.strandls.species.pojo.FieldRender;
+import com.strandls.species.pojo.FieldTranslationUpdateData;
 import com.strandls.species.pojo.Reference;
 import com.strandls.species.pojo.ReferenceCreateData;
 import com.strandls.species.pojo.ShowSpeciesPage;
@@ -24,6 +27,7 @@ import com.strandls.species.pojo.SpeciesPermission;
 import com.strandls.species.pojo.SpeciesPullData;
 import com.strandls.species.pojo.SpeciesResourcesPreData;
 import com.strandls.species.pojo.SpeciesTrait;
+
 import com.strandls.taxonomy.pojo.CommonName;
 import com.strandls.taxonomy.pojo.CommonNamesData;
 import com.strandls.taxonomy.pojo.EncryptedKey;
@@ -131,5 +135,14 @@ public interface SpeciesServices {
 	public Reference editReference(HttpServletRequest request, Long speciesId, Reference reference);
 
 	public Reference deleteReference(HttpServletRequest request, Long referenceId);
+
+	public FieldNew createField(HttpServletRequest request, FieldCreateData fieldData);
+
+	public List<FieldHeader> getFieldTranslations(Long fieldId);
+
+	public FieldHeader getFieldTranslation(Long fieldId, Long languageId);
+
+	public List<FieldHeader> updateFieldTranslations(HttpServletRequest request,
+			List<FieldTranslationUpdateData> translationData) throws Exception;
 
 }

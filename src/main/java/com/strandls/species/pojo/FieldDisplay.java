@@ -12,8 +12,8 @@ import java.util.List;
  */
 public class FieldDisplay {
 
-	private FieldNew parentField;
-	private List<FieldNew> childFields;
+	private FieldNewExtended parentField;
+	private List<FieldNewExtended> childFields;
 
 	/**
 	 * 
@@ -26,7 +26,7 @@ public class FieldDisplay {
 	 * @param parentField
 	 * @param childFields
 	 */
-	public FieldDisplay(FieldNew parentField, List<FieldNew> childFields) {
+	public FieldDisplay(FieldNewExtended parentField, List<FieldNewExtended> childFields) {
 		super();
 		this.parentField = parentField;
 		this.childFields = childFields;
@@ -36,15 +36,15 @@ public class FieldDisplay {
 		return parentField;
 	}
 
-	public void setParentField(FieldNew parentField) {
+	public void setParentField(FieldNewExtended parentField) {
 		this.parentField = parentField;
 	}
 
-	public List<FieldNew> getChildFields() {
+	public List<FieldNewExtended> getChildFields() {
 		return childFields;
 	}
 
-	public void setChildFields(List<FieldNew> childFields) {
+	public void setChildFields(List<FieldNewExtended> childFields) {
 		this.childFields = childFields;
 	}
 
