@@ -641,7 +641,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 		try {
 			List<TraitsValuePair> traitValuePairLIst = traitService.getSpeciesTraits(taxonomyId.toString(),
 					language.toString());
-			List<SpeciesTrait> arranged = arrangeTraits(traitValuePairLIst);
+			List<SpeciesTrait> arranged = arrangeTraits(traitValuePairLIst,language);
 			return arranged;
 
 		} catch (Exception e) {
@@ -650,14 +650,14 @@ public class SpeciesServiceImpl implements SpeciesServices {
 		return null;
 	}
 
-	private List<SpeciesTrait> arrangeTraits(List<TraitsValuePair> traitValuePairList) {
+	private List<SpeciesTrait> arrangeTraits(List<TraitsValuePair> traitValuePairList, Long languageId) {
 
 		TreeMap<String, List<TraitsValuePair>> arrangedPair = new TreeMap<String, List<TraitsValuePair>>();
 
 		for (TraitsValuePair traitsValuePair : traitValuePairList) {
 			String name = "";
 			Long fieldId = traitsValuePair.getTraits().getFieldId();
-			name = fieldHierarchyString(fieldId);
+			name = fieldHierarchyString(fieldId,languageId);
 			if (arrangedPair.containsKey(name)) {
 				List<TraitsValuePair> pairList = arrangedPair.get(name);
 				pairList.add(traitsValuePair);
@@ -721,12 +721,16 @@ public class SpeciesServiceImpl implements SpeciesServices {
 	}
 
 
-	private String fieldHierarchyString(Long fieldId) {
+	private String fieldHierarchyString(Long fieldId, Long language) {
 		FieldNew fieldNew = null;
 		String name = "";
 		do {
 			fieldNew = fieldNewDao.findById(fieldId);
-			name = fieldHeaderDao.findByFieldId(fieldNew.getId(), defaultLanguageId).getHeader() + " > " + name;
+			FieldHeader header = fieldHeaderDao.findByFieldId(fieldNew.getId(), language);
+			if (header == null) {
+			    header = fieldHeaderDao.findByFieldId(fieldNew.getId(), defaultLanguageId);
+			}
+			name = header.getHeader() + " > " + name;
 			fieldId = fieldNew.getParentId();
 
 		} while (fieldNew.getParentId() != null);
@@ -738,7 +742,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 	public List<SpeciesTrait> getAllSpeciesTraits(Long language) {
 		try {
 			List<TraitsValuePair> traitsValuePairList = traitService.getAllSpeciesTraits(language.toString());
-			List<SpeciesTrait> arranged = arrangeTraits(traitsValuePairList);
+			List<SpeciesTrait> arranged = arrangeTraits(traitsValuePairList,language);
 			return arranged;
 		} catch (Exception e) {
 			logger.error(e.getMessage());
@@ -976,7 +980,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 //				add / update references
 				updateCreateReferences(speciesField.getId(), sfdata.getReferences());
 
-				String fieldHierarchy = fieldHierarchyString(sfdata.getFieldId());
+				String fieldHierarchy = fieldHierarchyString(sfdata.getFieldId(),defaultLanguageId);
 
 				if (sfdata.getIsEdit()) {
 					String desc = "Updated species field : " + fieldHierarchy;
@@ -1099,7 +1103,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 			speciesfield.setIsDeleted(true);
 			speciesFieldDao.update(speciesfield);
 
-			String fieldHierarchy = fieldHierarchyString(speciesfield.getFieldId());
+			String fieldHierarchy = fieldHierarchyString(speciesfield.getFieldId(),defaultLanguageId);
 
 			String desc = "Deleted species field : " + fieldHierarchy;
 			logActivity.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), desc, speciesfield.getSpeciesId(),
