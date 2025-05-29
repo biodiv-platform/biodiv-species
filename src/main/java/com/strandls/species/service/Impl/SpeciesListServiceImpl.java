@@ -9,6 +9,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
@@ -44,6 +47,7 @@ import com.strandls.taxonomy.pojo.TaxonomicNames;
 public class SpeciesListServiceImpl implements SpeciesListService {
 
 	private final Logger logger = LoggerFactory.getLogger(SpeciesListServiceImpl.class);
+	private final ExecutorService executor = Executors.newFixedThreadPool(20);
 
 //	Dao injection
 
@@ -136,9 +140,13 @@ public class SpeciesListServiceImpl implements SpeciesListService {
 	private void getAggregateLatch(String index, String type, String filter, MapSearchQuery searchQuery,
 			Map<String, AggregationResponse> mapResponse, CountDownLatch latch, String namedAgg) {
 
-		LatchThreadWorker worker = new LatchThreadWorker(index, type, filter, searchQuery, mapResponse, namedAgg, latch,
-				esService);
-		worker.start();
+//		LatchThreadWorker worker = new LatchThreadWorker(index, type, filter, searchQuery, mapResponse, namedAgg, latch,
+//				esService);
+		
+		executor.submit(new LatchThreadWorker(index, type, filter, searchQuery, mapResponse, namedAgg, latch,
+				esService));
+		
+		//worker.start();
 
 	}
 
@@ -254,11 +262,21 @@ public class SpeciesListServiceImpl implements SpeciesListService {
 					latch, null);
 		}
 
+//		try {
+//			latch.await();
+//		} catch (Exception e) {
+//			logger.error(e.getMessage());
+//			Thread.currentThread().interrupt();
+//		}
+		
 		try {
-			latch.await();
-		} catch (Exception e) {
-			logger.error(e.getMessage());
-			Thread.currentThread().interrupt();
+		    if (!latch.await(30, TimeUnit.SECONDS)) {  // Timeout after 30s
+		        logger.warn("Timed out waiting for aggregations");
+		        // Handle partial results or fail fast
+		    }
+		} catch (InterruptedException e) {
+		    Thread.currentThread().interrupt();
+		    throw new RuntimeException("Aggregation interrupted", e);
 		}
 
 		aggregationResponse.setGroupSpeciesName(mapAggResponse.get(SpeciesIndex.SGROUP.getValue()) != null
