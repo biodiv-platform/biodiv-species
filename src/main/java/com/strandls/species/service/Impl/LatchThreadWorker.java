@@ -67,9 +67,12 @@ public class LatchThreadWorker extends Thread {
 			else
 				mapResponse.put(filter, response);
 
-			latch.countDown();
+			// latch.countDown();
 		} catch (Exception e) {
-			logger.error(e.getMessage());
+			// logger.error(e.getMessage());
+			logger.error("Aggregation failed for filter {}: {}", filter, e.getMessage());
+		} finally {
+			latch.countDown();
 		}
 	}
 
