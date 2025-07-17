@@ -213,7 +213,7 @@ public class SpeciesController {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
 	}
-	
+
 	@GET
 	@Path(ApiConstants.TRAITS + "/{languageId}")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -239,7 +239,8 @@ public class SpeciesController {
 	@ApiOperation(value = "Get all the species traits field wise by taxonomyId", notes = "returns all the traits CategoryWise", response = SpeciesTrait.class, responseContainer = "List")
 	@ApiResponses(value = { @ApiResponse(code = 400, message = "Unable to fetch the traits", response = String.class) })
 
-	public Response getSpeciesTraitsByTaxonomy(@PathParam("taxonomyId") String taxonomyId, @PathParam("languageId") String languageId) {
+	public Response getSpeciesTraitsByTaxonomy(@PathParam("taxonomyId") String taxonomyId,
+			@PathParam("languageId") String languageId) {
 		try {
 			Long language = Long.parseLong(languageId);
 			Long taxon = Long.parseLong(taxonomyId);
@@ -1035,18 +1036,37 @@ public class SpeciesController {
 	@ApiOperation(value = "Update translations for multiple fields", notes = "Returns updated field headers", response = FieldHeader.class, responseContainer = "List")
 	@ApiResponses(value = {
 			@ApiResponse(code = 400, message = "Unable to update translations", response = String.class),
-			@ApiResponse(code = 401, message = "User not authorized to update translations", response = String.class)
-	})
-	public Response updateFieldTranslations(
-			@Context HttpServletRequest request,
-			@ApiParam(name = "translationData", value = "List of fields with their translations", required = true) 
-			List<FieldTranslationUpdateData> translationData) {
+			@ApiResponse(code = 401, message = "User not authorized to update translations", response = String.class) })
+	public Response updateFieldTranslations(@Context HttpServletRequest request,
+			@ApiParam(name = "translationData", value = "List of fields with their translations", required = true) List<FieldTranslationUpdateData> translationData) {
 		try {
 			List<FieldHeader> result = speciesService.updateFieldTranslations(request, translationData);
 			return Response.ok().entity(result).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
+	}
+
+	@PUT
+	@Path(ApiConstants.UPDATE + "/{speciesId}" + "/{taxonId}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+
+	@ValidateUser
+
+	@ApiOperation(value = "update taxonId  of a species Page", notes = "update taoxnId", response = ShowSpeciesPage.class)
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "uable to unfollow", response = String.class) })
+
+	public Response updateTaxonId(@Context HttpServletRequest request, @PathParam("speciesId") String speciesId,
+			@PathParam("taxonId") String taxonId) {
+		try {
+			ShowSpeciesPage result = speciesService.updateTaxonId(request, Long.parseLong(speciesId),
+					Long.parseLong(taxonId));
+			return Response.status(Status.OK).entity(result).build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+
 	}
 
 }

@@ -312,6 +312,23 @@ public class SpeciesServiceImpl implements SpeciesServices {
 		return null;
 	}
 
+	@Override
+	public ShowSpeciesPage updateTaxonId(HttpServletRequest request, Long speciesId, Long taxonId) {
+		try {
+			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
+			JSONArray userRoles = (JSONArray) profile.getAttribute("roles");
+			if (!userRoles.contains("ROLE_ADMIN")) {
+				throw new Exception("User not authorized to update taxon id");
+			}
+			Species updatedSpecies = speciesDao.updateTaxonConceptId(speciesId, taxonId);
+			ESSpeciesUpdate(updatedSpecies.getId());
+			return showSpeciesPageFromES(speciesId, null);
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return null;
+	}
+
 	/**
 	 * Removes objects from the list where all fields are null recursively
 	 * 
