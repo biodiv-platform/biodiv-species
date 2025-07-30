@@ -5,12 +5,11 @@ package com.strandls.species.dao;
 
 import java.util.List;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.query.Query;
-import org.hibernate.type.LongType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -93,7 +92,7 @@ public class SpeciesDao extends AbstractDAO<Species, Long> {
 		Session session = sessionFactory.openSession();
 		Long result = null;
 		try {
-			Query<Long> query = session.createNativeQuery(qry).addScalar("count", LongType.INSTANCE);
+			Query<Long> query = session.createQuery(qry, Long.class);
 			result = query.getSingleResult();
 		} catch (Exception e) {
 			logger.error(e.getMessage());

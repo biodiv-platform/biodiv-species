@@ -3,15 +3,19 @@
  */
 package com.strandls.species.service.Impl;
 
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.inject.Inject;
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.core.HttpHeaders;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import jakarta.inject.Inject;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.ws.rs.core.HttpHeaders;
 
 import org.pac4j.core.profile.CommonProfile;
 import org.slf4j.Logger;
@@ -67,7 +71,8 @@ public class SpeciesHelper {
 				filesDTO.setFiles(fileList);
 				filesDTO.setFolder("img");
 				filesDTO.setModule("SPECIES");
-				fileMap = fileUploadService.moveFiles(filesDTO);
+				String json = fileUploadService.moveFiles(filesDTO);
+				fileMap = new ObjectMapper().readValue(json, new TypeReference<>() {});
 			}
 
 			for (SpeciesResourceData resourceData : resourceDataList) {
@@ -101,7 +106,7 @@ public class SpeciesHelper {
 				}
 				resource.setUrl(resourceData.getUrl());
 				resource.setRating(resourceData.getRating());
-				resource.setUploadTime(new Date());
+				resource.setUploadTime(OffsetDateTime.now(ZoneId.systemDefault()));
 				resource.setUploaderId(userId);
 				resource.setContext(context.toUpperCase());
 				resource.setLanguageId(defaultLanguageId);

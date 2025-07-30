@@ -1,20 +1,13 @@
 package com.strandls.species.util;
 
-import java.sql.Types;
+import org.hibernate.dialect.PostgreSQLDialect;
 
-import org.hibernate.dialect.PostgreSQL95Dialect;
-import org.hibernate.spatial.dialect.postgis.PostgisDialect;
-
-/**
- * Custom PostgreSQL dialect that registers the ltree type
- */
-public class CustomPostgisDialect extends PostgisDialect {
-
-	public CustomPostgisDialect() {
-		super();
-		// Register the ltree type with our custom handler
-		registerColumnType(Types.OTHER, "ltree");
-		// Register the custom type
-		registerHibernateType(Types.OTHER, "com.strandls.species.util.LTreeType");
-	}
+public class CustomPostgisDialect extends PostgreSQLDialect {
+    public CustomPostgisDialect() {
+        super();
+        // Optionally register ltree as a recognized type for metadata
+        // This helps Hibernate know about the `ltree` type
+        // You may add mapping if needed, but usually columnDefinition="ltree" in @Column is enough
+        // this.registerColumnType(Types.OTHER, "ltree");
+    }
 }

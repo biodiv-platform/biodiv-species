@@ -3,9 +3,9 @@
  */
 package com.strandls.species;
 
-import javax.ws.rs.core.HttpHeaders;
+import jakarta.ws.rs.core.HttpHeaders;
 
-import com.strandls.activity.controller.ActivitySerivceApi;
+import com.strandls.activity.controller.ActivityServiceApi;
 import com.strandls.file.api.UploadApi;
 import com.strandls.observation.controller.ObservationServiceApi;
 import com.strandls.resource.controllers.ResourceServicesApi;
@@ -70,7 +70,7 @@ public class Headers {
 		return observationService;
 	}
 
-	public ActivitySerivceApi addActivityHeader(ActivitySerivceApi activityService, String authHeaders) {
+	public ActivityServiceApi addActivityHeader(ActivityServiceApi activityService, String authHeaders) {
 		activityService.getApiClient().addDefaultHeader(HttpHeaders.AUTHORIZATION, authHeaders);
 		return activityService;
 	}

@@ -21,9 +21,9 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
-import javax.inject.Inject;
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.core.HttpHeaders;
+import jakarta.inject.Inject;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.ws.rs.core.HttpHeaders;
 
 import org.pac4j.core.profile.CommonProfile;
 import org.slf4j.Logger;
@@ -34,7 +34,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.strandls.activity.controller.ActivitySerivceApi;
+import com.strandls.activity.controller.ActivityServiceApi;
 import com.strandls.activity.pojo.Activity;
 import com.strandls.activity.pojo.CommentLoggingData;
 import com.strandls.activity.pojo.MailData;
@@ -179,7 +179,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 //	injection of services
 
 	@Inject
-	private ActivitySerivceApi activityService;
+	private ActivityServiceApi activityService;
 
 	@Inject
 	private EsServicesApi esService;
@@ -1288,8 +1288,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 				objectIds.add(obs.getId());
 			}
 
-			List<SpeciesPull> resources = resourceServices.getBulkResources("observation", offset.toString(),
-					objectIds);
+			List<SpeciesPull> resources = resourceServices.getBulkResources("observation", objectIds, offset.toString());
 
 			return resources;
 
