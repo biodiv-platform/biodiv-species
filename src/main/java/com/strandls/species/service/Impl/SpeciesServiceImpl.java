@@ -320,8 +320,19 @@ public class SpeciesServiceImpl implements SpeciesServices {
 			if (!userRoles.contains("ROLE_ADMIN")) {
 				throw new Exception("User not authorized to update taxon id");
 			}
+			
+			// Get the species before update to capture old taxon ID for activity logging
+			Species originalSpecies = speciesDao.findById(speciesId);
+			Long oldTaxonId = originalSpecies.getTaxonConceptId();
+			
 			Species updatedSpecies = speciesDao.updateTaxonConceptId(speciesId, taxonId);
 			ESSpeciesUpdate(updatedSpecies.getId());
+			
+			// Log activity for taxon ID update
+			logActivity.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION),
+					"Updated taxon ID from " + oldTaxonId + " to " + taxonId, speciesId, speciesId, "species",
+					taxonId, "Updated species", getSpeciesMailData(request, updatedSpecies));
+			
 			return showSpeciesPageFromES(speciesId, null);
 		} catch (Exception e) {
 			logger.error(e.getMessage());
