@@ -66,7 +66,7 @@ import com.strandls.taxonomy.pojo.TaxonomySave;
 import com.strandls.traits.pojo.FactValuePair;
 import com.strandls.traits.pojo.FactsUpdateData;
 import com.strandls.user.pojo.Follow;
-import com.strandls.userGroup.controller.UserGroupSerivceApi;
+import com.strandls.userGroup.controller.UserGroupServiceApi;
 import com.strandls.userGroup.pojo.Featured;
 import com.strandls.userGroup.pojo.FeaturedCreate;
 import com.strandls.userGroup.pojo.UserGroupIbp;
@@ -101,7 +101,7 @@ public class SpeciesController {
 	private ObjectMapper objectMapper;
 
 	@Inject
-	private UserGroupSerivceApi ugService;
+	private UserGroupServiceApi ugService;
 
 	@Inject
 	private EsServicesApi esService;
@@ -193,7 +193,7 @@ public class SpeciesController {
 		}
 	)
 	public Response renderFields(
-		@QueryParam("langId") String langId, 
+		@QueryParam("langId") String langId,
 		@QueryParam("userGroupId") String userGroupId) {
 
 		try {
@@ -266,7 +266,7 @@ public class SpeciesController {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
 	}
-	
+
 	@GET
 	@Path(ApiConstants.TRAITS + "/{languageId}")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -351,7 +351,7 @@ public class SpeciesController {
 		}
 	)
 	public Response updateUserGroupSpecies(@Context HttpServletRequest request, @PathParam("speciesId") String speciesId, List<Long> userGroupList) {
-		
+
 		try {
 			UserGroupSpeciesCreateData ugSpeciesCreateData = new UserGroupSpeciesCreateData();
 			ugSpeciesCreateData.setUserGroupIds(userGroupList);
@@ -380,7 +380,7 @@ public class SpeciesController {
 		}
 	)
 	public Response createFeatured(@Context HttpServletRequest request, FeaturedCreate featuredCreate) {
-		
+
 		try {
 			List<Featured> result = speciesService.createFeatured(request, featuredCreate);
 			return Response.status(Status.OK).entity(result).build();
@@ -409,7 +409,7 @@ public class SpeciesController {
 		}
 	)
 	public Response unFeatured(@Context HttpServletRequest request, @PathParam("speciesId") String speciesId, List<Long> userGroupList) {
-		
+
 		try {
 			List<Featured> result = speciesService.unFeatured(request, speciesId, userGroupList);
 			return Response.status(Status.OK).entity(result).build();
@@ -707,7 +707,7 @@ public class SpeciesController {
 			@ApiResponse(responseCode = "400", description = "unable to log the comment")
 		}
 	)
-	public Response addSpeciesComment(@Context HttpServletRequest request, CommentLoggingData loggingData) {    
+	public Response addSpeciesComment(@Context HttpServletRequest request, CommentLoggingData loggingData) {
     try {
         Activity result = speciesService.addSpeciesComment(request, loggingData);
         if (result != null)
@@ -739,7 +739,7 @@ public class SpeciesController {
 	)
 	public Response deleteComment(@Context HttpServletRequest request,
                               CommentLoggingData commentDatas,
-                              @PathParam("commentId") String commentId) { 		
+                              @PathParam("commentId") String commentId) {
 		try {
 			Activity result = speciesService.removeSpeciesComment(request, commentDatas, commentId);
 			return Response.status(Status.OK).entity(result).build();
@@ -767,7 +767,7 @@ public class SpeciesController {
 	public Response checkSpeciesPageExist(
 		@Context HttpServletRequest request,
 		@QueryParam("taxonId") String taxonId) {
-		
+
 		try {
 			Long taxonomyId = Long.parseLong(taxonId);
 			Long result = speciesService.checkSpeciesPageExist(request, taxonomyId);
@@ -796,7 +796,7 @@ public class SpeciesController {
 			@ApiResponse(responseCode = "400", description = "unable to create the taxonomy")
 		}
 	)
-	public Response createTaxonomy(@Context HttpServletRequest request, TaxonomySave taxonomySave) { 
+	public Response createTaxonomy(@Context HttpServletRequest request, TaxonomySave taxonomySave) {
 		try {
 			TaxonomyDefinition result = speciesService.createTaxonomy(request, taxonomySave);
 			if (result != null)
@@ -855,7 +855,7 @@ public class SpeciesController {
 	)
 	public Response addUpdateSynonyms(@Context HttpServletRequest request,
 									@PathParam("speciesId") String speciesId,
-									SynonymData synonymData) {		
+									SynonymData synonymData) {
 		try {
 			List<TaxonomyDefinition> result = speciesService.updateAddSynonyms(request, speciesId, synonymData);
 			if (result != null)
@@ -939,7 +939,7 @@ public Response removeSynonyms(
 		}
 	)
 	public Response requestPermission(@Context HttpServletRequest request, PermissionData permissionData) {
-		
+
 		try {
 			Boolean result = speciesService.sendPermissionRequest(request, permissionData);
 			if (result != null) {
@@ -973,7 +973,7 @@ public Response removeSynonyms(
 	)
 	public Response grantPermissionrequest(@Context HttpServletRequest request, EncryptedKey encryptedKey) {
 
-		
+
 		try {
 			Boolean result = speciesService.sendPermissionGrant(request, encryptedKey);
 			if (result)
@@ -1003,7 +1003,7 @@ public Response removeSynonyms(
 	public Response followSpecies(
 		@Context HttpServletRequest request,
 		@PathParam("speciesId") String speciesId) {
-		
+
 		try {
 			Long sId = Long.parseLong(speciesId);
 			Follow result = speciesService.followRequest(request, sId);
@@ -1031,7 +1031,7 @@ public Response removeSynonyms(
 public Response unFollowSpecies(
     @Context HttpServletRequest request,
     @PathParam("speciesId") String speciesId) {
-    
+
     try {
         Long sId = Long.parseLong(speciesId);
         Follow result = speciesService.unFollowRequest(request, sId);
@@ -1060,7 +1060,7 @@ public Response unFollowSpecies(
 public Response removeSpeciesPage(
     @Context HttpServletRequest request,
     @PathParam("speciesId") String speciesId) {
-    
+
     try {
         Long sId = Long.parseLong(speciesId);
         Boolean result = speciesService.removeSpeciesPage(request, sId);
@@ -1199,7 +1199,7 @@ public Response removeSpeciesPage(
 	)
 	public Response createReference(@Context HttpServletRequest request,
 									List<ReferenceCreateData> referenceCreateData,
-									@PathParam("speciesId") String speciesId) {		
+									@PathParam("speciesId") String speciesId) {
 		try {
 				List<com.strandls.species.pojo.Reference> result = speciesService.createReference(request,
 						Long.parseLong(speciesId), referenceCreateData);
@@ -1259,7 +1259,7 @@ public Response removeSpeciesPage(
 	public Response deleteReference(
 		@Context HttpServletRequest request,
 		@PathParam("referenceId") String referenceId) {
-		
+
 		try {
 			com.strandls.species.pojo.Reference result = speciesService.deleteReference(
 				request, Long.valueOf(referenceId));
@@ -1287,7 +1287,7 @@ public Response removeSpeciesPage(
 			@ApiResponse(responseCode = "401", description = "User not authorized to create field")
 		}
 	)
-	public Response createField(@Context HttpServletRequest request, FieldCreateData fieldData) {		
+	public Response createField(@Context HttpServletRequest request, FieldCreateData fieldData) {
 		try {
 			FieldNew result = speciesService.createField(request, fieldData);
 			return Response.status(Status.OK).entity(result).build();
@@ -1337,7 +1337,7 @@ public Response removeSpeciesPage(
 		}
 	)
 	public Response getFieldTranslation(@PathParam("fieldId") Long fieldId,
-										@PathParam("languageId") Long languageId) {		
+										@PathParam("languageId") Long languageId) {
 		try {
 			FieldHeader translation = speciesService.getFieldTranslation(fieldId, languageId);
 			if (translation == null) {
@@ -1367,7 +1367,7 @@ public Response removeSpeciesPage(
 		}
 	)
 	public Response updateFieldTranslations(@Context HttpServletRequest request,
-											List<FieldTranslationUpdateData> translationData) {		
+											List<FieldTranslationUpdateData> translationData) {
 		try {
 			List<FieldHeader> result = speciesService.updateFieldTranslations(request, translationData);
 			return Response.ok().entity(result).build();

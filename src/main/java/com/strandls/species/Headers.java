@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package com.strandls.species;
 
@@ -15,16 +15,16 @@ import com.strandls.taxonomy.controllers.TaxonomyServicesApi;
 import com.strandls.taxonomy.controllers.TaxonomyTreeServicesApi;
 import com.strandls.traits.controller.TraitsServiceApi;
 import com.strandls.user.controller.UserServiceApi;
-import com.strandls.userGroup.controller.UserGroupSerivceApi;
+import com.strandls.userGroup.controller.UserGroupServiceApi;
 
 /**
  * @author Abhishek Rudra
  *
- * 
+ *
  */
 public class Headers {
 
-	public UserGroupSerivceApi addUserGroupHeader(UserGroupSerivceApi ugService, String authHeader) {
+	public UserGroupServiceApi addUserGroupHeader(UserGroupServiceApi ugService, String authHeader) {
 		ugService.getApiClient().addDefaultHeader(HttpHeaders.AUTHORIZATION, authHeader);
 		return ugService;
 	}

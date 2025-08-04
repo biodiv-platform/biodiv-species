@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package com.strandls.species.service.Impl;
 
@@ -33,7 +33,7 @@ import com.strandls.species.util.PropertyFileUtil;
 /**
  * @author Abhishek Rudra
  *
- * 
+ *
  */
 public class SpeciesHelper {
 
@@ -71,8 +71,7 @@ public class SpeciesHelper {
 				filesDTO.setFiles(fileList);
 				filesDTO.setFolder("img");
 				filesDTO.setModule("SPECIES");
-				String json = fileUploadService.moveFiles(filesDTO);
-				fileMap = new ObjectMapper().readValue(json, new TypeReference<>() {});
+				fileMap = fileUploadService.moveFiles(filesDTO).getData();
 			}
 
 			for (SpeciesResourceData resourceData : resourceDataList) {
@@ -106,7 +105,7 @@ public class SpeciesHelper {
 				}
 				resource.setUrl(resourceData.getUrl());
 				resource.setRating(resourceData.getRating());
-				resource.setUploadTime(OffsetDateTime.now(ZoneId.systemDefault()));
+				resource.setUploadTime(new java.util.Date());
 				resource.setUploaderId(userId);
 				resource.setContext(context.toUpperCase());
 				resource.setLanguageId(defaultLanguageId);

@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package com.strandls.species;
 
@@ -51,7 +51,7 @@ import com.strandls.taxonomy.controllers.TaxonomyServicesApi;
 import com.strandls.taxonomy.controllers.TaxonomyTreeServicesApi;
 import com.strandls.traits.controller.TraitsServiceApi;
 import com.strandls.user.controller.UserServiceApi;
-import com.strandls.userGroup.controller.UserGroupSerivceApi;
+import com.strandls.userGroup.controller.UserGroupServiceApi;
 
 /**
  * @author Abhishek Rudra
@@ -98,7 +98,7 @@ public class SpeciesServeletContextListener extends GuiceServletContextListener 
 				bind(UploadApi.class).in(Scopes.SINGLETON);
 				bind(ResourceServicesApi.class).in(Scopes.SINGLETON);
 				bind(TraitsServiceApi.class).in(Scopes.SINGLETON);
-				bind(UserGroupSerivceApi.class).in(Scopes.SINGLETON);
+				bind(UserGroupServiceApi.class).in(Scopes.SINGLETON);
 				bind(UserServiceApi.class).in(Scopes.SINGLETON);
 				bind(TaxonomyServicesApi.class).in(Scopes.SINGLETON);
 				bind(TaxonomyTreeServicesApi.class).in(Scopes.SINGLETON);

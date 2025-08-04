@@ -21,7 +21,7 @@ import com.strandls.esmodule.ApiException;
 import com.strandls.esmodule.controllers.EsServicesApi;
 import com.strandls.species.pojo.ShowSpeciesPage;
 import com.strandls.species.service.SpeciesServices;
-import com.strandls.userGroup.controller.UserGroupSerivceApi;
+import com.strandls.userGroup.controller.UserGroupServiceApi;
 import com.strandls.userGroup.pojo.UserGroupIbp;
 
 public class ESUpdate {
@@ -35,7 +35,7 @@ public class ESUpdate {
 	private SpeciesServices speciesService;
 
 	@Inject
-	private UserGroupSerivceApi ugService;
+	private UserGroupServiceApi ugService;
 
 	@Inject
 	private ObjectMapper om;
