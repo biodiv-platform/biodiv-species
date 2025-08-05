@@ -300,7 +300,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 
 				ShowSpeciesPage showSpeciesPage = new ShowSpeciesPage(species, prefferedCommonName, speciesGroup,
 						breadCrumbs, taxonomyDefinition, resourceData, fieldData, facts, userGroupList, featured, names,
-						null, documentMetaList, referencesList);
+						temporalData, documentMetaList, referencesList);
 
 				return showSpeciesPage;
 
