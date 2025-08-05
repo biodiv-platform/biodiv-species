@@ -293,10 +293,10 @@ public class SpeciesServiceImpl implements SpeciesServices {
 				TaxonomicNames names = taxonomyService.getNames(species.getTaxonConceptId().toString());
 
 				// temporal data
-//				ObservationInfo observationInfo = esService.getObservationInfo("extended_observation", "_doc",
-//						species.getTaxonConceptId().toString(), false);
+				ObservationInfo observationInfo = esService.getObservationInfo("extended_observation", "_doc",
+						species.getTaxonConceptId().toString(), false);
 
-//				Map<String, Long> temporalData = observationInfo.getMonthAggregation();
+				Map<String, Long> temporalData = observationInfo.getMonthAggregation();
 
 				ShowSpeciesPage showSpeciesPage = new ShowSpeciesPage(species, prefferedCommonName, speciesGroup,
 						breadCrumbs, taxonomyDefinition, resourceData, fieldData, facts, userGroupList, featured, names,
