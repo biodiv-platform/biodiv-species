@@ -327,10 +327,12 @@ public class SpeciesServiceImpl implements SpeciesServices {
 
 			Species updatedSpecies = speciesDao.updateTaxonConceptId(speciesId, taxonId);
 			ESSpeciesUpdate(updatedSpecies.getId());
+			
+			String activityDesc="Updated taxon id from "+oldTaxonId+" to "+updatedSpecies.getTaxonConceptId();
 
 			// Log activity for taxon ID update
-			logActivity.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), "Updated taxon ID", speciesId,
-					speciesId, "species", taxonId, "Updated species", getSpeciesMailData(request, updatedSpecies));
+			logActivity.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), activityDesc, speciesId,
+					speciesId, "species", taxonId, "Updated taxon ID", getSpeciesMailData(request, updatedSpecies));
 
 			return showSpeciesPageFromES(speciesId, null);
 		} catch (Exception e) {
