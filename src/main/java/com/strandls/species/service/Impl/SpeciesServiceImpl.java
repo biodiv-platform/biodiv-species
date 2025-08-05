@@ -293,14 +293,14 @@ public class SpeciesServiceImpl implements SpeciesServices {
 				TaxonomicNames names = taxonomyService.getNames(species.getTaxonConceptId().toString());
 
 				// temporal data
-				ObservationInfo observationInfo = esService.getObservationInfo("extended_observation", "_doc",
-						species.getTaxonConceptId().toString(), false);
+//				ObservationInfo observationInfo = esService.getObservationInfo("extended_observation", "_doc",
+//						species.getTaxonConceptId().toString(), false);
 
-				Map<String, Long> temporalData = observationInfo.getMonthAggregation();
+//				Map<String, Long> temporalData = observationInfo.getMonthAggregation();
 
 				ShowSpeciesPage showSpeciesPage = new ShowSpeciesPage(species, prefferedCommonName, speciesGroup,
 						breadCrumbs, taxonomyDefinition, resourceData, fieldData, facts, userGroupList, featured, names,
-						temporalData, documentMetaList, referencesList);
+						null, documentMetaList, referencesList);
 
 				return showSpeciesPage;
 
@@ -325,14 +325,22 @@ public class SpeciesServiceImpl implements SpeciesServices {
 			Species originalSpecies = speciesDao.findById(speciesId);
 			Long oldTaxonId = originalSpecies.getTaxonConceptId();
 
+			TaxonomyDefinition oldTaxon = taxonomyService.getTaxonomyConceptName(oldTaxonId.toString());
+			String oldTaxonName = oldTaxon.getName();
+
 			Species updatedSpecies = speciesDao.updateTaxonConceptId(speciesId, taxonId);
+
+			TaxonomyDefinition newTaxon = taxonomyService.getTaxonomyConceptName(taxonId.toString());
+			String newTaxonName = newTaxon.getName();
+
 			ESSpeciesUpdate(updatedSpecies.getId());
-			
-			String activityDesc="Updated taxon id from "+oldTaxonId+" to "+updatedSpecies.getTaxonConceptId();
+
+			String activityDesc = "Updated taxon from " + oldTaxonName + "(" + oldTaxonId + ")" + " to " + newTaxonName
+					+ "(" + updatedSpecies.getTaxonConceptId() + ")";
 
 			// Log activity for taxon ID update
-			logActivity.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), activityDesc, speciesId,
-					speciesId, "species", taxonId, "Updated taxon ID", getSpeciesMailData(request, updatedSpecies));
+			logActivity.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), activityDesc, speciesId, speciesId,
+					"species", taxonId, "Updated taxon ID", getSpeciesMailData(request, updatedSpecies));
 
 			return showSpeciesPageFromES(speciesId, null);
 		} catch (Exception e) {
