@@ -335,8 +335,8 @@ public class SpeciesServiceImpl implements SpeciesServices {
 
 			ESSpeciesUpdate(updatedSpecies.getId());
 
-			String activityDesc = "Updated taxon from " + oldTaxonName + "(" + oldTaxonId + ")" + " to " + newTaxonName
-					+ "(" + updatedSpecies.getTaxonConceptId() + ")";
+			String activityDesc = "Updated taxon from " + oldTaxonName + "(Taxon ID:" + oldTaxonId + ")" + " to " + newTaxonName
+					+ "(Taxon ID:" + updatedSpecies.getTaxonConceptId() + ")";
 
 			// Log activity for taxon ID update
 			logActivity.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), activityDesc, speciesId, speciesId,
