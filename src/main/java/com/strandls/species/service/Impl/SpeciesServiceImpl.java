@@ -312,6 +312,43 @@ public class SpeciesServiceImpl implements SpeciesServices {
 		return null;
 	}
 
+	@Override
+	public ShowSpeciesPage updateTaxonId(HttpServletRequest request, Long speciesId, Long taxonId) {
+		try {
+			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
+			JSONArray userRoles = (JSONArray) profile.getAttribute("roles");
+			if (!userRoles.contains("ROLE_ADMIN")) {
+				throw new Exception("User not authorized to update taxon id");
+			}
+
+			// Get the species before update to capture old taxon ID for activity logging
+			Species originalSpecies = speciesDao.findById(speciesId);
+			Long oldTaxonId = originalSpecies.getTaxonConceptId();
+
+			TaxonomyDefinition oldTaxon = taxonomyService.getTaxonomyConceptName(oldTaxonId.toString());
+			String oldTaxonName = oldTaxon.getName();
+
+			Species updatedSpecies = speciesDao.updateTaxonConceptId(speciesId, taxonId);
+
+			TaxonomyDefinition newTaxon = taxonomyService.getTaxonomyConceptName(taxonId.toString());
+			String newTaxonName = newTaxon.getName();
+
+			ESSpeciesUpdate(updatedSpecies.getId());
+
+			String activityDesc = "Updated taxon from " + oldTaxonName + "(Taxon ID:" + oldTaxonId + ")" + " to " + newTaxonName
+					+ "(Taxon ID:" + updatedSpecies.getTaxonConceptId() + ")";
+
+			// Log activity for taxon ID update
+			logActivity.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), activityDesc, speciesId, speciesId,
+					"species", taxonId, "Updated taxon ID", getSpeciesMailData(request, updatedSpecies));
+
+			return showSpeciesPageFromES(speciesId, null);
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return null;
+	}
+
 	/**
 	 * Removes objects from the list where all fields are null recursively
 	 * 

@@ -57,7 +57,7 @@ public interface SpeciesServices {
 	public List<SpeciesTrait> getSpeciesTraitsByTaxonomyId(Long taxonomyId, Long language);
 
 	public List<SpeciesTrait> getAllSpeciesTraits(Long language);
-	
+
 	public List<SpeciesTrait> getAllTraits(Long language);
 
 //	edits in speceis show page
@@ -144,5 +144,7 @@ public interface SpeciesServices {
 
 	public List<FieldHeader> updateFieldTranslations(HttpServletRequest request,
 			List<FieldTranslationUpdateData> translationData) throws Exception;
+
+	public ShowSpeciesPage updateTaxonId(HttpServletRequest request, Long speciesId, Long taxonId);
 
 }

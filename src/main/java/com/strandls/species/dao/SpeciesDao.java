@@ -104,4 +104,40 @@ public class SpeciesDao extends AbstractDAO<Species, Long> {
 
 	}
 
+	public Species updateTaxonConceptId(Long speciesId, Long taxonId) {
+		String qry = "UPDATE Species SET taxonConceptId = :taxonId, lastUpdated = :lastUpdated WHERE id = :speciesId";
+		Session session = sessionFactory.openSession();
+		Species result = null;
+
+		try {
+			session.beginTransaction();
+			Query query = session.createQuery(qry);
+			query.setParameter("taxonId", taxonId);
+			query.setParameter("speciesId", speciesId);
+			query.setParameter("lastUpdated", new java.util.Date());
+
+			int rowsUpdated = query.executeUpdate();
+			session.getTransaction().commit();
+
+			if (rowsUpdated > 0) {
+				// Fetch the updated species object
+				result = session.get(Species.class, speciesId);
+				logger.info("Successfully updated taxonConceptId for species ID: {} to taxonId: {}", speciesId,
+						taxonId);
+			} else {
+				logger.warn("No species found with ID: {}", speciesId);
+			}
+
+		} catch (Exception e) {
+			if (session.getTransaction() != null) {
+				session.getTransaction().rollback();
+			}
+			logger.error("Error updating taxonConceptId for species ID: {} - {}", speciesId, e.getMessage());
+		} finally {
+			session.close();
+		}
+
+		return result;
+	}
+
 }
