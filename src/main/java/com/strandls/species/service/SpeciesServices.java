@@ -5,8 +5,6 @@ package com.strandls.species.service;
 
 import java.util.List;
 
-import javax.servlet.http.HttpServletRequest;
-
 import com.strandls.activity.pojo.Activity;
 import com.strandls.activity.pojo.CommentLoggingData;
 import com.strandls.esmodule.ApiException;
@@ -27,7 +25,6 @@ import com.strandls.species.pojo.SpeciesPermission;
 import com.strandls.species.pojo.SpeciesPullData;
 import com.strandls.species.pojo.SpeciesResourcesPreData;
 import com.strandls.species.pojo.SpeciesTrait;
-
 import com.strandls.taxonomy.pojo.CommonName;
 import com.strandls.taxonomy.pojo.CommonNamesData;
 import com.strandls.taxonomy.pojo.EncryptedKey;
@@ -43,6 +40,8 @@ import com.strandls.userGroup.pojo.FeaturedCreate;
 import com.strandls.userGroup.pojo.UserGroupIbp;
 import com.strandls.userGroup.pojo.UserGroupSpeciesCreateData;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 /**
  * @author Abhishek Rudra
  *
@@ -57,7 +56,7 @@ public interface SpeciesServices {
 	public List<SpeciesTrait> getSpeciesTraitsByTaxonomyId(Long taxonomyId, Long language);
 
 	public List<SpeciesTrait> getAllSpeciesTraits(Long language);
-	
+
 	public List<SpeciesTrait> getAllTraits(Long language);
 
 //	edits in speceis show page

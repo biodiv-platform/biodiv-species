@@ -3,7 +3,7 @@ package com.strandls.species.controllers;
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
 
-public class SpeciesControllerModule extends AbstractModule{
+public class SpeciesControllerModule extends AbstractModule {
 
 	@Override
 	protected void configure() {

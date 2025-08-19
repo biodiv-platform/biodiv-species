@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package com.strandls.species;
 
@@ -20,8 +20,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.servlet.ServletContextEvent;
-
 import org.glassfish.jersey.servlet.ServletContainer;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
@@ -34,7 +32,7 @@ import com.google.inject.Injector;
 import com.google.inject.Scopes;
 import com.google.inject.servlet.GuiceServletContextListener;
 import com.google.inject.servlet.ServletModule;
-import com.strandls.activity.controller.ActivitySerivceApi;
+import com.strandls.activity.controller.ActivityServiceApi;
 import com.strandls.document.controllers.DocumentServiceApi;
 import com.strandls.esmodule.controllers.EsServicesApi;
 import com.strandls.file.api.UploadApi;
@@ -51,7 +49,9 @@ import com.strandls.taxonomy.controllers.TaxonomyServicesApi;
 import com.strandls.taxonomy.controllers.TaxonomyTreeServicesApi;
 import com.strandls.traits.controller.TraitsServiceApi;
 import com.strandls.user.controller.UserServiceApi;
-import com.strandls.userGroup.controller.UserGroupSerivceApi;
+import com.strandls.userGroup.controller.UserGroupServiceApi;
+
+import jakarta.servlet.ServletContextEvent;
 
 /**
  * @author Abhishek Rudra
@@ -83,7 +83,7 @@ public class SpeciesServeletContextListener extends GuiceServletContextListener 
 				SessionFactory sessionFactory = configuration.buildSessionFactory();
 
 				Map<String, String> props = new HashMap<String, String>();
-				props.put("javax.ws.rs.Application", ApplicationConfig.class.getName());
+				props.put("jakarta.ws.rs.Application", ApplicationConfig.class.getName());
 				props.put("jersey.config.server.provider.packages", "com");
 				props.put("jersey.config.server.wadl.disableWadl", "true");
 
@@ -98,7 +98,7 @@ public class SpeciesServeletContextListener extends GuiceServletContextListener 
 				bind(UploadApi.class).in(Scopes.SINGLETON);
 				bind(ResourceServicesApi.class).in(Scopes.SINGLETON);
 				bind(TraitsServiceApi.class).in(Scopes.SINGLETON);
-				bind(UserGroupSerivceApi.class).in(Scopes.SINGLETON);
+				bind(UserGroupServiceApi.class).in(Scopes.SINGLETON);
 				bind(UserServiceApi.class).in(Scopes.SINGLETON);
 				bind(TaxonomyServicesApi.class).in(Scopes.SINGLETON);
 				bind(TaxonomyTreeServicesApi.class).in(Scopes.SINGLETON);
@@ -106,14 +106,14 @@ public class SpeciesServeletContextListener extends GuiceServletContextListener 
 				bind(SpeciesServicesApi.class).in(Scopes.SINGLETON);
 				bind(EsServicesApi.class).in(Scopes.SINGLETON);
 				bind(ObservationServiceApi.class).in(Scopes.SINGLETON);
-				bind(ActivitySerivceApi.class).in(Scopes.SINGLETON);
+				bind(ActivityServiceApi.class).in(Scopes.SINGLETON);
 				bind(TaxonomyPermissionServiceApi.class).in(Scopes.SINGLETON);
 
 				bind(ServletContainer.class).in(Scopes.SINGLETON);
 				serve("/api/*").with(ServletContainer.class, props);
 
 			}
-		}, new SpeciesControllerModule(), new SpeciesDaoModule(), new SpeciesServiceModule(),new ESUtilModule());
+		}, new SpeciesControllerModule(), new SpeciesDaoModule(), new SpeciesServiceModule(), new ESUtilModule());
 
 		return injector;
 
@@ -130,7 +130,7 @@ public class SpeciesServeletContextListener extends GuiceServletContextListener 
 			Annotation[] annotations = cls.getAnnotations();
 
 			for (Annotation annotation : annotations) {
-				if (annotation instanceof javax.persistence.Entity) {
+				if (annotation instanceof jakarta.persistence.Entity) {
 					classes.add(cls);
 				}
 			}

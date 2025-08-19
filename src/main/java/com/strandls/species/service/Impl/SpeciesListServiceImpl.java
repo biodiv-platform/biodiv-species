@@ -14,8 +14,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import javax.inject.Inject;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,6 +36,8 @@ import com.strandls.species.pojo.SpeciesListTiles;
 import com.strandls.species.service.SpeciesListService;
 import com.strandls.taxonomy.pojo.CommonName;
 import com.strandls.taxonomy.pojo.TaxonomicNames;
+
+import jakarta.inject.Inject;
 
 /**
  * @author Abhishek Rudra
@@ -142,11 +142,11 @@ public class SpeciesListServiceImpl implements SpeciesListService {
 
 //		LatchThreadWorker worker = new LatchThreadWorker(index, type, filter, searchQuery, mapResponse, namedAgg, latch,
 //				esService);
-		
-		executor.submit(new LatchThreadWorker(index, type, filter, searchQuery, mapResponse, namedAgg, latch,
-				esService));
-		
-		//worker.start();
+
+		executor.submit(
+				new LatchThreadWorker(index, type, filter, searchQuery, mapResponse, namedAgg, latch, esService));
+
+		// worker.start();
 
 	}
 
@@ -268,15 +268,15 @@ public class SpeciesListServiceImpl implements SpeciesListService {
 //			logger.error(e.getMessage());
 //			Thread.currentThread().interrupt();
 //		}
-		
+
 		try {
-		    if (!latch.await(30, TimeUnit.SECONDS)) {  // Timeout after 30s
-		        logger.warn("Timed out waiting for aggregations");
-		        // Handle partial results or fail fast
-		    }
+			if (!latch.await(30, TimeUnit.SECONDS)) { // Timeout after 30s
+				logger.warn("Timed out waiting for aggregations");
+				// Handle partial results or fail fast
+			}
 		} catch (InterruptedException e) {
-		    Thread.currentThread().interrupt();
-		    throw new RuntimeException("Aggregation interrupted", e);
+			Thread.currentThread().interrupt();
+			throw new RuntimeException("Aggregation interrupted", e);
 		}
 
 		aggregationResponse.setGroupSpeciesName(mapAggResponse.get(SpeciesIndex.SGROUP.getValue()) != null

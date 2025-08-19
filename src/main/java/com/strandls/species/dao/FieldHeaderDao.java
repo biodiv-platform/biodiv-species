@@ -3,7 +3,7 @@
  */
 package com.strandls.species.dao;
 
-import javax.inject.Inject;
+import java.util.List;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
 import com.strandls.species.pojo.FieldHeader;
 import com.strandls.species.util.AbstractDAO;
 
-import java.util.List;
+import jakarta.inject.Inject;
 
 /**
  * @author Abhishek Rudra
@@ -63,35 +63,35 @@ public class FieldHeaderDao extends AbstractDAO<FieldHeader, Long> {
 //		}
 //		return result;
 //	}
-	
+
 	@SuppressWarnings("unchecked")
 	public FieldHeader findByFieldId(Long fieldId, Long languageId) {
-	    String qry = "from FieldHeader where fieldId = :fieldId and languageId = :languageId ";
-	    Session session = sessionFactory.openSession();
-	    FieldHeader result = null;
-	    try {
-	        Query<FieldHeader> query = session.createQuery(qry);
-	        query.setParameter("fieldId", fieldId);
-	        query.setParameter("languageId", languageId);
-	        result = query.getSingleResult();
-	    } catch (Exception e) {
-	        logger.error(e.getMessage());
-	        
-	        // Fallback to languageId 205 if no result found
-	        try {
-	            Query<FieldHeader> fallbackQuery = session.createQuery(qry);
-	            fallbackQuery.setParameter("fieldId", fieldId);
-	            fallbackQuery.setParameter("languageId", 205L);
-	            result = fallbackQuery.getSingleResult();
-	        } catch (Exception fallbackException) {
-	            logger.error("Fallback query also failed: " + fallbackException.getMessage());
-	        }
-	    } finally {
-	        if (session != null && session.isOpen()) {
-	            session.close();
-	        }
-	    }
-	    return result;
+		String qry = "from FieldHeader where fieldId = :fieldId and languageId = :languageId ";
+		Session session = sessionFactory.openSession();
+		FieldHeader result = null;
+		try {
+			Query<FieldHeader> query = session.createQuery(qry);
+			query.setParameter("fieldId", fieldId);
+			query.setParameter("languageId", languageId);
+			result = query.getSingleResult();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+
+			// Fallback to languageId 205 if no result found
+			try {
+				Query<FieldHeader> fallbackQuery = session.createQuery(qry);
+				fallbackQuery.setParameter("fieldId", fieldId);
+				fallbackQuery.setParameter("languageId", 205L);
+				result = fallbackQuery.getSingleResult();
+			} catch (Exception fallbackException) {
+				logger.error("Fallback query also failed: " + fallbackException.getMessage());
+			}
+		} finally {
+			if (session != null && session.isOpen()) {
+				session.close();
+			}
+		}
+		return result;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -133,15 +133,15 @@ public class FieldHeaderDao extends AbstractDAO<FieldHeader, Long> {
 		Transaction tx = null;
 		try {
 			tx = session.beginTransaction();
-			
+
 			// Try to find existing translation
-			Query<FieldHeader> query = session.createQuery(
-				"from FieldHeader where fieldId = :fieldId and languageId = :languageId");
+			Query<FieldHeader> query = session
+					.createQuery("from FieldHeader where fieldId = :fieldId and languageId = :languageId");
 			query.setParameter("fieldId", fieldHeader.getFieldId());
 			query.setParameter("languageId", fieldHeader.getLanguageId());
-			
+
 			FieldHeader existing = query.uniqueResult();
-			
+
 			if (existing != null) {
 				// Update existing
 				existing.setHeader(fieldHeader.getHeader());
@@ -153,7 +153,7 @@ public class FieldHeaderDao extends AbstractDAO<FieldHeader, Long> {
 				// Create new
 				session.save(fieldHeader);
 			}
-			
+
 			tx.commit();
 			return fieldHeader;
 		} catch (Exception e) {
