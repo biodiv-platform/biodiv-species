@@ -144,4 +144,6 @@ public interface SpeciesServices {
 	public List<FieldHeader> updateFieldTranslations(HttpServletRequest request,
 			List<FieldTranslationUpdateData> translationData) throws Exception;
 
+	public ShowSpeciesPage updateTaxonId(HttpServletRequest request, Long speciesId, Long taxonId);
+
 }

@@ -997,5 +997,36 @@ public class SpeciesController {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
 	}
-
+@PUT
+@Path(ApiConstants.UPDATE + "/{speciesId}/{taxonId}")
+@Consumes(MediaType.APPLICATION_JSON)
+@Produces(MediaType.APPLICATION_JSON)
+@ValidateUser
+@Operation(
+    summary = "Update taxonId of a species page",
+    description = "Updates the taxonId for the given species and returns the updated page"
+)
+@ApiResponses({
+    @ApiResponse(responseCode = "200", description = "Species page updated",
+        content = @Content(schema = @Schema(implementation = ShowSpeciesPage.class))),
+    @ApiResponse(responseCode = "400", description = "Unable to update",
+        content = @Content(schema = @Schema(implementation = String.class))),
+    @ApiResponse(responseCode = "404", description = "Not found")
+})
+public Response updateTaxonId(
+    @Context HttpServletRequest request,
+    @Parameter(description = "Species ID") @PathParam("speciesId") String speciesId,
+    @Parameter(description = "Taxon ID") @PathParam("taxonId") String taxonId
+) {
+    try {
+        ShowSpeciesPage result = speciesService.updateTaxonId(
+            request,
+            Long.parseLong(speciesId),
+            Long.parseLong(taxonId)
+        );
+        return Response.status(Response.Status.OK).entity(result).build();
+    } catch (Exception e) {
+        return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
+    }
+}
 }
