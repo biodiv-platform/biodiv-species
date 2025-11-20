@@ -58,7 +58,7 @@ public class SpeciesListCSVThread implements Runnable {
 	private String requestAuthHeader;
 	private MapSearchParams mapSearchParams;
 	private String url;
-	private String authorId;
+	private final String authorId;
 	private UserServiceApi userService;
 
 	public SpeciesListCSVThread(MapSearchQuery mapSearchQuery, String index, String type, EsServicesApi esService,
