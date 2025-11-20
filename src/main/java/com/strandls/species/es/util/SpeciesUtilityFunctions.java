@@ -61,7 +61,7 @@ public class SpeciesUtilityFunctions {
 	public String getCsvFileNameDownloadPath() {
 
 		Date date = new Date();
-		String fileName = "obv_" + date.getTime() + ".csv";
+		String fileName = "species_" + date.getTime() + ".csv";
 		String filePathName;
 		filePathName = csvFileDownloadPath + File.separator + fileName;
 		File file = new File(filePathName);
