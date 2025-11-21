@@ -352,7 +352,7 @@ public class SpeciesUtilityFunctions {
 				}
 
 				// Create the content string
-				String content = "description:" + value.getFieldData().getDescription() + "\n\nattributions:"
+				String content = "description:" + value.getFieldData().getDescription().replaceAll("<[^>]*>", "") + "\n\nattributions:"
 						+ value.getAttributions() + "\ncontributor:"
 						+ contriString+ "\nlicense:"
 						+ value.getLicense().getName() + "|" + value.getLicense().getUrl() + "|"
