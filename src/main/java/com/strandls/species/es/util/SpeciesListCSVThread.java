@@ -63,7 +63,8 @@ public class SpeciesListCSVThread implements Runnable {
 
 	public SpeciesListCSVThread(MapSearchQuery mapSearchQuery, String index, String type, EsServicesApi esService,
 			ObjectMapper objectMapper, SpeciesServices speciesService, UtilityServiceApi utilityServices,
-			HttpServletRequest request, Headers headers, MapSearchParams mapSearchParams, String url, String authorId, UserServiceApi userService) {
+			HttpServletRequest request, Headers headers, MapSearchParams mapSearchParams, String url, String authorId,
+			UserServiceApi userService) {
 		super();
 		this.mapSearchQuery = mapSearchQuery;
 		this.index = index;
@@ -169,26 +170,28 @@ public class SpeciesListCSVThread implements Runnable {
 			} while (epochSize >= max);
 			entity.setFilePath(filePath);
 			entity.setStatus(fileGenerationStatus);
-			//mailService.sendMail(authorId, fileName, "species");
+			// mailService.sendMail(authorId, fileName, "species");
 			logger.info("File Generated successfully");
 		} catch (Exception e) {
-			logger.error("file generation failed @ " + filePath + " due to - " + e.getMessage());
+			logger.error("file generation failed @ " + filePath + " due to - " + e);
 			fileGenerationStatus = "FAILED";
 			entity.setStatus(fileGenerationStatus);
 		} finally {
 			obUtil.closeWriter();
 			entity.setStatus(fileGenerationStatus);
-			DownloadLogData data = new DownloadLogData();
-			data.setFilePath(modulePathForDownloads + File.separator + fileName);
-			data.setFileType(fileType);
-			data.setFilterUrl(entity.getFilterUrl());
-			data.setStatus(fileGenerationStatus);
-			data.setNotes("Species List");
-			data.setSourcetype("Species");
-			try {
-				userService.logDocumentDownload(data);
-			} catch (ApiException e) {
-				logger.error(e.getMessage());
+			if (fileGenerationStatus.equalsIgnoreCase("SUCCESS")) {
+				DownloadLogData data = new DownloadLogData();
+				data.setFilePath(modulePathForDownloads + File.separator + fileName);
+				data.setFileType(fileType);
+				data.setFilterUrl(entity.getFilterUrl());
+				data.setStatus(fileGenerationStatus);
+				data.setNotes("Species List");
+				data.setSourcetype("Species");
+				try {
+					userService.logDocumentDownload(data);
+				} catch (ApiException e) {
+					logger.error(e.getMessage());
+				}
 			}
 		}
 		if (fileGenerationStatus.equalsIgnoreCase("failed")) {
