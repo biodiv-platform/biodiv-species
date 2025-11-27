@@ -163,7 +163,7 @@ public class SpeciesListCSVThread implements Runnable {
 						logger.error(e.getMessage());
 					}
 				}
-				epochSize = documents.size();
+				epochSize = specieList.size();
 				offset = offset + max;
 				obUtil.insertListToCSV(specieList, writer, objectMapper,
 						allTraitNames.stream().collect(Collectors.toList()), ids, langaugeMap);
