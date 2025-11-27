@@ -61,12 +61,12 @@ public class SpeciesListCSVThread implements Runnable {
 	private String url;
 	private final String authorId;
 	private UserServiceApi userService;
-	private MailService mailService;
+	//private MailService mailService;
 
 	public SpeciesListCSVThread(MapSearchQuery mapSearchQuery, String index, String type, EsServicesApi esService,
 			ObjectMapper objectMapper, SpeciesServices speciesService, UtilityServiceApi utilityServices,
 			HttpServletRequest request, Headers headers, MapSearchParams mapSearchParams, String url, String authorId,
-			UserServiceApi userService, MailService mailService) {
+			UserServiceApi userService) {
 		super();
 		this.mapSearchQuery = mapSearchQuery;
 		this.index = index;
@@ -83,7 +83,7 @@ public class SpeciesListCSVThread implements Runnable {
 		this.authorId = authorId;
 		System.out.println("\n\n***** Author Id: " + authorId + " *****\n\n");
 		this.userService = userService;
-		this.mailService = mailService;
+		//this.mailService = mailService;
 	}
 
 	@Override

@@ -33,7 +33,6 @@ import com.strandls.esmodule.pojo.MapBoundParams;
 import com.strandls.esmodule.pojo.MapSearchParams;
 import com.strandls.esmodule.pojo.MapSearchQuery;
 import com.strandls.esmodule.pojo.MapSearchParams.SortTypeEnum;
-import com.strandls.species.service.MailService;
 import com.strandls.resource.pojo.ResourceData;
 import com.strandls.resource.pojo.SpeciesPull;
 import com.strandls.species.ApiConstants;
@@ -117,9 +116,6 @@ public class SpeciesController {
 
 	@Inject
 	private ESUpdate esUpdate;
-	
-	@Inject
-	private MailService mailService;
 
 	@GET
 	@Path(ApiConstants.PING)
@@ -894,7 +890,7 @@ public class SpeciesController {
 
 				SpeciesListCSVThread csvThread = new SpeciesListCSVThread(mapSearchQuery, index, type, esService,
 						objectMapper, speciesService, utilityServices, request, headers, mapSearchParams,
-						uriInfo.getRequestUri().toString(), authorId, userService, mailService);
+						uriInfo.getRequestUri().toString(), authorId, userService);
 				Thread thread = new Thread(csvThread);
 				thread.start();
 				return Response.status(Status.OK).build();
