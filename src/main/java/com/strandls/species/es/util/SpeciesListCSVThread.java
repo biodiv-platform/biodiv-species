@@ -176,6 +176,7 @@ public class SpeciesListCSVThread implements Runnable {
 			mailService.sendMail(authorId, fileName, "species");
 			logger.info("File Generated successfully");
 		} catch (Exception e) {
+			e.printStackTrace();
 			logger.error("file generation failed @ " + filePath + " due to - " + e);
 			fileGenerationStatus = "FAILED";
 			entity.setStatus(fileGenerationStatus);
