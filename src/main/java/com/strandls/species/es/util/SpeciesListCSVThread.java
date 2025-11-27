@@ -138,7 +138,7 @@ public class SpeciesListCSVThread implements Runnable {
 			Set<String> allTraitNames = new LinkedHashSet<String>();
 
 			obUtil.writeIntoCSV(writer, obUtil.getCsvHeaders(allTraitNames, fieldNames));
-
+			
 			do {
 				MapResponse result;
 				mapSearchParams.setFrom(offset);
@@ -147,7 +147,7 @@ public class SpeciesListCSVThread implements Runnable {
 				List<MapDocument> documents = result.getDocuments();
 				List<ShowSpeciesPage> specieList = new ArrayList<ShowSpeciesPage>();
 				for (MapDocument document : documents) {
-					JsonNode rootNode = objectMapper.readTree(document.getDocument().toString());
+					JsonNode rootNode = objectMapper.readTree(document.getDocument().toString().replace("\"isParticipatory\"", "\"isParticipatry\""));
 					((ObjectNode) rootNode).remove("id");
 					JsonNode child = ((ObjectNode) rootNode).get("taxonomyDefinition");
 					((ObjectNode) child).replace("defaultHierarchy", null);
