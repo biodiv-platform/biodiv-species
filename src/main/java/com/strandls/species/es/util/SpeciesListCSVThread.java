@@ -19,6 +19,7 @@ import javax.ws.rs.core.HttpHeaders;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -139,6 +140,8 @@ public class SpeciesListCSVThread implements Runnable {
 
 			obUtil.writeIntoCSV(writer, obUtil.getCsvHeaders(allTraitNames, fieldNames));
 			
+			objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+			
 			do {
 				MapResponse result;
 				mapSearchParams.setFrom(offset);
@@ -147,7 +150,7 @@ public class SpeciesListCSVThread implements Runnable {
 				List<MapDocument> documents = result.getDocuments();
 				List<ShowSpeciesPage> specieList = new ArrayList<ShowSpeciesPage>();
 				for (MapDocument document : documents) {
-					JsonNode rootNode = objectMapper.readTree(document.getDocument().toString().replace("\"isParticipatory\"", "\"isParticipatry\""));
+					JsonNode rootNode = objectMapper.readTree(document.getDocument().toString());
 					((ObjectNode) rootNode).remove("id");
 					JsonNode child = ((ObjectNode) rootNode).get("taxonomyDefinition");
 					((ObjectNode) child).replace("defaultHierarchy", null);
