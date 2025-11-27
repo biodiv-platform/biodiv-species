@@ -164,17 +164,14 @@ public class SpeciesUtilityFunctions {
 			List<String> row = new ArrayList<String>();
 
 			addCoreHeaderValues(row, record, list, ids);
+			row.add("Hi");
 
-			Map<Long, LinkedHashMap<String, String>> langContent = fetchFieldDataForCsv(record.getFieldData(), ids);
+			/*Map<Long, LinkedHashMap<String, String>> langContent = fetchFieldDataForCsv(record.getFieldData(), ids);
 
 			int i = 0;
 			for (Entry<Long, LinkedHashMap<String, String>> content : langContent.entrySet()) {
 				LinkedHashMap<String, String> fieldContent = content.getValue();
 				if (i == 0) {
-					/*
-					 * for (Entry<String, String> field : content.getValue().entrySet()) {
-					 * row.add(field.getValue()); }
-					 */
 					row.add(langaugeMap.getOrDefault(content.getKey(), content.getKey().toString()));
 					for (Long field : ids) {
 						if (fieldContent.containsKey(field.toString())) {
@@ -200,7 +197,8 @@ public class SpeciesUtilityFunctions {
 					rowSets.add(emptyRow);
 				}
 				i = i + 1;
-			}
+			}*/
+			rowSets.add(row.stream().toArray(String[]::new));
 		}
 		writer.writeAll(rowSets);
 
