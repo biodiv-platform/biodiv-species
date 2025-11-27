@@ -162,7 +162,7 @@ public class SpeciesListCSVThread implements Runnable {
 						 * if (species.getFacts() != null) { for (FactValuePair trait :
 						 * species.getFacts()) { allTraitNames.add(trait.getName()); } }
 						 */
-					} catch (IOException e) {
+					} catch (Exception e) {
 						logger.error(e.getMessage());
 					}
 				}
