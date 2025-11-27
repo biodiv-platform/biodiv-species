@@ -5,6 +5,7 @@ package com.strandls.species.service.Impl;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
+import com.strandls.species.service.MailService;
 import com.strandls.species.service.SpeciesListService;
 import com.strandls.species.service.SpeciesServices;
 
@@ -21,5 +22,6 @@ public class SpeciesServiceModule extends AbstractModule {
 		bind(SpeciesHelper.class).in(Scopes.SINGLETON);
 		bind(LogActivities.class).in(Scopes.SINGLETON);
 		bind(SpeciesListService.class).to(SpeciesListServiceImpl.class).in(Scopes.SINGLETON);
+		bind(MailService.class).to(MailServiceImpl.class).in(Scopes.SINGLETON);
 	}
 }
