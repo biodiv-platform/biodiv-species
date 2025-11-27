@@ -173,7 +173,7 @@ public class SpeciesListCSVThread implements Runnable {
 			} while (epochSize >= max);
 			entity.setFilePath(filePath);
 			entity.setStatus(fileGenerationStatus);
-			mailService.sendMail(authorId, fileName, "species");
+			//mailService.sendMail(authorId, fileName, "species");
 			logger.info("File Generated successfully");
 		} catch (Exception e) {
 			logger.error("file generation failed @ " + filePath + " due to - " + e);
