@@ -317,21 +317,11 @@ public class SpeciesUtilityFunctions {
 			return Arrays.asList(null, null, null, null, null, null, null);
 
 		// Sort to standard order: kingdom, phylum, class, order, family, genus, species
-		Map<String, String> rankMap = breadCrumbs.stream()
-	            .collect(Collectors.toMap(
-	                BreadCrumb::getRankName, 
-	                BreadCrumb::getName,
-	                (existing, replacement) -> replacement
-	            ));
+		Map<String, String> rankMap = breadCrumbs.stream().collect(
+				Collectors.toMap(BreadCrumb::getRankName, BreadCrumb::getName, (existing, replacement) -> replacement));
 
-		return Arrays.asList(rankMap.get("kingdom"),
-				rankMap.get("phylum"),
-				rankMap.get("class"),
-				rankMap.get("order"),
-				rankMap.get("family"),
-				rankMap.get("genus"),
-				rankMap.get("species")
-		);
+		return Arrays.asList(rankMap.get("kingdom"), rankMap.get("phylum"), rankMap.get("class"), rankMap.get("order"),
+				rankMap.get("family"), rankMap.get("genus"), rankMap.get("species"));
 	}
 
 	private Map<Long, LinkedHashMap<String, String>> fetchFieldDataForCsv(List<SpeciesFieldData> fieldValues,
@@ -341,35 +331,36 @@ public class SpeciesUtilityFunctions {
 		if (fieldValues != null) {
 			for (SpeciesFieldData value : fieldValues) {
 				String fieldId = value.getFieldId().toString();
-				Long languageId = value.getFieldData().getLanguageId();
-				String contriString = "";
-				if (value.getContributor() != null) {
-					for (UserIbp contri : value.getContributor()) {
-						if (contri != null) {
-							contriString = contriString + contri.getName() + ",";
+				if (value.getFieldData() != null) {
+					Long languageId = value.getFieldData().getLanguageId();
+					String contriString = "";
+					if (value.getContributor() != null) {
+						for (UserIbp contri : value.getContributor()) {
+							if (contri != null) {
+								contriString = contriString + contri.getName() + ",";
+							}
 						}
 					}
-				}
 
-				// Create the content string
-				String content = "description:" + value.getFieldData().getDescription().replaceAll("<[^>]*>", "") + "\n\nattributions:"
-						+ value.getAttributions() + "\ncontributor:"
-						+ contriString+ "\nlicense:"
-						+ value.getLicense().getName() + "|" + value.getLicense().getUrl() + "|"
-						+ value.getLicense().getId();
+					// Create the content string
+					String content = "description:" + value.getFieldData().getDescription().replaceAll("<[^>]*>", "")
+							+ "\n\nattributions:" + value.getAttributions() + "\ncontributor:" + contriString
+							+ "\nlicense:" + value.getLicense().getName() + "|" + value.getLicense().getUrl() + "|"
+							+ value.getLicense().getId();
 
-				// Initialize field map if not exists
-				fieldGroupedMap.computeIfAbsent(fieldId, k -> new HashMap<>());
+					// Initialize field map if not exists
+					fieldGroupedMap.computeIfAbsent(fieldId, k -> new HashMap<>());
 
-				// Get or create the language map for this field
-				Map<Long, List<String>> languageMap = fieldGroupedMap.get(fieldId);
+					// Get or create the language map for this field
+					Map<Long, List<String>> languageMap = fieldGroupedMap.get(fieldId);
 
-				if (languageMap.containsKey(languageId)) {
-					languageMap.get(languageId).add(content);
-				} else {
-					List<String> descriptions = new ArrayList<>();
-					descriptions.add(content);
-					languageMap.put(languageId, descriptions);
+					if (languageMap.containsKey(languageId)) {
+						languageMap.get(languageId).add(content);
+					} else {
+						List<String> descriptions = new ArrayList<>();
+						descriptions.add(content);
+						languageMap.put(languageId, descriptions);
+					}
 				}
 			}
 		}
