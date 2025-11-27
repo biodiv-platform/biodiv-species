@@ -150,12 +150,9 @@ public class SpeciesListCSVThread implements Runnable {
 				List<MapDocument> documents = result.getDocuments();
 				List<ShowSpeciesPage> specieList = new ArrayList<ShowSpeciesPage>();
 				for (MapDocument document : documents) {
-					JsonNode rootNode = objectMapper.readTree(document.getDocument().toString());
-					((ObjectNode) rootNode).remove("id");
-					JsonNode child = ((ObjectNode) rootNode).get("taxonomyDefinition");
-					((ObjectNode) child).replace("defaultHierarchy", null);
+					//JsonNode rootNode = objectMapper.readTree(document.getDocument().toString());
 					try {
-						ShowSpeciesPage species = objectMapper.readValue(String.valueOf(rootNode),
+						ShowSpeciesPage species = objectMapper.readValue(String.valueOf(document.getDocument()),
 								ShowSpeciesPage.class);
 						specieList.add(species);
 						/*
