@@ -20,10 +20,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.opencsv.CSVWriter;
+import com.strandls.activity.controller.ActivitySerivceApi;
 import com.strandls.esmodule.controllers.EsServicesApi;
 import com.strandls.esmodule.pojo.MapDocument;
 import com.strandls.esmodule.pojo.MapResponse;
@@ -33,8 +32,8 @@ import com.strandls.species.Headers;
 import com.strandls.species.pojo.FieldDisplay;
 import com.strandls.species.pojo.FieldRender;
 import com.strandls.species.pojo.ShowSpeciesPage;
-import com.strandls.species.service.MailService;
 import com.strandls.species.service.SpeciesServices;
+import com.strandls.species.util.PropertyFileUtil;
 import com.strandls.observation.pojo.DownloadLog;
 import com.strandls.user.ApiException;
 import com.strandls.user.controller.UserServiceApi;
@@ -48,6 +47,9 @@ public class SpeciesListCSVThread implements Runnable {
 	private final String modulePath = "/data-archive/listpagecsv";
 	private final String basePath = "/app/data/biodiv";
 
+	private Long defaultLanguageId = Long
+			.parseLong(PropertyFileUtil.fetchProperty("config.properties", "defaultLanguageId"));
+
 	private MapSearchQuery mapSearchQuery;
 	private String index;
 	private String type;
@@ -55,19 +57,18 @@ public class SpeciesListCSVThread implements Runnable {
 	private ObjectMapper objectMapper;
 	private SpeciesServices speciesService;
 	private UtilityServiceApi utilityServices;
-	private HttpServletRequest request;
 	private Headers headers;
 	private String requestAuthHeader;
 	private MapSearchParams mapSearchParams;
 	private String url;
 	private final String authorId;
 	private UserServiceApi userService;
-	private MailService mailService;
+	private ActivitySerivceApi activityService;
 
 	public SpeciesListCSVThread(MapSearchQuery mapSearchQuery, String index, String type, EsServicesApi esService,
 			ObjectMapper objectMapper, SpeciesServices speciesService, UtilityServiceApi utilityServices,
 			HttpServletRequest request, Headers headers, MapSearchParams mapSearchParams, String url, String authorId,
-			UserServiceApi userService, MailService mailService) {
+			UserServiceApi userService, ActivitySerivceApi activityService) {
 		super();
 		this.mapSearchQuery = mapSearchQuery;
 		this.index = index;
@@ -76,7 +77,6 @@ public class SpeciesListCSVThread implements Runnable {
 		this.objectMapper = objectMapper;
 		this.speciesService = speciesService;
 		this.utilityServices = utilityServices;
-		this.request = request;
 		this.headers = headers;
 		this.requestAuthHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
 		this.mapSearchParams = mapSearchParams;
@@ -84,7 +84,7 @@ public class SpeciesListCSVThread implements Runnable {
 		this.authorId = authorId;
 		System.out.println("\n\n***** Author Id: " + authorId + " *****\n\n");
 		this.userService = userService;
-		this.mailService = mailService;
+		this.activityService = activityService;
 	}
 
 	@Override
@@ -94,8 +94,7 @@ public class SpeciesListCSVThread implements Runnable {
 		logger.info("Species List Download Request Received : RequestId = " + authorId + dtf.format(now));
 		SpeciesUtilityFunctions obUtil = new SpeciesUtilityFunctions();
 		String fileName = obUtil.getCsvFileNameDownloadPath();
-		String modulePathForDownloads = "";
-		modulePathForDownloads = modulePath;
+		String modulePathForDownloads = modulePath;
 		String filePath = basePath + modulePathForDownloads + File.separator + fileName;
 		CSVWriter writer = obUtil.getCsvWriter(filePath);
 		Integer max = 2000;
@@ -118,7 +117,7 @@ public class SpeciesListCSVThread implements Runnable {
 			}
 
 			// Getting species fields
-			List<FieldRender> fields = speciesService.getFields((long) 205, null);
+			List<FieldRender> fields = speciesService.getFields(defaultLanguageId, null);
 			List<String> fieldNames = new ArrayList<>();
 			List<FieldDisplay> speciesField = new ArrayList<>();
 			fieldNames.add("language");
@@ -139,9 +138,9 @@ public class SpeciesListCSVThread implements Runnable {
 			Set<String> allTraitNames = new LinkedHashSet<String>();
 
 			obUtil.writeIntoCSV(writer, obUtil.getCsvHeaders(allTraitNames, fieldNames));
-			
+
 			objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-			
+
 			do {
 				MapResponse result;
 				mapSearchParams.setFrom(offset);
@@ -150,15 +149,10 @@ public class SpeciesListCSVThread implements Runnable {
 				List<MapDocument> documents = result.getDocuments();
 				List<ShowSpeciesPage> specieList = new ArrayList<ShowSpeciesPage>();
 				for (MapDocument document : documents) {
-					//JsonNode rootNode = objectMapper.readTree(document.getDocument().toString());
 					try {
 						ShowSpeciesPage species = objectMapper.readValue(String.valueOf(document.getDocument()),
 								ShowSpeciesPage.class);
 						specieList.add(species);
-						/*
-						 * if (species.getFacts() != null) { for (FactValuePair trait :
-						 * species.getFacts()) { allTraitNames.add(trait.getName()); } }
-						 */
 					} catch (Exception e) {
 						logger.error(e.getMessage());
 					}
@@ -173,10 +167,9 @@ public class SpeciesListCSVThread implements Runnable {
 			} while (epochSize >= max);
 			entity.setFilePath(filePath);
 			entity.setStatus(fileGenerationStatus);
-			mailService.sendMail(authorId, fileName, "species");
+			activityService.speciesDownloadMail(fileName, "species");
 			logger.info("File Generated successfully");
 		} catch (Exception e) {
-			e.printStackTrace();
 			logger.error("file generation failed @ " + filePath + " due to - " + e);
 			fileGenerationStatus = "FAILED";
 			entity.setStatus(fileGenerationStatus);

@@ -33,14 +33,12 @@ import com.strandls.esmodule.pojo.MapBoundParams;
 import com.strandls.esmodule.pojo.MapSearchParams;
 import com.strandls.esmodule.pojo.MapSearchQuery;
 import com.strandls.esmodule.pojo.MapSearchParams.SortTypeEnum;
-import com.strandls.species.service.MailService;
 import com.strandls.resource.pojo.ResourceData;
 import com.strandls.resource.pojo.SpeciesPull;
 import com.strandls.species.ApiConstants;
 import com.strandls.species.Headers;
 import com.strandls.species.es.util.ESUpdate;
 import com.strandls.species.es.util.ESUtility;
-import com.strandls.species.es.util.SpeciesListCSVThread;
 import com.strandls.species.pojo.FieldCreateData;
 import com.strandls.species.pojo.FieldHeader;
 import com.strandls.species.pojo.FieldNew;
@@ -67,15 +65,12 @@ import com.strandls.taxonomy.pojo.TaxonomyDefinition;
 import com.strandls.taxonomy.pojo.TaxonomySave;
 import com.strandls.traits.pojo.FactValuePair;
 import com.strandls.traits.pojo.FactsUpdateData;
-import com.strandls.user.controller.UserServiceApi;
 import com.strandls.user.pojo.Follow;
 import com.strandls.userGroup.controller.UserGroupSerivceApi;
 import com.strandls.userGroup.pojo.Featured;
 import com.strandls.userGroup.pojo.FeaturedCreate;
 import com.strandls.userGroup.pojo.UserGroupIbp;
 import com.strandls.userGroup.pojo.UserGroupSpeciesCreateData;
-import com.strandls.utility.controller.UtilityServiceApi;
-import com.strandls.species.pojo.FieldTranslation;
 import com.strandls.species.pojo.FieldTranslationUpdateData;
 
 import io.swagger.annotations.Api;
@@ -102,12 +97,6 @@ public class SpeciesController {
 
 	@Inject
 	private UserGroupSerivceApi ugService;
-	
-	@Inject
-	private UserServiceApi userService;
-
-	@Inject
-	private UtilityServiceApi utilityServices;
 
 	@Inject
 	private EsServicesApi esService;
@@ -117,9 +106,6 @@ public class SpeciesController {
 
 	@Inject
 	private ESUpdate esUpdate;
-	
-	@Inject
-	private MailService mailService;
 
 	@GET
 	@Path(ApiConstants.PING)
@@ -860,8 +846,7 @@ public class SpeciesController {
 			@DefaultValue("") @QueryParam("rank") String rank, @DefaultValue("") @QueryParam("path") String path,
 			@DefaultValue("") @QueryParam("description") String description,
 			@DefaultValue("") @QueryParam("attributes") String attributes,
-			@DefaultValue("40") @QueryParam("colorRange") Integer colorRange,
-			@DefaultValue("") @QueryParam("authorId") String authorId,
+			@DefaultValue("40") @QueryParam("colorRange") Integer colorRange, @QueryParam("authorId") String authorId,
 			@DefaultValue("grid") @QueryParam("view") String view, @QueryParam("bulkAction") String bulkAction,
 			@QueryParam("selectAll") Boolean selectAll, @QueryParam("bulkUsergroupIds") String bulkUsergroupIds,
 			@QueryParam("bulkSpeciesIds") String bulkSpeciesIds, @Context HttpServletRequest request,
@@ -890,13 +875,8 @@ public class SpeciesController {
 
 			if (view.equalsIgnoreCase("csv_download") && request.getHeader(HttpHeaders.AUTHORIZATION) != null
 					&& !request.getHeader(HttpHeaders.AUTHORIZATION).isEmpty()) {
-				userService = headers.addUserHeader(userService, request.getHeader(HttpHeaders.AUTHORIZATION));
-
-				SpeciesListCSVThread csvThread = new SpeciesListCSVThread(mapSearchQuery, index, type, esService,
-						objectMapper, speciesService, utilityServices, request, headers, mapSearchParams,
-						uriInfo.getRequestUri().toString(), authorId, userService, mailService);
-				Thread thread = new Thread(csvThread);
-				thread.start();
+				listService.csvDownload(mapSearchQuery, index, type, request, mapSearchParams,
+						uriInfo.getRequestUri().toString(), authorId);
 				return Response.status(Status.OK).build();
 			}
 

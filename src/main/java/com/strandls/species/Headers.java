@@ -80,11 +80,10 @@ public class Headers {
 		userService.getApiClient().addDefaultHeader(HttpHeaders.AUTHORIZATION, authHeader);
 		return userService;
 	}
-	
+
 	public UtilityServiceApi addUtilityHeaders(UtilityServiceApi utilityServices, String authHeader) {
 		utilityServices.getApiClient().addDefaultHeader(HttpHeaders.AUTHORIZATION, authHeader);
 		return utilityServices;
 	}
-
 
 }

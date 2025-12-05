@@ -34,12 +34,10 @@ import com.google.inject.Injector;
 import com.google.inject.Scopes;
 import com.google.inject.servlet.GuiceServletContextListener;
 import com.google.inject.servlet.ServletModule;
-import com.rabbitmq.client.Channel;
 import com.strandls.activity.controller.ActivitySerivceApi;
 import com.strandls.document.controllers.DocumentServiceApi;
 import com.strandls.esmodule.controllers.EsServicesApi;
 import com.strandls.file.api.UploadApi;
-import com.strandls.mail_utility.producer.RabbitMQProducer;
 import com.strandls.observation.controller.ObservationServiceApi;
 import com.strandls.resource.controllers.ResourceServicesApi;
 import com.strandls.species.controllers.SpeciesControllerModule;
@@ -54,7 +52,6 @@ import com.strandls.taxonomy.controllers.TaxonomyTreeServicesApi;
 import com.strandls.traits.controller.TraitsServiceApi;
 import com.strandls.user.controller.UserServiceApi;
 import com.strandls.userGroup.controller.UserGroupSerivceApi;
-
 
 /**
  * @author Abhishek Rudra
@@ -84,19 +81,6 @@ public class SpeciesServeletContextListener extends GuiceServletContextListener 
 
 				configuration = configuration.configure();
 				SessionFactory sessionFactory = configuration.buildSessionFactory();
-				
-				RabbitMqConnection rabbitConnetion = new RabbitMqConnection();
-				Channel channel = null;
-				try {
-					channel = rabbitConnetion.setRabbitMQConnetion();
-				} catch (Exception e) {
-					logger.error(e.getMessage());
-				}
-				
-				System.out.println("before binding");
-				bind(Channel.class).toInstance(channel);
-				System.out.println("after channel binding");
-				RabbitMQProducer producer = new RabbitMQProducer(channel);
 
 				Map<String, String> props = new HashMap<String, String>();
 				props.put("javax.ws.rs.Application", ApplicationConfig.class.getName());
@@ -112,7 +96,6 @@ public class SpeciesServeletContextListener extends GuiceServletContextListener 
 
 				bind(DocumentServiceApi.class).in(Scopes.SINGLETON);
 				bind(UploadApi.class).in(Scopes.SINGLETON);
-				bind(RabbitMQProducer.class).toInstance(producer);
 				bind(ResourceServicesApi.class).in(Scopes.SINGLETON);
 				bind(TraitsServiceApi.class).in(Scopes.SINGLETON);
 				bind(UserGroupSerivceApi.class).in(Scopes.SINGLETON);
@@ -127,11 +110,10 @@ public class SpeciesServeletContextListener extends GuiceServletContextListener 
 				bind(TaxonomyPermissionServiceApi.class).in(Scopes.SINGLETON);
 
 				bind(ServletContainer.class).in(Scopes.SINGLETON);
-				bind(RabbitMQProducer.class).toInstance(producer);
 				serve("/api/*").with(ServletContainer.class, props);
 
 			}
-		}, new SpeciesControllerModule(), new SpeciesDaoModule(), new SpeciesServiceModule(),new ESUtilModule());
+		}, new SpeciesControllerModule(), new SpeciesDaoModule(), new SpeciesServiceModule(), new ESUtilModule());
 
 		return injector;
 
