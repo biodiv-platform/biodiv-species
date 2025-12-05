@@ -16,6 +16,7 @@ import com.strandls.taxonomy.controllers.TaxonomyTreeServicesApi;
 import com.strandls.traits.controller.TraitsServiceApi;
 import com.strandls.user.controller.UserServiceApi;
 import com.strandls.userGroup.controller.UserGroupSerivceApi;
+import com.strandls.utility.controller.UtilityServiceApi;
 
 /**
  * @author Abhishek Rudra
@@ -78,6 +79,11 @@ public class Headers {
 	public UserServiceApi addUserHeader(UserServiceApi userService, String authHeader) {
 		userService.getApiClient().addDefaultHeader(HttpHeaders.AUTHORIZATION, authHeader);
 		return userService;
+	}
+
+	public UtilityServiceApi addUtilityHeaders(UtilityServiceApi utilityServices, String authHeader) {
+		utilityServices.getApiClient().addDefaultHeader(HttpHeaders.AUTHORIZATION, authHeader);
+		return utilityServices;
 	}
 
 }

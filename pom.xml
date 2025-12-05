@@ -74,6 +74,12 @@
 			<artifactId>slf4j-api</artifactId>
 			<version>1.7.22</version>
 		</dependency>
+		
+		<dependency>
+			<groupId>com.opencsv</groupId>
+			<artifactId>opencsv</artifactId>
+			<version>3.3</version>
+		</dependency>
 
 		<!-- https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-core -->
 		<dependency>
@@ -304,6 +310,12 @@
 		    <groupId>com.strandls.biodiv</groupId>
 		    <artifactId>activity-client</artifactId>
 		    <version>1.0.0</version>
+		</dependency>
+		
+		<dependency>
+			<groupId>com.strandls.biodiv</groupId>
+			<artifactId>utility-client</artifactId>
+			<version>1.0.0</version>
 		</dependency>
 		
 	</dependencies>

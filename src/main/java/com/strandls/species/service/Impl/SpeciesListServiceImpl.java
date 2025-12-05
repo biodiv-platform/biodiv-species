@@ -15,6 +15,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.core.HttpHeaders;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,6 +24,7 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.strandls.activity.controller.ActivitySerivceApi;
 import com.strandls.esmodule.controllers.EsServicesApi;
 import com.strandls.esmodule.pojo.AggregationResponse;
 import com.strandls.esmodule.pojo.MapDocument;
@@ -29,15 +32,20 @@ import com.strandls.esmodule.pojo.MapResponse;
 import com.strandls.esmodule.pojo.MapSearchParams;
 import com.strandls.esmodule.pojo.MapSearchQuery;
 import com.strandls.resource.pojo.ResourceData;
+import com.strandls.species.Headers;
 import com.strandls.species.es.util.ESUtility;
 import com.strandls.species.es.util.SpeciesIndex;
+import com.strandls.species.es.util.SpeciesListCSVThread;
 import com.strandls.species.pojo.MapAggregationResponse;
 import com.strandls.species.pojo.ShowSpeciesPage;
 import com.strandls.species.pojo.SpeciesListPageData;
 import com.strandls.species.pojo.SpeciesListTiles;
 import com.strandls.species.service.SpeciesListService;
+import com.strandls.species.service.SpeciesServices;
 import com.strandls.taxonomy.pojo.CommonName;
 import com.strandls.taxonomy.pojo.TaxonomicNames;
+import com.strandls.user.controller.UserServiceApi;
+import com.strandls.utility.controller.UtilityServiceApi;
 
 /**
  * @author Abhishek Rudra
@@ -59,6 +67,21 @@ public class SpeciesListServiceImpl implements SpeciesListService {
 
 	@Inject
 	private ESUtility esUtility;
+	
+	@Inject
+	private UserServiceApi userService;
+
+	@Inject
+	private UtilityServiceApi utilityServices;
+	
+	@Inject
+	private Headers headers;
+	
+	@Inject
+	private SpeciesServices speciesService;
+	
+	@Inject
+	private ActivitySerivceApi activityService;
 
 	@Override
 	public SpeciesListPageData searchList(String index, String type, MapSearchQuery querys,
@@ -299,6 +322,19 @@ public class SpeciesListServiceImpl implements SpeciesListService {
 				? mapAggResponse.get(SpeciesIndex.TRAITS_NAME_KEYWORD.getValue()).getGroupAggregation()
 				: null);
 		return aggregationResponse;
+	}
+	
+	@Override
+	public void csvDownload(MapSearchQuery mapSearchQuery, String index, String type, HttpServletRequest request, MapSearchParams mapSearchParams, String string, String authorId) {
+		userService = headers.addUserHeader(userService, request.getHeader(HttpHeaders.AUTHORIZATION));
+		
+		activityService = headers.addActivityHeader(activityService, request.getHeader(HttpHeaders.AUTHORIZATION));
+
+		SpeciesListCSVThread csvThread = new SpeciesListCSVThread(mapSearchQuery, index, type, esService,
+				objectMapper, speciesService, utilityServices, request, headers, mapSearchParams,
+				string, authorId, userService, activityService);
+		Thread thread = new Thread(csvThread);
+		thread.start();
 	}
 
 }

@@ -113,7 +113,7 @@ public class SpeciesServeletContextListener extends GuiceServletContextListener 
 				serve("/api/*").with(ServletContainer.class, props);
 
 			}
-		}, new SpeciesControllerModule(), new SpeciesDaoModule(), new SpeciesServiceModule(),new ESUtilModule());
+		}, new SpeciesControllerModule(), new SpeciesDaoModule(), new SpeciesServiceModule(), new ESUtilModule());
 
 		return injector;
 
