@@ -818,7 +818,7 @@ public class SpeciesController {
 		}
 	}
 
-	@GET
+	@POST
 	@Path(ApiConstants.LIST + "/{index}/{type}")
 	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces(MediaType.APPLICATION_JSON)
