@@ -873,7 +873,7 @@ public class SpeciesController {
 					revisedOnMaxDate, rank, path, user, attributes, reference, description, colorRange, traitParams,
 					mapSearchParams);
 
-			if (view.equalsIgnoreCase("csv_download") && request.getHeader(HttpHeaders.AUTHORIZATION) != null
+			if (view.equalsIgnoreCase("species_list") && request.getHeader(HttpHeaders.AUTHORIZATION) != null
 					&& !request.getHeader(HttpHeaders.AUTHORIZATION).isEmpty()) {
 				listService.csvDownload(mapSearchQuery, index, type, request, mapSearchParams,
 						uriInfo.getRequestUri().toString(), authorId);
