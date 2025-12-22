@@ -820,7 +820,7 @@ public class SpeciesController {
 
 	@POST
 	@Path(ApiConstants.LIST + "/{index}/{type}")
-	@Consumes(MediaType.TEXT_PLAIN)
+	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 
 	@ApiOperation(value = "search the species for list page", notes = "return speceis list data", response = SpeciesListPageData.class)
