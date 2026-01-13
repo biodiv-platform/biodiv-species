@@ -6,6 +6,8 @@ package com.strandls.species.service;
 import java.util.List;
 import java.util.Map;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import com.strandls.esmodule.pojo.MapSearchParams;
 import com.strandls.esmodule.pojo.MapSearchQuery;
 import com.strandls.species.pojo.MapAggregationResponse;
@@ -26,5 +28,7 @@ public interface SpeciesListService {
 			String createdOnMinDate, String revisedOnMinDate, String revisedOnMaxDate, String rank, String path,
 			String userId, String attributes, String reference, String description, Integer colorRange,
 			Map<String, List<String>> traitParams, MapSearchParams mapSearchParams);
+
+	public void csvDownload(MapSearchQuery mapSearchQuery, String index, String type, HttpServletRequest request, MapSearchParams mapSearchParams, String string, String authorId);
 
 }

@@ -52,7 +52,6 @@ import com.strandls.userGroup.pojo.Featured;
 import com.strandls.userGroup.pojo.FeaturedCreate;
 import com.strandls.userGroup.pojo.UserGroupIbp;
 import com.strandls.userGroup.pojo.UserGroupSpeciesCreateData;
-
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -800,7 +799,7 @@ public class SpeciesController {
 			@DefaultValue("") @QueryParam("rank") String rank, @DefaultValue("") @QueryParam("path") String path,
 			@DefaultValue("") @QueryParam("description") String description,
 			@DefaultValue("") @QueryParam("attributes") String attributes,
-			@DefaultValue("40") @QueryParam("colorRange") Integer colorRange,
+			@DefaultValue("40") @QueryParam("colorRange") Integer colorRange, @QueryParam("authorId") String authorId,
 			@DefaultValue("grid") @QueryParam("view") String view, @QueryParam("bulkAction") String bulkAction,
 			@QueryParam("selectAll") Boolean selectAll, @QueryParam("bulkUsergroupIds") String bulkUsergroupIds,
 			@QueryParam("bulkSpeciesIds") String bulkSpeciesIds, @Context HttpServletRequest request,
@@ -827,7 +826,14 @@ public class SpeciesController {
 					revisedOnMaxDate, rank, path, user, attributes, reference, description, colorRange, traitParams,
 					mapSearchParams);
 
-			if (view.equalsIgnoreCase("list") || view.equalsIgnoreCase("grid")) {
+			if (view.equalsIgnoreCase("csv_download") && request.getHeader(HttpHeaders.AUTHORIZATION) != null
+					&& !request.getHeader(HttpHeaders.AUTHORIZATION).isEmpty()) {
+				listService.csvDownload(mapSearchQuery, index, type, request, mapSearchParams,
+						uriInfo.getRequestUri().toString(), authorId);
+				return Response.status(Status.OK).build();
+			}
+
+			else if (view.equalsIgnoreCase("list") || view.equalsIgnoreCase("grid")) {
 				MapAggregationResponse aggregationResult = null;
 
 				aggregationResult = listService.mapAggregate(index, type, scientificName, commonName, sGroup,
