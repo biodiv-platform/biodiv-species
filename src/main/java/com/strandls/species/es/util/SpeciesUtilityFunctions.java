@@ -181,10 +181,10 @@ public class SpeciesUtilityFunctions {
 					}
 					rowSets.add(row.stream().toArray(String[]::new));
 				} else {
-					String[] emptyRow = new String[row.size()];
+					String[] emptyRow = new String[csvCoreHeaders.length + list.size() + 1 + ids.size()];
 					Arrays.fill(emptyRow, "");
 					int j = csvCoreHeaders.length + list.size();
-					emptyRow[j] = content.getKey().toString();
+					emptyRow[j] = langaugeMap.getOrDefault(content.getKey(), content.getKey().toString());
 					j = j + 1;
 					for (Long field : ids) {
 						if (fieldContent.containsKey(field.toString())) {
