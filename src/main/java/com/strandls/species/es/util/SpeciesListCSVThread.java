@@ -120,7 +120,6 @@ public class SpeciesListCSVThread implements Runnable {
 			List<FieldRender> fields = speciesService.getFields(defaultLanguageId, null);
 			List<String> fieldNames = new ArrayList<>();
 			List<FieldDisplay> speciesField = new ArrayList<>();
-			fieldNames.add("language");
 			List<Long> ids = new ArrayList<>();
 
 			// Getting leaf nodes

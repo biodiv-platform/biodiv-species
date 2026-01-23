@@ -45,7 +45,7 @@ public class SpeciesUtilityFunctions {
 
 	private final Logger logger = LoggerFactory.getLogger(SpeciesUtilityFunctions.class);
 
-	private final String[] csvCoreHeaders = { "taxonomyDefinition.name", "taxonomyDefinition.nameSourceId",
+	private final String[] csvCoreHeaders = { "taxonomyDefinition.name", "language", "taxonomyDefinition.nameSourceId",
 			"taxonomyDefinition.binomialForm", "taxonomyDefinition.relationship", "taxonomyDefinition.italicisedForm",
 			"taxonomyDefinition.normalizedForm", "taxonomyDefinition.authorYear", "taxonomyDefinition.id",
 			"taxonomyDefinition.canonicalForm", "taxonomyDefinition.matchDatabaseName",
@@ -103,9 +103,10 @@ public class SpeciesUtilityFunctions {
 
 	}
 
-	private void addCoreHeaderValues(List<String> row, ShowSpeciesPage record, List<String> list, List<Long> ids) {
+	private void addCoreHeaderValues(List<String> row, ShowSpeciesPage record, List<String> list, List<Long> ids, String language) {
 		try {
 			row.add(record.getTaxonomyDefinition().getName());
+			row.add(language);
 			row.add(record.getTaxonomyDefinition().getNameSourceId());
 			row.add(record.getTaxonomyDefinition().getBinomialForm());
 			row.add(record.getTaxonomyDefinition().getRelationship());
@@ -163,15 +164,13 @@ public class SpeciesUtilityFunctions {
 		for (ShowSpeciesPage record : records) {
 			List<String> row = new ArrayList<String>();
 
-			addCoreHeaderValues(row, record, list, ids);
-
 			Map<Long, LinkedHashMap<String, String>> langContent = fetchFieldDataForCsv(record.getFieldData(), ids);
 
 			int i = 0;
 			for (Entry<Long, LinkedHashMap<String, String>> content : langContent.entrySet()) {
 				LinkedHashMap<String, String> fieldContent = content.getValue();
 				if (i == 0) {
-					row.add(langaugeMap.getOrDefault(content.getKey(), content.getKey().toString()));
+					addCoreHeaderValues(row, record, list, ids, langaugeMap.getOrDefault(content.getKey(), content.getKey().toString()));
 					for (Long field : ids) {
 						if (fieldContent.containsKey(field.toString())) {
 							row.add(fieldContent.get(field.toString()));
@@ -184,8 +183,8 @@ public class SpeciesUtilityFunctions {
 					String[] emptyRow = new String[csvCoreHeaders.length + list.size() + 1 + ids.size()];
 					Arrays.fill(emptyRow, "");
 					int j = csvCoreHeaders.length + list.size();
-					emptyRow[j] = langaugeMap.getOrDefault(content.getKey(), content.getKey().toString());
-					j = j + 1;
+					emptyRow[0] = record.getTaxonomyDefinition().getName();
+					emptyRow[1] = langaugeMap.getOrDefault(content.getKey(), content.getKey().toString());
 					for (Long field : ids) {
 						if (fieldContent.containsKey(field.toString())) {
 							emptyRow[j] = fieldContent.get(field.toString());
@@ -322,6 +321,17 @@ public class SpeciesUtilityFunctions {
 		return Arrays.asList(rankMap.get("kingdom"), rankMap.get("phylum"), rankMap.get("class"), rankMap.get("order"),
 				rankMap.get("family"), rankMap.get("genus"), rankMap.get("species"));
 	}
+	
+	private static String decodeHtmlEntities(String text) {
+		String cleanedText = text.replace("\t", "");
+		return cleanedText.replace("&amp;", "&").replace("&lt;", "<").replace("&gt;", ">").replace("&quot;", "\"")
+				.replace("&#39;", "'").replace("&nbsp;", " ").replace("&copy;", "(c)").replace("&reg;", "(r)")
+				.replace("&#8217;", "'").replace("&#8220;", "\"").replace("&#8221;", "\"").replace("&agrave;", "à")
+				.replace("&egrave;", "è").replace("&eacute;", "é").replace("&ecirc;", "ê").replace("&Eacute;", "É")
+				.replace("&icirc;", "î").replace("&ocirc;", "ô").replace("&ucirc;", "û").replace("&ccedil;", "ç")
+				.replace("&Ccedil;", "Ç").replace("&Agrave;", "À").replace("&Egrave;", "È").replace("&acirc;", "â")
+				.replace("&iuml;", "ï").replace("&rsquo;", "’").replace("&ugrave;", "ù").replace("&acirc;", "â");
+	}
 
 	private Map<Long, LinkedHashMap<String, String>> fetchFieldDataForCsv(List<SpeciesFieldData> fieldValues,
 			List<Long> ids) {
@@ -342,7 +352,7 @@ public class SpeciesUtilityFunctions {
 					}
 
 					// Create the content string
-					String content = "description:" + value.getFieldData().getDescription().replaceAll("<[^>]*>", "")
+					String content = "description:" + decodeHtmlEntities(value.getFieldData().getDescription().replaceAll("<[^>]*>", ""))
 							+ "\n\nattributions:" + value.getAttributions() + "\ncontributor:" + contriString
 							+ "\nlicense:" + value.getLicense().getName() + "|" + value.getLicense().getUrl() + "|"
 							+ value.getLicense().getId();
