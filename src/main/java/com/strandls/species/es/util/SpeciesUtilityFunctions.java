@@ -342,7 +342,7 @@ public class SpeciesUtilityFunctions {
 				.replace("&ndash;", "-").replace("&deg;", "°").replace("&euml;", "ë").replace("&laquo;", "«")
 				.replace("&lsquo;", "‘").replace("&raquo;", "»").replace("&oelig;", "œ").replace("&ldquo;", "\"")
 				.replace("&uuml;", "ü").replace("&rdquo;", "\"").replace("&bull;", "•").replace("&hellip;", "…")
-				.replace(":&middot;", "·").replace("&sup2", "²").replace("&omega;", "ω").replace("&shy;", "")
+				.replace("&middot;", "·").replace("&sup2", "²").replace("&omega;", "ω").replace("&shy;", "")
 				.replace("&ordm;", "º").replace("&alpha;", "α").replace("&eacute;", "é").replace("&sup1;", "¹")
 				.replace("&aacute;", "á").replace("&plusmn;", "±").replace("&Acirc;", "Â").replace("&ntilde;", "ñ")
 				.replace("&frac12;", "½").replace("&frac14;", "¼").replace("&frac34;", "¾").replace("&mdash;", "—")
