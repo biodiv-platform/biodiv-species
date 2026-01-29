@@ -338,7 +338,16 @@ public class SpeciesUtilityFunctions {
 				.replace("&egrave;", "è").replace("&eacute;", "é").replace("&ecirc;", "ê").replace("&Eacute;", "É")
 				.replace("&icirc;", "î").replace("&ocirc;", "ô").replace("&ucirc;", "û").replace("&ccedil;", "ç")
 				.replace("&Ccedil;", "Ç").replace("&Agrave;", "À").replace("&Egrave;", "È").replace("&acirc;", "â")
-				.replace("&iuml;", "ï").replace("&rsquo;", "’").replace("&ugrave;", "ù").replace("&acirc;", "â");
+				.replace("&iuml;", "ï").replace("&rsquo;", "’").replace("&ugrave;", "ù").replace("&acirc;", "â")
+				.replace("&ndash;", "-").replace("&deg;", "°").replace("&euml;", "ë").replace("&laquo;", "«")
+				.replace("&lsquo;", "‘").replace("&raquo;", "»").replace("&oelig;", "œ").replace("&ldquo;", "\"")
+				.replace("&uuml;", "ü").replace("&rdquo;", "\"").replace("&bull;", "•").replace("&hellip;", "…")
+				.replace(":&middot;", "·").replace("&sup2", "²").replace("&omega;", "ω").replace("&shy;", "")
+				.replace("&ordm;", "º").replace("&alpha;", "α").replace("&eacute;", "é").replace("&sup1;", "¹")
+				.replace("&aacute;", "á").replace("&plusmn;", "±").replace("&Acirc;", "Â").replace("&ntilde;", "ñ")
+				.replace("&frac12;", "½").replace("&frac14;", "¼").replace("&frac34;", "¾").replace("&mdash;", "—")
+				.replace("&oacute;", "ó").replace("&Icirc;", "Î").replace("&le;", "≤").replace("&micro;", "µ")
+				.replace("&mu;", "µ").replace("&pound;", "£").replace("&sect;", "§").replace("&times;", "×");
 	}
 
 	private Map<Long, LinkedHashMap<String, String>> fetchFieldDataForCsv(List<SpeciesFieldData> fieldValues,
