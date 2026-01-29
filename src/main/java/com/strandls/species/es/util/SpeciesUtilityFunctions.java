@@ -31,6 +31,7 @@ import com.strandls.observation.pojo.DownloadLog;
 import com.strandls.species.pojo.Reference;
 import com.strandls.species.pojo.ShowSpeciesPage;
 import com.strandls.species.pojo.SpeciesFieldData;
+import com.strandls.species.util.PropertyFileUtil;
 import com.strandls.taxonomy.pojo.BreadCrumb;
 import com.strandls.taxonomy.pojo.CommonName;
 import com.strandls.traits.pojo.FactValuePair;
@@ -44,6 +45,9 @@ import com.strandls.userGroup.pojo.UserGroupIbp;
 public class SpeciesUtilityFunctions {
 
 	private final Logger logger = LoggerFactory.getLogger(SpeciesUtilityFunctions.class);
+
+	private Long defaultLanguageId = Long
+			.parseLong(PropertyFileUtil.fetchProperty("config.properties", "defaultLanguageId"));
 
 	private final String[] csvCoreHeaders = { "taxonomyDefinition.name", "language", "taxonomyDefinition.nameSourceId",
 			"taxonomyDefinition.binomialForm", "taxonomyDefinition.relationship", "taxonomyDefinition.italicisedForm",
@@ -103,7 +107,8 @@ public class SpeciesUtilityFunctions {
 
 	}
 
-	private void addCoreHeaderValues(List<String> row, ShowSpeciesPage record, List<String> list, List<Long> ids, String language) {
+	private void addCoreHeaderValues(List<String> row, ShowSpeciesPage record, List<String> list, List<Long> ids,
+			String language) {
 		try {
 			row.add(record.getTaxonomyDefinition().getName());
 			row.add(language);
@@ -170,7 +175,8 @@ public class SpeciesUtilityFunctions {
 			for (Entry<Long, LinkedHashMap<String, String>> content : langContent.entrySet()) {
 				LinkedHashMap<String, String> fieldContent = content.getValue();
 				if (i == 0) {
-					addCoreHeaderValues(row, record, list, ids, langaugeMap.getOrDefault(content.getKey(), content.getKey().toString()));
+					addCoreHeaderValues(row, record, list, ids,
+							langaugeMap.getOrDefault(content.getKey(), content.getKey().toString()));
 					for (Long field : ids) {
 						if (fieldContent.containsKey(field.toString())) {
 							row.add(fieldContent.get(field.toString()));
@@ -197,6 +203,8 @@ public class SpeciesUtilityFunctions {
 				i = i + 1;
 			}
 			if (i == 0) {
+				addCoreHeaderValues(row, record, list, ids,
+						langaugeMap.getOrDefault(defaultLanguageId, defaultLanguageId.toString()));
 				rowSets.add(row.stream().toArray(String[]::new));
 			}
 		}
@@ -321,7 +329,7 @@ public class SpeciesUtilityFunctions {
 		return Arrays.asList(rankMap.get("kingdom"), rankMap.get("phylum"), rankMap.get("class"), rankMap.get("order"),
 				rankMap.get("family"), rankMap.get("genus"), rankMap.get("species"));
 	}
-	
+
 	private static String decodeHtmlEntities(String text) {
 		String cleanedText = text.replace("\t", "");
 		return cleanedText.replace("&amp;", "&").replace("&lt;", "<").replace("&gt;", ">").replace("&quot;", "\"")
@@ -352,7 +360,8 @@ public class SpeciesUtilityFunctions {
 					}
 
 					// Create the content string
-					String content = "description:" + decodeHtmlEntities(value.getFieldData().getDescription().replaceAll("<[^>]*>", ""))
+					String content = "description:"
+							+ decodeHtmlEntities(value.getFieldData().getDescription().replaceAll("<[^>]*>", ""))
 							+ "\n\nattributions:" + value.getAttributions() + "\ncontributor:" + contriString
 							+ "\nlicense:" + value.getLicense().getName() + "|" + value.getLicense().getUrl() + "|"
 							+ value.getLicense().getId();

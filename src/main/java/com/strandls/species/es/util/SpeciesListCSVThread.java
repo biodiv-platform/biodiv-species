@@ -30,6 +30,7 @@ import com.strandls.esmodule.pojo.MapSearchParams;
 import com.strandls.esmodule.pojo.MapSearchQuery;
 import com.strandls.species.Headers;
 import com.strandls.species.pojo.FieldDisplay;
+import com.strandls.species.pojo.FieldNewExtended;
 import com.strandls.species.pojo.FieldRender;
 import com.strandls.species.pojo.ShowSpeciesPage;
 import com.strandls.species.service.SpeciesServices;
@@ -119,19 +120,29 @@ public class SpeciesListCSVThread implements Runnable {
 			// Getting species fields
 			List<FieldRender> fields = speciesService.getFields(defaultLanguageId, null);
 			List<String> fieldNames = new ArrayList<>();
-			List<FieldDisplay> speciesField = new ArrayList<>();
 			List<Long> ids = new ArrayList<>();
 
 			// Getting leaf nodes
 			for (FieldRender field : fields) {
 				List<FieldDisplay> childFields = field.getChildField();
 				if (childFields != null && !childFields.isEmpty()) {
-					speciesField.addAll(childFields);
+					for (FieldDisplay childField : childFields) {
+						List<FieldNewExtended> grandChildFields = childField.getChildFields();
+						if (grandChildFields != null && !grandChildFields.isEmpty()) {
+							for (FieldNewExtended grandchildField : grandChildFields) {
+								fieldNames.add(
+										childField.getParentField().getHeader() + " < " + grandchildField.getHeader());
+								ids.add(grandchildField.getId());
+							}
+						} else {
+							fieldNames.add(childField.getParentField().getHeader());
+							ids.add(childField.getParentField().getId());
+						}
+					}
+				} else {
+					fieldNames.add(field.getParentField().getHeader());
+					ids.add(field.getParentField().getId());
 				}
-			}
-			for (FieldDisplay species : speciesField) {
-				fieldNames.add(species.getParentField().getHeader());
-				ids.add(species.getParentField().getId());
 			}
 
 			Set<String> allTraitNames = new LinkedHashSet<String>();
