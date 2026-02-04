@@ -280,9 +280,9 @@
       <version>0.0.21</version>
     </dependency>
     <dependency>
-	  <groupId>com.strandls.biodiv</groupId>
-	  <artifactId>utility-client</artifactId>
-	  <version>1.0.0</version>
+	   <groupId>com.strandls.biodiv</groupId>
+	   <artifactId>utility-client</artifactId>
+	   <version>0.0.21</version>
 	</dependency>
   </dependencies>
 
