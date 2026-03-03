@@ -1583,10 +1583,9 @@ public class SpeciesServiceImpl implements SpeciesServices {
 					ugMailData.setWebAddress(ugIbp.getWebAddress());
 					userGroupData.add(ugMailData);
 				}
-
-				payload.setUserGroupData(userGroupData);
 			}
 
+			payload.setUserGroupData(userGroupData);
 			payload.setSpeciesData(speciesData);
 			return payload;
 		} catch (Exception e) {
