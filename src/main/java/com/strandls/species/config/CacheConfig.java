@@ -89,17 +89,13 @@ public class CacheConfig {
 		Long missCount = stats.missCount();
 		Double hitRatio = stats.hitRate();
 		Long evictionCount = stats.evictionCount();
-		Long totalLoadTime = stats.totalLoadTime();
-		Double averageLoadTime = stats.averageLoadPenalty();
 
 		return new com.strandls.species.pojo.CacheStats(
 			currentSize,
 			hitCount,
 			missCount,
 			hitRatio,
-			evictionCount,
-			totalLoadTime,
-			averageLoadTime
+			evictionCount
 		);
 	}
 }

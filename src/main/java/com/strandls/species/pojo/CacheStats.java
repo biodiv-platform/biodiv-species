@@ -12,23 +12,18 @@ public class CacheStats {
 	private Long missCount;
 	private Double hitRatio;
 	private Long evictionCount;
-	private Long totalLoadTime;
-	private Double averageLoadTime;
 
 	public CacheStats() {
 		super();
 	}
 
-	public CacheStats(Long currentSize, Long hitCount, Long missCount, Double hitRatio, Long evictionCount,
-			Long totalLoadTime, Double averageLoadTime) {
+	public CacheStats(Long currentSize, Long hitCount, Long missCount, Double hitRatio, Long evictionCount) {
 		super();
 		this.currentSize = currentSize;
 		this.hitCount = hitCount;
 		this.missCount = missCount;
 		this.hitRatio = hitRatio;
 		this.evictionCount = evictionCount;
-		this.totalLoadTime = totalLoadTime;
-		this.averageLoadTime = averageLoadTime;
 	}
 
 	public Long getCurrentSize() {
@@ -69,22 +64,6 @@ public class CacheStats {
 
 	public void setEvictionCount(Long evictionCount) {
 		this.evictionCount = evictionCount;
-	}
-
-	public Long getTotalLoadTime() {
-		return totalLoadTime;
-	}
-
-	public void setTotalLoadTime(Long totalLoadTime) {
-		this.totalLoadTime = totalLoadTime;
-	}
-
-	public Double getAverageLoadTime() {
-		return averageLoadTime;
-	}
-
-	public void setAverageLoadTime(Double averageLoadTime) {
-		this.averageLoadTime = averageLoadTime;
 	}
 
 }
