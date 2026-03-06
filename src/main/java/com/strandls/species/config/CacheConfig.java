@@ -79,9 +79,27 @@ public class CacheConfig {
 	/**
 	 * Get cache statistics for monitoring
 	 *
-	 * @return Cache stats string
+	 * @return Cache stats object with detailed metrics
 	 */
-	public String getCacheStats() {
-		return speciesPageCache.stats().toString();
+	public com.strandls.species.pojo.CacheStats getCacheStats() {
+		com.github.benmanes.caffeine.cache.stats.CacheStats stats = speciesPageCache.stats();
+
+		Long currentSize = speciesPageCache.estimatedSize();
+		Long hitCount = stats.hitCount();
+		Long missCount = stats.missCount();
+		Double hitRatio = stats.hitRate();
+		Long evictionCount = stats.evictionCount();
+		Long totalLoadTime = stats.totalLoadTime();
+		Double averageLoadTime = stats.averageLoadPenalty();
+
+		return new com.strandls.species.pojo.CacheStats(
+			currentSize,
+			hitCount,
+			missCount,
+			hitRatio,
+			evictionCount,
+			totalLoadTime,
+			averageLoadTime
+		);
 	}
 }
