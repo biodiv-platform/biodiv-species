@@ -107,12 +107,30 @@ public class SpeciesController {
 	@Inject
 	private ESUpdate esUpdate;
 
+	@Inject
+	private com.strandls.species.config.CacheConfig cacheConfig;
+
 	@GET
 	@Path(ApiConstants.PING)
 	@Produces(MediaType.TEXT_PLAIN)
 
 	public Response getPong() {
 		return Response.status(Status.OK).entity("PONG").build();
+	}
+
+	@GET
+	@Path("/cache/stats")
+	@Produces(MediaType.APPLICATION_JSON)
+	@ApiOperation(value = "Get cache statistics", notes = "Returns detailed cache statistics including current size, hit/miss counts, hit ratio, eviction count, and average load time", response = com.strandls.species.pojo.CacheStats.class)
+	@ApiResponses(value = {
+			@ApiResponse(code = 200, message = "Successfully retrieved cache statistics", response = com.strandls.species.pojo.CacheStats.class) })
+	public Response getCacheStats() {
+		try {
+			com.strandls.species.pojo.CacheStats stats = cacheConfig.getCacheStats();
+			return Response.status(Status.OK).entity(stats).build();
+		} catch (Exception e) {
+			return Response.status(Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
+		}
 	}
 
 	@GET
