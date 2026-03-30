@@ -12,8 +12,8 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.strandls.species.pojo.ShowSpeciesPage;
 
 /**
- * Cache configuration for species data
- * Uses Caffeine for high-performance in-memory caching
+ * Cache configuration for species data Uses Caffeine for high-performance
+ * in-memory caching
  *
  * @author Optimization Team
  */
@@ -25,9 +25,7 @@ public class CacheConfig {
 	private final Cache<String, ShowSpeciesPage> speciesPageCache;
 
 	public CacheConfig() {
-		this.speciesPageCache = Caffeine.newBuilder()
-				.maximumSize(1000) // Cache up to 1000 species pages
-				.expireAfterWrite(30, TimeUnit.MINUTES) // Expire after 30 minutes
+		this.speciesPageCache = Caffeine.newBuilder().maximumSize(20000) // Cache up to 20f000 species pages
 				.recordStats() // Enable statistics for monitoring
 				.build();
 
@@ -46,7 +44,7 @@ public class CacheConfig {
 	/**
 	 * Generate cache key for species page
 	 *
-	 * @param speciesId Species ID
+	 * @param speciesId   Species ID
 	 * @param userGroupId User Group ID (can be null)
 	 * @return Cache key string
 	 */
@@ -58,18 +56,16 @@ public class CacheConfig {
 	}
 
 	/**
-	 * Invalidate all cache entries for a specific species
-	 * This includes entries with and without user group filtering
+	 * Invalidate all cache entries for a specific species This includes entries
+	 * with and without user group filtering
 	 *
 	 * @param speciesId Species ID to invalidate
 	 */
 	public void invalidateSpeciesCache(Long speciesId) {
 		// Invalidate all cache entries for this species (with or without userGroup)
 		String prefix = "species:" + speciesId;
-		long invalidatedCount = speciesPageCache.asMap().keySet().stream()
-				.filter(key -> key.startsWith(prefix))
-				.peek(key -> speciesPageCache.invalidate(key))
-				.count();
+		long invalidatedCount = speciesPageCache.asMap().keySet().stream().filter(key -> key.startsWith(prefix))
+				.peek(key -> speciesPageCache.invalidate(key)).count();
 
 		if (invalidatedCount > 0) {
 			logger.info("Invalidated {} cache entries for species: {}", invalidatedCount, speciesId);
@@ -90,12 +86,6 @@ public class CacheConfig {
 		Double hitRatio = stats.hitRate();
 		Long evictionCount = stats.evictionCount();
 
-		return new com.strandls.species.pojo.CacheStats(
-			currentSize,
-			hitCount,
-			missCount,
-			hitRatio,
-			evictionCount
-		);
+		return new com.strandls.species.pojo.CacheStats(currentSize, hitCount, missCount, hitRatio, evictionCount);
 	}
 }

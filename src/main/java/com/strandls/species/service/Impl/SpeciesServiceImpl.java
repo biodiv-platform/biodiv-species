@@ -336,10 +336,10 @@ public class SpeciesServiceImpl implements SpeciesServices {
 			TaxonomyDefinition newTaxon = taxonomyService.getTaxonomyConceptName(taxonId.toString());
 			String newTaxonName = newTaxon.getName();
 
-			ESSpeciesUpdate(updatedSpecies.getId());
+			updateLastRevised(speciesId);
 
-			String activityDesc = "Updated taxon from " + oldTaxonName + "(Taxon ID:" + oldTaxonId + ")" + " to " + newTaxonName
-					+ "(Taxon ID:" + updatedSpecies.getTaxonConceptId() + ")";
+			String activityDesc = "Updated taxon from " + oldTaxonName + "(Taxon ID:" + oldTaxonId + ")" + " to "
+					+ newTaxonName + "(Taxon ID:" + updatedSpecies.getTaxonConceptId() + ")";
 
 			// Log activity for taxon ID update
 			logActivity.LogActivity(request.getHeader(HttpHeaders.AUTHORIZATION), activityDesc, speciesId, speciesId,
@@ -552,8 +552,8 @@ public class SpeciesServiceImpl implements SpeciesServices {
 
 	/**
 	 * Enriches the species page with fields from the database that might not be in
-	 * ElasticSearch yet
-	 * OPTIMIZED: Only fetch fields for this specific species instead of ALL fields
+	 * ElasticSearch yet OPTIMIZED: Only fetch fields for this specific species
+	 * instead of ALL fields
 	 *
 	 * @param showPagePayload The species page payload from ElasticSearch
 	 * @param speciesId       The ID of the species
@@ -561,8 +561,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 	private void enrichSpeciesPageWithNewFields(ShowSpeciesPage showPagePayload, Long speciesId) {
 		try {
 			// Get existing field IDs from the ES response
-			Set<Long> existingFieldIds = showPagePayload.getFieldData().stream()
-					.map(SpeciesFieldData::getFieldId)
+			Set<Long> existingFieldIds = showPagePayload.getFieldData().stream().map(SpeciesFieldData::getFieldId)
 					.collect(Collectors.toSet());
 
 			// OPTIMIZED: Only get fields for this specific species instead of all fields
@@ -574,11 +573,9 @@ public class SpeciesServiceImpl implements SpeciesServices {
 			}
 
 			// Get the field IDs that are actually used by this species
-			Set<Long> speciesFieldIds = speciesFields.stream()
-					.map(SpeciesField::getFieldId)
+			Set<Long> speciesFieldIds = speciesFields.stream().map(SpeciesField::getFieldId)
 					.filter(fieldId -> !blackListSFId.contains(fieldId))
-					.filter(fieldId -> !existingFieldIds.contains(fieldId))
-					.collect(Collectors.toSet());
+					.filter(fieldId -> !existingFieldIds.contains(fieldId)).collect(Collectors.toSet());
 
 			logger.debug("Found {} new fields to enrich for species: {}", speciesFieldIds.size(), speciesId);
 
@@ -1062,7 +1059,8 @@ public class SpeciesServiceImpl implements SpeciesServices {
 				existingFacts.addAll(result);
 				showData.setFacts(existingFacts);
 				;
-				speciesEsUpdate(showData, speciesId);
+				// speciesEsUpdate(showData, speciesId);
+				updateLastRevised(Long.parseLong(speciesId));
 				return existingFacts;
 			}
 
@@ -1865,7 +1863,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 		try {
 			if (Boolean.TRUE.equals(isContributor)) {
 				result = commonNameService.updateIsPreffered(commonNameId);
-				ESSpeciesUpdate(speciesId);
+				updateLastRevised(speciesId);
 			}
 		} catch (Exception e) {
 			logger.error(e.getMessage());
