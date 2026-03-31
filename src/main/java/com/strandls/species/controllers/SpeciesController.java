@@ -125,9 +125,9 @@ public class SpeciesController {
 	@GET
 	@Path("/cache/stats")
 	@Produces(MediaType.APPLICATION_JSON)
-	@ApiOperation(value = "Get cache statistics", notes = "Returns detailed cache statistics including current size, hit/miss counts, hit ratio, eviction count, and average load time", response = com.strandls.species.pojo.CacheStats.class)
-	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = "Successfully retrieved cache statistics", response = com.strandls.species.pojo.CacheStats.class) })
+	@Operation(summary = "Get cache statistics", description = "Returns detailed cache statistics including current size, hit/miss counts, hit ratio, eviction count, and average load time")
+	@ApiResponses({
+			@ApiResponse(responseCode = "200", description = "Successfully retrieved cache statistics", content = @Content(schema = @Schema(implementation = com.strandls.species.pojo.CacheStats.class))) })
 	public Response getCacheStats() {
 		try {
 			com.strandls.species.pojo.CacheStats stats = cacheConfig.getCacheStats();
