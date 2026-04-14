@@ -4,6 +4,7 @@
 package com.strandls.species.service.Impl;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -388,6 +389,11 @@ public class SpeciesServiceImpl implements SpeciesServices {
 		}
 
 		for (Field field : obj.getClass().getDeclaredFields()) {
+			if (Modifier.isStatic(field.getModifiers())) {
+				logger.info("Skipping static field: {} in class: {}",
+					field.getName(), obj.getClass().getName());
+				continue;
+        	}
 			field.setAccessible(true);
 			try {
 				Object value = field.get(obj);
