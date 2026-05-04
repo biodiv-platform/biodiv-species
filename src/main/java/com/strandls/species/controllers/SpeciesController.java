@@ -158,19 +158,20 @@ public class SpeciesController {
 
 	}
 
-	@POST
+	@GET
 	@Path(ApiConstants.SHOW + "/{speciesId}")
-	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@Operation(summary = "provide the show page of speices", description = "Returns the species Show page", parameters = {
-			@Parameter(name = "speciesId", description = "Species ID", required = true) }, requestBody = @RequestBody(description = "User group information", required = true, content = @Content(schema = @Schema(implementation = UserGroupIbp.class))), responses = {
+			@Parameter(name = "speciesId", description = "Species ID", required = true),
+			@Parameter(name = "userGroupId", description = "User Group ID") }, responses = {
 					@ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = ShowSpeciesPage.class))),
 					@ApiResponse(responseCode = "400", description = "unable to fetch the show page") })
-	public Response getSpeciesShowPage(@PathParam("speciesId") String sId, UserGroupIbp userGroupIbp) {
+	public Response getSpeciesShowPage(@PathParam("speciesId") String sId,
+			@QueryParam("userGroupId") Long userGroupId) {
 
 		try {
 			Long speciesId = Long.parseLong(sId);
-			ShowSpeciesPage result = speciesService.showSpeciesPageFromES(speciesId, userGroupIbp);
+			ShowSpeciesPage result = speciesService.showSpeciesPageFromES(speciesId, userGroupId);
 			if (result != null)
 				return Response.status(Status.OK).entity(result).build();
 			return Response.status(Status.NOT_FOUND).build();
