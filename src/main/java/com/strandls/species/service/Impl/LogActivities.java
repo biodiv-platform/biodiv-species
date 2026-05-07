@@ -3,15 +3,15 @@
  */
 package com.strandls.species.service.Impl;
 
+import javax.inject.Inject;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.strandls.activity.controller.ActivityServiceApi;
+import com.strandls.activity.controller.ActivitySerivceApi;
 import com.strandls.activity.pojo.MailData;
 import com.strandls.activity.pojo.SpeciesActivityLogging;
 import com.strandls.species.Headers;
-
-import jakarta.inject.Inject;
 
 /**
  * @author Abhishek Rudra
@@ -21,7 +21,7 @@ import jakarta.inject.Inject;
 public class LogActivities {
 
 	@Inject
-	private ActivityServiceApi activityService;
+	private ActivitySerivceApi activityService;
 
 	@Inject
 	private Headers headers;

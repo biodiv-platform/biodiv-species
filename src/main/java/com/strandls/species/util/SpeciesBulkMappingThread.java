@@ -6,6 +6,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.core.HttpHeaders;
+
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,13 +25,10 @@ import com.strandls.species.Headers;
 import com.strandls.species.es.util.ESBulkUploadThread;
 import com.strandls.species.es.util.ESUpdate;
 import com.strandls.species.pojo.ShowSpeciesPage;
-import com.strandls.userGroup.controller.UserGroupServiceApi;
+import com.strandls.userGroup.controller.UserGroupSerivceApi;
 import com.strandls.userGroup.pojo.BulkGroupPostingData;
 import com.strandls.userGroup.pojo.BulkGroupUnPostingData;
 import com.strandls.userGroup.pojo.UserGroupObvFilterData;
-
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.ws.rs.core.HttpHeaders;
 
 public class SpeciesBulkMappingThread implements Runnable {
 
@@ -39,7 +39,7 @@ public class SpeciesBulkMappingThread implements Runnable {
 	private String bulkObservationIds;
 	private String bulkUsergroupIds;
 	private MapSearchQuery mapSearchQuery;
-	private UserGroupServiceApi ugService;
+	private UserGroupSerivceApi ugService;
 	private String index;
 	private String type;
 	private EsServicesApi esService;
@@ -50,7 +50,7 @@ public class SpeciesBulkMappingThread implements Runnable {
 	private final String requestAuthHeader;
 
 	public SpeciesBulkMappingThread(Boolean selectAll, String bulkAction, String bulkObservationIds,
-			String bulkUsergroupIds, MapSearchQuery mapSearchQuery, UserGroupServiceApi ugService, String index,
+			String bulkUsergroupIds, MapSearchQuery mapSearchQuery, UserGroupSerivceApi ugService, String index,
 			String type, EsServicesApi esService, HttpServletRequest request, Headers headers,
 			ObjectMapper objectMapper, ESUpdate esUpdate) {
 		super();
@@ -125,6 +125,7 @@ public class SpeciesBulkMappingThread implements Runnable {
 					ugFilterData.setObservationId(item.getSpecies().getId());
 					list.add(ugFilterData);
 				});
+
 
 			} catch (IOException | ApiException e) {
 				e.printStackTrace();

@@ -4,10 +4,10 @@
 	"invokerPackage": "com.strandls.species",
 	"groupId": "com.strandls.biodiv",
 	"artifactId": "species-client",
-	"artifactVersion": "0.0.21",
+	"artifactVersion": "1.0.0",
 	"fullJavaUtil": true,
 	"dateLibrary": "legacy",
-	"library": "jersey3",
+	"library": "jersey2",
 	"developerName": "Abhishek Kumar Rudra",
 	"developerEmail": "abhishek.rudra@strandls.com",
 	"java8": true

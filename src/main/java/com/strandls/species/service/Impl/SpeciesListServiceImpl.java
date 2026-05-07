@@ -14,9 +14,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import jakarta.inject.Inject;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.ws.rs.core.HttpHeaders;
+import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.core.HttpHeaders;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,7 +24,7 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.strandls.activity.controller.ActivityServiceApi;
+import com.strandls.activity.controller.ActivitySerivceApi;
 import com.strandls.esmodule.controllers.EsServicesApi;
 import com.strandls.esmodule.pojo.AggregationResponse;
 import com.strandls.esmodule.pojo.MapDocument;
@@ -67,21 +67,21 @@ public class SpeciesListServiceImpl implements SpeciesListService {
 
 	@Inject
 	private ESUtility esUtility;
-
+	
 	@Inject
 	private UserServiceApi userService;
 
 	@Inject
 	private UtilityServiceApi utilityServices;
-
+	
 	@Inject
 	private Headers headers;
-
+	
 	@Inject
 	private SpeciesServices speciesService;
-
+	
 	@Inject
-	private ActivityServiceApi activityService;
+	private ActivitySerivceApi activityService;
 
 	@Override
 	public SpeciesListPageData searchList(String index, String type, MapSearchQuery querys,
@@ -165,11 +165,11 @@ public class SpeciesListServiceImpl implements SpeciesListService {
 
 //		LatchThreadWorker worker = new LatchThreadWorker(index, type, filter, searchQuery, mapResponse, namedAgg, latch,
 //				esService);
-
-		executor.submit(
-				new LatchThreadWorker(index, type, filter, searchQuery, mapResponse, namedAgg, latch, esService));
-
-		// worker.start();
+		
+		executor.submit(new LatchThreadWorker(index, type, filter, searchQuery, mapResponse, namedAgg, latch,
+				esService));
+		
+		//worker.start();
 
 	}
 
@@ -291,15 +291,15 @@ public class SpeciesListServiceImpl implements SpeciesListService {
 //			logger.error(e.getMessage());
 //			Thread.currentThread().interrupt();
 //		}
-
+		
 		try {
-			if (!latch.await(30, TimeUnit.SECONDS)) { // Timeout after 30s
-				logger.warn("Timed out waiting for aggregations");
-				// Handle partial results or fail fast
-			}
+		    if (!latch.await(30, TimeUnit.SECONDS)) {  // Timeout after 30s
+		        logger.warn("Timed out waiting for aggregations");
+		        // Handle partial results or fail fast
+		    }
 		} catch (InterruptedException e) {
-			Thread.currentThread().interrupt();
-			throw new RuntimeException("Aggregation interrupted", e);
+		    Thread.currentThread().interrupt();
+		    throw new RuntimeException("Aggregation interrupted", e);
 		}
 
 		aggregationResponse.setGroupSpeciesName(mapAggResponse.get(SpeciesIndex.SGROUP.getValue()) != null
@@ -323,17 +323,16 @@ public class SpeciesListServiceImpl implements SpeciesListService {
 				: null);
 		return aggregationResponse;
 	}
-
+	
 	@Override
-	public void csvDownload(MapSearchQuery mapSearchQuery, String index, String type, HttpServletRequest request,
-			MapSearchParams mapSearchParams, String string, String authorId) {
+	public void csvDownload(MapSearchQuery mapSearchQuery, String index, String type, HttpServletRequest request, MapSearchParams mapSearchParams, String string, String authorId) {
 		userService = headers.addUserHeader(userService, request.getHeader(HttpHeaders.AUTHORIZATION));
-
+		
 		activityService = headers.addActivityHeader(activityService, request.getHeader(HttpHeaders.AUTHORIZATION));
 
-		SpeciesListCSVThread csvThread = new SpeciesListCSVThread(mapSearchQuery, index, type, esService, objectMapper,
-				speciesService, utilityServices, request, headers, mapSearchParams, string, authorId, userService,
-				activityService);
+		SpeciesListCSVThread csvThread = new SpeciesListCSVThread(mapSearchQuery, index, type, esService,
+				objectMapper, speciesService, utilityServices, request, headers, mapSearchParams,
+				string, authorId, userService, activityService);
 		Thread thread = new Thread(csvThread);
 		thread.start();
 	}

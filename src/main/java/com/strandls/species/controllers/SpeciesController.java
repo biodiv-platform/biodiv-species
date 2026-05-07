@@ -4,6 +4,26 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
+import javax.ws.rs.core.Response.Status;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.strandls.activity.pojo.Activity;
 import com.strandls.activity.pojo.CommentLoggingData;
@@ -11,8 +31,8 @@ import com.strandls.authentication_utility.filter.ValidateUser;
 import com.strandls.esmodule.controllers.EsServicesApi;
 import com.strandls.esmodule.pojo.MapBoundParams;
 import com.strandls.esmodule.pojo.MapSearchParams;
-import com.strandls.esmodule.pojo.MapSearchParams.SortTypeEnum;
 import com.strandls.esmodule.pojo.MapSearchQuery;
+import com.strandls.esmodule.pojo.MapSearchParams.SortTypeEnum;
 import com.strandls.resource.pojo.ResourceData;
 import com.strandls.resource.pojo.SpeciesPull;
 import com.strandls.species.ApiConstants;
@@ -23,7 +43,6 @@ import com.strandls.species.pojo.FieldCreateData;
 import com.strandls.species.pojo.FieldHeader;
 import com.strandls.species.pojo.FieldNew;
 import com.strandls.species.pojo.FieldRender;
-import com.strandls.species.pojo.FieldTranslationUpdateData;
 import com.strandls.species.pojo.MapAggregationResponse;
 import com.strandls.species.pojo.ReferenceCreateData;
 import com.strandls.species.pojo.ShowSpeciesPage;
@@ -47,41 +66,20 @@ import com.strandls.taxonomy.pojo.TaxonomySave;
 import com.strandls.traits.pojo.FactValuePair;
 import com.strandls.traits.pojo.FactsUpdateData;
 import com.strandls.user.pojo.Follow;
-import com.strandls.userGroup.controller.UserGroupServiceApi;
+import com.strandls.userGroup.controller.UserGroupSerivceApi;
 import com.strandls.userGroup.pojo.Featured;
 import com.strandls.userGroup.pojo.FeaturedCreate;
 import com.strandls.userGroup.pojo.UserGroupIbp;
 import com.strandls.userGroup.pojo.UserGroupSpeciesCreateData;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.ArraySchema;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.inject.Inject;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.ws.rs.Consumes;
-import jakarta.ws.rs.DELETE;
-import jakarta.ws.rs.DefaultValue;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.PUT;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.PathParam;
-import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.QueryParam;
-import jakarta.ws.rs.core.Context;
-import jakarta.ws.rs.core.HttpHeaders;
-import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.MultivaluedMap;
-import jakarta.ws.rs.core.Response;
-import jakarta.ws.rs.core.Response.Status;
-import jakarta.ws.rs.core.UriInfo;
+import com.strandls.species.pojo.FieldTranslationUpdateData;
 
-@Tag(name = "Species Services", description = "APIs for managing species information")
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+
+@Api("Species Services")
 @Path(ApiConstants.V1 + ApiConstants.SPECIES)
 public class SpeciesController {
 
@@ -98,7 +96,7 @@ public class SpeciesController {
 	private ObjectMapper objectMapper;
 
 	@Inject
-	private UserGroupServiceApi ugService;
+	private UserGroupSerivceApi ugService;
 
 	@Inject
 	private EsServicesApi esService;
@@ -115,9 +113,7 @@ public class SpeciesController {
 	@GET
 	@Path(ApiConstants.PING)
 	@Produces(MediaType.TEXT_PLAIN)
-	@Operation(summary = "Ping endpoint", description = "Returns PONG to check if the service is alive")
-	@ApiResponses({
-			@ApiResponse(responseCode = "200", description = "Success", content = @Content(schema = @Schema(type = "string"))) })
+
 	public Response getPong() {
 		return Response.status(Status.OK).entity("PONG").build();
 	}
@@ -125,9 +121,9 @@ public class SpeciesController {
 	@GET
 	@Path("/cache/stats")
 	@Produces(MediaType.APPLICATION_JSON)
-	@Operation(summary = "Get cache statistics", description = "Returns detailed cache statistics including current size, hit/miss counts, hit ratio, eviction count, and average load time")
-	@ApiResponses({
-			@ApiResponse(responseCode = "200", description = "Successfully retrieved cache statistics", content = @Content(schema = @Schema(implementation = com.strandls.species.pojo.CacheStats.class))) })
+	@ApiOperation(value = "Get cache statistics", notes = "Returns detailed cache statistics including current size, hit/miss counts, hit ratio, eviction count, and average load time", response = com.strandls.species.pojo.CacheStats.class)
+	@ApiResponses(value = {
+			@ApiResponse(code = 200, message = "Successfully retrieved cache statistics", response = com.strandls.species.pojo.CacheStats.class) })
 	public Response getCacheStats() {
 		try {
 			com.strandls.species.pojo.CacheStats stats = cacheConfig.getCacheStats();
@@ -162,12 +158,13 @@ public class SpeciesController {
 	@Path(ApiConstants.SHOW + "/{speciesId}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	@Operation(summary = "provide the show page of speices", description = "Returns the species Show page", parameters = {
-			@Parameter(name = "speciesId", description = "Species ID", required = true) }, requestBody = @RequestBody(description = "User group information", required = true, content = @Content(schema = @Schema(implementation = UserGroupIbp.class))), responses = {
-					@ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = ShowSpeciesPage.class))),
-					@ApiResponse(responseCode = "400", description = "unable to fetch the show page") })
-	public Response getSpeciesShowPage(@PathParam("speciesId") String sId, UserGroupIbp userGroupIbp) {
 
+	@ApiOperation(value = "provide the show page of speices", notes = "Returns the species Show page", response = ShowSpeciesPage.class)
+	@ApiResponses(value = {
+			@ApiResponse(code = 400, message = "unable to fetch the show page", response = String.class) })
+
+	public Response getSpeciesShowPage(@PathParam("speciesId") String sId,
+			@ApiParam(name = "userGroupIbp") UserGroupIbp userGroupIbp) {
 		try {
 			Long speciesId = Long.parseLong(sId);
 			ShowSpeciesPage result = speciesService.showSpeciesPageFromES(speciesId, userGroupIbp);
@@ -182,11 +179,12 @@ public class SpeciesController {
 	@GET
 	@Path(ApiConstants.FIELDS + ApiConstants.RENDER)
 	@Produces(MediaType.APPLICATION_JSON)
-	@Operation(summary = "Forms the field structure", description = "Returns the field structure", responses = {
-			@ApiResponse(responseCode = "200", description = "List of field structure", content = @Content(array = @ArraySchema(schema = @Schema(implementation = FieldRender.class)))),
-			@ApiResponse(responseCode = "400", description = "Unable to get the fields framework", content = @Content(schema = @Schema(implementation = String.class))) })
-	public Response renderFields(@QueryParam("langId") String langId, @QueryParam("userGroupId") String userGroupId) {
 
+	@ApiOperation(value = "forms the field stucture", notes = "returns the fields structure", response = FieldRender.class, responseContainer = "List")
+	@ApiResponses(value = {
+			@ApiResponse(code = 400, message = "unable to get the fields framework", response = String.class) })
+
+	public Response renderFields(@QueryParam("langId") String langId, @QueryParam("userGroupId") String userGroupId) {
 		try {
 			Long languageId = null;
 			if (langId != null)
@@ -202,9 +200,10 @@ public class SpeciesController {
 	@GET
 	@Path(ApiConstants.FIELDS + ApiConstants.LEAFNODES)
 	@Produces(MediaType.APPLICATION_JSON)
-	@Operation(summary = "Get all the fields with no children", description = "Returns the leaf node fields", responses = {
-			@ApiResponse(responseCode = "200", description = "List of leaf fields", content = @Content(array = @ArraySchema(schema = @Schema(implementation = FieldNew.class)))),
-			@ApiResponse(responseCode = "400", description = "Unable to get the leaf node fields", content = @Content(schema = @Schema(implementation = String.class))) })
+	@ApiOperation(value = "get all the fields with no children", notes = "returns the leaf node fields", response = FieldNew.class, responseContainer = "List")
+	@ApiResponses(value = {
+			@ApiResponse(code = 400, message = "unable to get the leaf node fields", response = String.class) })
+
 	public Response getLeafNodeFields() {
 		try {
 			List<FieldNew> result = speciesService.fetchLeafNodes();
@@ -218,9 +217,10 @@ public class SpeciesController {
 	@GET
 	@Path(ApiConstants.TRAITS + ApiConstants.ALL + "/{languageId}")
 	@Produces(MediaType.APPLICATION_JSON)
-	@Operation(summary = "Get all species traits field-wise", description = "Returns all the traits CategoryWise", responses = {
-			@ApiResponse(responseCode = "200", description = "List of species traits", content = @Content(array = @ArraySchema(schema = @Schema(implementation = SpeciesTrait.class)))),
-			@ApiResponse(responseCode = "400", description = "Unable to fetch the traits", content = @Content(schema = @Schema(implementation = String.class))) })
+
+	@ApiOperation(value = "Get all the species traits field wise", notes = "returns all the traits CategoryWise", response = SpeciesTrait.class, responseContainer = "List")
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "Unable to fetch the traits", response = String.class) })
+
 	public Response getAllSpeciesTraits(@PathParam("languageId") String languageId) {
 		Long language = Long.parseLong(languageId);
 		try {
@@ -234,9 +234,10 @@ public class SpeciesController {
 	@GET
 	@Path(ApiConstants.TRAITS + "/{languageId}")
 	@Produces(MediaType.APPLICATION_JSON)
-	@Operation(summary = "Get all the species traits field wise", description = "Returns all the traits CategoryWise", responses = {
-			@ApiResponse(responseCode = "200", description = "List of traits", content = @Content(array = @ArraySchema(schema = @Schema(implementation = SpeciesTrait.class)))),
-			@ApiResponse(responseCode = "400", description = "Unable to fetch the traits", content = @Content(schema = @Schema(implementation = String.class))) })
+
+	@ApiOperation(value = "Get all the species traits field wise", notes = "returns all the traits CategoryWise", response = SpeciesTrait.class, responseContainer = "List")
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "Unable to fetch the traits", response = String.class) })
+
 	public Response getAllTraits(@PathParam("languageId") String languageId) {
 		Long language = Long.parseLong(languageId);
 		try {
@@ -251,9 +252,10 @@ public class SpeciesController {
 	@Path(ApiConstants.TRAITS + ApiConstants.TAXONOMY + "/{taxonomyId}/{languageId}")
 	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces(MediaType.APPLICATION_JSON)
-	@Operation(summary = "Get all the species traits field wise by taxonomyId", description = "Returns all the traits CategoryWise", responses = {
-			@ApiResponse(responseCode = "200", description = "Traits for taxonomy", content = @Content(array = @ArraySchema(schema = @Schema(implementation = SpeciesTrait.class)))),
-			@ApiResponse(responseCode = "400", description = "Unable to fetch the traits", content = @Content(schema = @Schema(implementation = String.class))) })
+
+	@ApiOperation(value = "Get all the species traits field wise by taxonomyId", notes = "returns all the traits CategoryWise", response = SpeciesTrait.class, responseContainer = "List")
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "Unable to fetch the traits", response = String.class) })
+
 	public Response getSpeciesTraitsByTaxonomy(@PathParam("taxonomyId") String taxonomyId,
 			@PathParam("languageId") String languageId) {
 		try {
@@ -271,14 +273,14 @@ public class SpeciesController {
 	@Path(ApiConstants.UPDATE + ApiConstants.USERGROUP + "/{speciesId}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	@ValidateUser
-	@Operation(summary = "update the species usergroup mapping", description = "Return the associated userGroup", parameters = {
-			@Parameter(name = "speciesId", description = "Species ID", required = true) }, requestBody = @RequestBody(description = "List of user group IDs", required = true, content = @Content(array = @ArraySchema(schema = @Schema(implementation = Long.class)))), responses = {
-					@ApiResponse(responseCode = "200", description = "OK", content = @Content(array = @ArraySchema(schema = @Schema(implementation = UserGroupIbp.class)))),
-					@ApiResponse(responseCode = "400", description = "unable to fetch the data") })
-	public Response updateUserGroupSpecies(@Context HttpServletRequest request,
-			@PathParam("speciesId") String speciesId, List<Long> userGroupList) {
 
+	@ValidateUser
+
+	@ApiOperation(value = "update the species usergroup mapping", notes = "Return the associated userGroup", response = UserGroupIbp.class, responseContainer = "List")
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "unable to fetch the data", response = String.class) })
+
+	public Response updateUserGroupSpecies(@Context HttpServletRequest request,
+			@PathParam("speciesId") String speciesId, @ApiParam(name = "userGroupList") List<Long> userGroupList) {
 		try {
 			UserGroupSpeciesCreateData ugSpeciesCreateData = new UserGroupSpeciesCreateData();
 			ugSpeciesCreateData.setUserGroupIds(userGroupList);
@@ -294,12 +296,15 @@ public class SpeciesController {
 	@Path(ApiConstants.FEATURED)
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	@ValidateUser
-	@Operation(summary = "Feature a species", description = "Returns all the featuring", requestBody = @RequestBody(description = "Featured creation data", required = true, content = @Content(schema = @Schema(implementation = FeaturedCreate.class))), responses = {
-			@ApiResponse(responseCode = "200", description = "OK", content = @Content(array = @ArraySchema(schema = @Schema(implementation = Featured.class)))),
-			@ApiResponse(responseCode = "404", description = "Unable to feature the species") })
-	public Response createFeatured(@Context HttpServletRequest request, FeaturedCreate featuredCreate) {
 
+	@ValidateUser
+
+	@ApiOperation(value = "Feature a species", notes = "Returns all the featuring", response = Featured.class, responseContainer = "List")
+	@ApiResponses(value = {
+			@ApiResponse(code = 404, message = "Unable to feature the species", response = String.class) })
+
+	public Response createFeatured(@Context HttpServletRequest request,
+			@ApiParam(name = "featuredCreate") FeaturedCreate featuredCreate) {
 		try {
 			List<Featured> result = speciesService.createFeatured(request, featuredCreate);
 			return Response.status(Status.OK).entity(result).build();
@@ -312,14 +317,15 @@ public class SpeciesController {
 	@Path(ApiConstants.UNFEATURED + "/{speciesId}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	@ValidateUser
-	@Operation(summary = "Unfeatured a species", description = "Returns all the featuring", parameters = {
-			@Parameter(name = "speciesId", description = "Species ID", required = true) }, requestBody = @RequestBody(description = "List of user group IDs", required = true, content = @Content(array = @ArraySchema(schema = @Schema(implementation = Long.class)))), responses = {
-					@ApiResponse(responseCode = "200", description = "OK", content = @Content(array = @ArraySchema(schema = @Schema(implementation = Featured.class)))),
-					@ApiResponse(responseCode = "404", description = "Unable to feature the species") })
-	public Response unFeatured(@Context HttpServletRequest request, @PathParam("speciesId") String speciesId,
-			List<Long> userGroupList) {
 
+	@ValidateUser
+
+	@ApiOperation(value = "Unfeatured a species", notes = "Returns all the featuring", response = Featured.class, responseContainer = "List")
+	@ApiResponses(value = {
+			@ApiResponse(code = 404, message = "Unable to feature the species", response = String.class) })
+
+	public Response unFeatured(@Context HttpServletRequest request, @PathParam("speciesId") String speciesId,
+			@ApiParam(name = "userGroupList") List<Long> userGroupList) {
 		try {
 			List<Featured> result = speciesService.unFeatured(request, speciesId, userGroupList);
 			return Response.status(Status.OK).entity(result).build();
@@ -332,15 +338,15 @@ public class SpeciesController {
 	@Path(ApiConstants.UPDATE + ApiConstants.TRAITS + "/{speciesId}/{traitId}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	@ValidateUser
-	@Operation(summary = "update species Traits", description = "Return all the traits", parameters = {
-			@Parameter(name = "speciesId", description = "Species ID", required = true),
-			@Parameter(name = "traitId", description = "Trait ID", required = true) }, requestBody = @RequestBody(description = "Traits update data", required = true, content = @Content(schema = @Schema(implementation = FactsUpdateData.class))), responses = {
-					@ApiResponse(responseCode = "200", description = "OK", content = @Content(array = @ArraySchema(schema = @Schema(implementation = FactValuePair.class)))),
-					@ApiResponse(responseCode = "404", description = "unable to update the traits") })
-	public Response updateTraits(@Context HttpServletRequest request, @PathParam("speciesId") String speciesId,
-			@PathParam("traitId") String traitId, FactsUpdateData factsUpdateData) {
 
+	@ValidateUser
+
+	@ApiOperation(value = "update species Traits", notes = "Return all the traits", response = FactValuePair.class, responseContainer = "List")
+	@ApiResponses(value = {
+			@ApiResponse(code = 404, message = "unable to update the traits", response = String.class) })
+
+	public Response updateTraits(@Context HttpServletRequest request, @PathParam("speciesId") String speciesId,
+			@PathParam("traitId") String traitId, @ApiParam(name = "factsUpdateData") FactsUpdateData factsUpdateData) {
 		try {
 			List<FactValuePair> result = speciesService.updateTraits(request, speciesId, traitId, factsUpdateData);
 			return Response.status(Status.OK).entity(result).build();
@@ -354,14 +360,15 @@ public class SpeciesController {
 	@Path(ApiConstants.UPDATE + ApiConstants.SPECIESFIELD + "/{speciesId}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	@ValidateUser
-	@Operation(summary = "update species field", description = "return species field data", parameters = {
-			@Parameter(name = "speciesId", description = "Species ID", required = true) }, requestBody = @RequestBody(description = "Species field update data", required = true, content = @Content(schema = @Schema(implementation = SpeciesFieldUpdateData.class))), responses = {
-					@ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = SpeciesFieldData.class))),
-					@ApiResponse(responseCode = "404", description = "unable to update the species Field") })
-	public Response updateSpeciesField(@Context HttpServletRequest request, @PathParam("speciesId") String speciesId,
-			SpeciesFieldUpdateData sfUpdateData) {
 
+	@ValidateUser
+
+	@ApiOperation(value = "update species field", notes = "return species field data", response = SpeciesFieldData.class)
+	@ApiResponses(value = {
+			@ApiResponse(code = 404, message = "unable to update the species Field", response = String.class) })
+
+	public Response updateSpeciesField(@Context HttpServletRequest request, @PathParam("speciesId") String speciesId,
+			@ApiParam(name = "sfUpdateData") SpeciesFieldUpdateData sfUpdateData) {
 		try {
 			Long sId = Long.parseLong(speciesId);
 			SpeciesFieldData result = speciesService.updateSpeciesField(request, sId, sfUpdateData);
@@ -378,10 +385,13 @@ public class SpeciesController {
 	@Path(ApiConstants.REMOVE + ApiConstants.SPECIESFIELD + "/{speciesFieldId}")
 	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces(MediaType.APPLICATION_JSON)
+
 	@ValidateUser
-	@Operation(summary = "Delete species field", description = "Deletes a species field and returns success/failure", responses = {
-			@ApiResponse(responseCode = "200", description = "Species field deleted"),
-			@ApiResponse(responseCode = "404", description = "Unable to delete the species field", content = @Content(schema = @Schema(implementation = String.class))) })
+
+	@ApiOperation(value = "Delete species field", notes = "return Boolean value", response = Boolean.class)
+	@ApiResponses(value = {
+			@ApiResponse(code = 404, message = "unable to delete the species Field", response = String.class) })
+
 	public Response removeSpeciesField(@Context HttpServletRequest request,
 			@PathParam("speciesFieldId") String speciesFieldId) {
 		try {
@@ -399,14 +409,15 @@ public class SpeciesController {
 	@Path(ApiConstants.UPDATE + ApiConstants.COMMONNAME + "/{speciesId}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	@ValidateUser
-	@Operation(summary = "update and add common Names", description = "return common Names list", parameters = {
-			@Parameter(name = "speciesId", description = "Species ID", required = true) }, requestBody = @RequestBody(description = "Common names update data", required = true, content = @Content(schema = @Schema(implementation = CommonNamesData.class))), responses = {
-					@ApiResponse(responseCode = "200", description = "OK", content = @Content(array = @ArraySchema(schema = @Schema(implementation = CommonName.class)))),
-					@ApiResponse(responseCode = "404", description = "unable to update the common Names") })
-	public Response updateAddCommonName(@Context HttpServletRequest request, @PathParam("speciesId") String speciesId,
-			CommonNamesData commonNamesData) {
 
+	@ValidateUser
+
+	@ApiOperation(value = "update and add common Names", notes = "return common Names list", response = CommonName.class, responseContainer = "List")
+	@ApiResponses(value = {
+			@ApiResponse(code = 404, message = "unable to update the common Names", response = String.class) })
+
+	public Response updateAddCommonName(@Context HttpServletRequest request, @PathParam("speciesId") String speciesId,
+			@ApiParam(name = "commonNamesData") CommonNamesData commonNamesData) {
 		try {
 			Long sId = Long.parseLong(speciesId);
 			List<CommonName> result = speciesService.updateAddCommonName(request, sId, commonNamesData);
@@ -423,13 +434,15 @@ public class SpeciesController {
 	@Path(ApiConstants.UPDATE + ApiConstants.PREFERREDCOMMONNAME + "/{speciesId}/{commonNameId}")
 	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces(MediaType.APPLICATION_JSON)
+
 	@ValidateUser
-	@Operation(summary = "Update preferred common names", description = "Return preferred common Name", responses = {
-			@ApiResponse(responseCode = "200", description = "Preferred common name updated", content = @Content(schema = @Schema(implementation = CommonName.class))),
-			@ApiResponse(responseCode = "404", description = "Unable to update the preferred common names", content = @Content(schema = @Schema(implementation = String.class))) })
+
+	@ApiOperation(value = "update preferrred common Names", notes = "return preferred common Name", response = CommonName.class)
+	@ApiResponses(value = {
+			@ApiResponse(code = 404, message = "unable to update the preferrred common Names", response = String.class) })
+
 	public Response updatePreferredCommonName(@Context HttpServletRequest request,
 			@PathParam("speciesId") String speciesId, @PathParam("commonNameId") String commonNameId) {
-
 		try {
 
 			Long sId = Long.parseLong(speciesId);
@@ -445,10 +458,13 @@ public class SpeciesController {
 	@Path(ApiConstants.REMOVE + ApiConstants.COMMONNAME + "/{speciesId}/{commonNameId}")
 	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces(MediaType.APPLICATION_JSON)
+
 	@ValidateUser
-	@Operation(summary = "Delete common names", description = "Return common names list", responses = {
-			@ApiResponse(responseCode = "200", description = "Updated common names list", content = @Content(array = @ArraySchema(schema = @Schema(implementation = CommonName.class)))),
-			@ApiResponse(responseCode = "404", description = "Unable to update the common names", content = @Content(schema = @Schema(implementation = String.class))) })
+
+	@ApiOperation(value = "delete common Names", notes = "return common Names list", response = CommonName.class, responseContainer = "List")
+	@ApiResponses(value = {
+			@ApiResponse(code = 404, message = "unable to update the common Names", response = String.class) })
+
 	public Response removeCommonName(@Context HttpServletRequest request, @PathParam("speciesId") String speciesId,
 			@PathParam("commonNameId") String commonNameId) {
 		try {
@@ -465,11 +481,12 @@ public class SpeciesController {
 	@Path(ApiConstants.PULL + ApiConstants.OBSERVATION + ApiConstants.RESOURCE + "/{speciesId}")
 	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces(MediaType.APPLICATION_JSON)
-	@Operation(summary = "Get all observation resources", description = "Returns all observation-linked resources", responses = {
-			@ApiResponse(responseCode = "200", description = "Observation resources list", content = @Content(array = @ArraySchema(schema = @Schema(implementation = SpeciesPull.class)))),
-			@ApiResponse(responseCode = "400", description = "Unable to get the resources", content = @Content(schema = @Schema(implementation = String.class))) })
-	public Response getObservationResources(
-			@PathParam("speciesId") @Parameter(description = "Species ID") String speciesId,
+
+	@ApiOperation(value = "get all the observation resources", notes = "Returns the observation resources", response = SpeciesPull.class, responseContainer = "List")
+	@ApiResponses(value = {
+			@ApiResponse(code = 400, message = "unable to get the resources", response = String.class) })
+
+	public Response getObservationResources(@PathParam("speciesId") String speciesId,
 			@DefaultValue("0") @QueryParam("offset") String offset) {
 		try {
 
@@ -487,10 +504,13 @@ public class SpeciesController {
 	@Path(ApiConstants.EDIT + ApiConstants.RESOURCE + "/{speciesId}")
 	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces(MediaType.APPLICATION_JSON)
+
 	@ValidateUser
-	@Operation(summary = "Get all the species resources", description = "Returns the species resources", responses = {
-			@ApiResponse(responseCode = "200", description = "Species resource list", content = @Content(array = @ArraySchema(schema = @Schema(implementation = ResourceData.class)))),
-			@ApiResponse(responseCode = "400", description = "Unable to get the resources", content = @Content(schema = @Schema(implementation = String.class))) })
+
+	@ApiOperation(value = "get all the species resources", notes = "Returns the spcies resources", response = ResourceData.class, responseContainer = "List")
+	@ApiResponses(value = {
+			@ApiResponse(code = 400, message = "unable to get the resources", response = String.class) })
+
 	public Response getEditSpeciesResource(@Context HttpServletRequest request,
 			@PathParam("speciesId") String speciesId) {
 		try {
@@ -506,14 +526,15 @@ public class SpeciesController {
 	@Path(ApiConstants.UPDATE + ApiConstants.RESOURCE + "/{speciesId}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	@ValidateUser
-	@Operation(summary = "update the species resources", description = "Returns the species resources", parameters = {
-			@Parameter(name = "speciesId", description = "Species ID", required = true) }, requestBody = @RequestBody(description = "List of species resource pre-data", required = true, content = @Content(array = @ArraySchema(schema = @Schema(implementation = SpeciesResourcesPreData.class)))), responses = {
-					@ApiResponse(responseCode = "200", description = "OK", content = @Content(array = @ArraySchema(schema = @Schema(implementation = ResourceData.class)))),
-					@ApiResponse(responseCode = "400", description = "unable to update the resources") })
-	public Response updateSpeciesResource(@Context HttpServletRequest request, @PathParam("speciesId") String speciesId,
-			List<SpeciesResourcesPreData> preDataList) {
 
+	@ValidateUser
+
+	@ApiOperation(value = "update the species resources", notes = "Returns the species resources", response = ResourceData.class, responseContainer = "List")
+	@ApiResponses(value = {
+			@ApiResponse(code = 400, message = "unable to update the resources", response = String.class) })
+
+	public Response updateSpeciesResource(@Context HttpServletRequest request, @PathParam("speciesId") String speciesId,
+			@ApiParam(name = "") List<SpeciesResourcesPreData> preDataList) {
 		try {
 			Long sId = Long.parseLong(speciesId);
 			List<ResourceData> result = speciesService.updateSpciesResources(request, sId, preDataList);
@@ -528,11 +549,14 @@ public class SpeciesController {
 	@Path(ApiConstants.ADD + ApiConstants.COMMENT)
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
+
 	@ValidateUser
-	@Operation(summary = "Add species Comment", description = "Return the comment activity", requestBody = @RequestBody(description = "Comment data", required = true, content = @Content(schema = @Schema(implementation = CommentLoggingData.class))), responses = {
-			@ApiResponse(responseCode = "200", description = "Comment added", content = @Content(schema = @Schema(implementation = Activity.class))),
-			@ApiResponse(responseCode = "400", description = "unable to log the comment") })
-	public Response addSpeciesComment(@Context HttpServletRequest request, CommentLoggingData loggingData) {
+
+	@ApiOperation(value = "Add species Comment", notes = "Return the comment activity", response = Activity.class)
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "unable to log the comment", response = String.class) })
+
+	public Response addSpeciesComment(@Context HttpServletRequest request,
+			@ApiParam(name = "commentData") CommentLoggingData loggingData) {
 		try {
 			Activity result = speciesService.addSpeciesComment(request, loggingData);
 			if (result != null)
@@ -547,13 +571,14 @@ public class SpeciesController {
 	@Path(ApiConstants.DELETE + ApiConstants.COMMENT + "/{commentId}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
+
 	@ValidateUser
-	@Operation(summary = "Deletes a comment", description = "Return the current activity", parameters = {
-			@Parameter(name = "commentId", description = "Comment ID", required = true) }, requestBody = @RequestBody(description = "Comment data", required = true, content = @Content(schema = @Schema(implementation = CommentLoggingData.class))), responses = {
-					@ApiResponse(responseCode = "200", description = "Comment deleted", content = @Content(schema = @Schema(implementation = Activity.class))),
-					@ApiResponse(responseCode = "400", description = "Unable to log a comment") })
-	public Response deleteComment(@Context HttpServletRequest request, CommentLoggingData commentDatas,
-			@PathParam("commentId") String commentId) {
+
+	@ApiOperation(value = "Deletes a comment", notes = "Return the current activity", response = Activity.class)
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "Unable to log a comment", response = String.class) })
+
+	public Response deleteCommnet(@Context HttpServletRequest request,
+			@ApiParam(name = "commentData") CommentLoggingData commentDatas, @PathParam("commentId") String commentId) {
 		try {
 			Activity result = speciesService.removeSpeciesComment(request, commentDatas, commentId);
 			return Response.status(Status.OK).entity(result).build();
@@ -567,12 +592,13 @@ public class SpeciesController {
 	@Path(ApiConstants.CHECK + ApiConstants.SPECIES)
 	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces(MediaType.APPLICATION_JSON)
-	@ValidateUser
-	@Operation(summary = "Check using taxonId if species page is present", description = "Returns the species Page Id", responses = {
-			@ApiResponse(responseCode = "200", description = "Species page ID found", content = @Content(schema = @Schema(implementation = Long.class))),
-			@ApiResponse(responseCode = "400", description = "Bad request", content = @Content(schema = @Schema(implementation = String.class))) })
-	public Response checkSpeciesPageExist(@Context HttpServletRequest request, @QueryParam("taxonId") String taxonId) {
 
+	@ValidateUser
+
+	@ApiOperation(value = "check using taxonId if species page is present", notes = "Returns the species Page Id", response = Long.class)
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "unable to fetch the data ", response = String.class) })
+
+	public Response checkSpeciesPageExist(@Context HttpServletRequest request, @QueryParam("taxonId") String taxonId) {
 		try {
 			Long taxonomyId = Long.parseLong(taxonId);
 			Long result = speciesService.checkSpeciesPageExist(request, taxonomyId);
@@ -589,11 +615,15 @@ public class SpeciesController {
 	@Path(ApiConstants.SAVE + ApiConstants.TAXONOMY)
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
+
 	@ValidateUser
-	@Operation(summary = "create taxonomy", description = "Returns the taxonmyDefination", requestBody = @RequestBody(description = "Taxonomy save object", required = true, content = @Content(schema = @Schema(implementation = TaxonomySave.class))), responses = {
-			@ApiResponse(responseCode = "200", description = "Taxonomy created", content = @Content(schema = @Schema(implementation = TaxonomyDefinition.class))),
-			@ApiResponse(responseCode = "400", description = "unable to create the taxonomy") })
-	public Response createTaxonomy(@Context HttpServletRequest request, TaxonomySave taxonomySave) {
+
+	@ApiOperation(value = "create taxonomy", notes = "Returns the taxonmyDefination", response = TaxonomyDefinition.class)
+	@ApiResponses(value = {
+			@ApiResponse(code = 400, message = "unable to create the taxonomy", response = String.class) })
+
+	public Response createTaxonomy(@Context HttpServletRequest request,
+			@ApiParam("taxonomySave") TaxonomySave taxonomySave) {
 		try {
 			TaxonomyDefinition result = speciesService.createTaxonomy(request, taxonomySave);
 			if (result != null)
@@ -609,11 +639,14 @@ public class SpeciesController {
 	@Path(ApiConstants.ADD)
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
+
 	@ValidateUser
-	@Operation(summary = "create species", description = "Returns the speciesId", requestBody = @RequestBody(description = "Species create data", required = true, content = @Content(schema = @Schema(implementation = SpeciesCreateData.class))), responses = {
-			@ApiResponse(responseCode = "200", description = "Species created", content = @Content(schema = @Schema(implementation = Long.class))),
-			@ApiResponse(responseCode = "400", description = "unable to create the species") })
-	public Response createSpecies(@Context HttpServletRequest request, SpeciesCreateData createData) {
+	@ApiOperation(value = "create species", notes = "Returns the speciesId", response = Long.class)
+	@ApiResponses(value = {
+			@ApiResponse(code = 400, message = "unable to create the species", response = String.class) })
+
+	public Response createSpecies(@Context HttpServletRequest request,
+			@ApiParam(name = "createData") SpeciesCreateData createData) {
 		try {
 			Long result = speciesService.createSpeciesPage(request, createData);
 			return Response.status(Status.OK).entity(result).build();
@@ -627,13 +660,15 @@ public class SpeciesController {
 	@Path(ApiConstants.UPDATE + ApiConstants.SYNONYMS + "/{speciesId}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
+
 	@ValidateUser
-	@Operation(summary = "add and update synonyms", description = "Returns the synonyms list", parameters = {
-			@Parameter(name = "speciesId", description = "Species ID", required = true) }, requestBody = @RequestBody(description = "Synonym data", required = true, content = @Content(schema = @Schema(implementation = SynonymData.class))), responses = {
-					@ApiResponse(responseCode = "200", description = "Synonyms updated", content = @Content(array = @ArraySchema(schema = @Schema(implementation = TaxonomyDefinition.class)))),
-					@ApiResponse(responseCode = "400", description = "unable to add and update the synonyms") })
+
+	@ApiOperation(value = "add and update synonyms", notes = "Returns the synonyms list", response = TaxonomyDefinition.class, responseContainer = "List")
+	@ApiResponses(value = {
+			@ApiResponse(code = 400, message = "unable to add and update the synonyms", response = String.class) })
+
 	public Response addUpdateSynonyms(@Context HttpServletRequest request, @PathParam("speciesId") String speciesId,
-			SynonymData synonymData) {
+			@ApiParam(name = "synonymData") SynonymData synonymData) {
 		try {
 			List<TaxonomyDefinition> result = speciesService.updateAddSynonyms(request, speciesId, synonymData);
 			if (result != null)
@@ -648,10 +683,12 @@ public class SpeciesController {
 	@Path(ApiConstants.REMOVE + ApiConstants.SYNONYMS + "/{speciesId}/{synonymId}")
 	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces(MediaType.APPLICATION_JSON)
+
 	@ValidateUser
-	@Operation(summary = "Remove synonyms", description = "Returns the boolean data", responses = {
-			@ApiResponse(responseCode = "200", description = "Synonym removed", content = @Content(array = @ArraySchema(schema = @Schema(implementation = TaxonomyDefinition.class)))),
-			@ApiResponse(responseCode = "400", description = "Unable to remove synonyms", content = @Content(schema = @Schema(implementation = String.class))) })
+	@ApiOperation(value = "remove synonyms", notes = "Returns the Boolean data", response = TaxonomyDefinition.class, responseContainer = "List")
+	@ApiResponses(value = {
+			@ApiResponse(code = 400, message = "unable to remove the synonyms", response = String.class) })
+
 	public Response removeSynonyms(@Context HttpServletRequest request, @PathParam("speciesId") String speciesId,
 			@PathParam("synonymId") String synonymId) {
 		try {
@@ -667,10 +704,12 @@ public class SpeciesController {
 	@Path(ApiConstants.PERMISSION + "/{speciesId}")
 	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces(MediaType.APPLICATION_JSON)
+
 	@ValidateUser
-	@Operation(summary = "Check the permission for species Page", description = "Returns the Boolean value", responses = {
-			@ApiResponse(responseCode = "200", description = "Permission info", content = @Content(schema = @Schema(implementation = SpeciesPermission.class))),
-			@ApiResponse(responseCode = "400", description = "Unable to fetch the permission", content = @Content(schema = @Schema(implementation = String.class))) })
+	@ApiOperation(value = "Check the permission for species Page", notes = "Returns the Boolean value", response = SpeciesPermission.class)
+	@ApiResponses(value = {
+			@ApiResponse(code = 400, message = "unable to fetch the permission", response = String.class) })
+
 	public Response getSpeciesPagePermission(@Context HttpServletRequest request,
 			@PathParam("speciesId") String speciesId) {
 		try {
@@ -686,13 +725,13 @@ public class SpeciesController {
 	@Path(ApiConstants.REQUEST)
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	@ValidateUser
-	@Operation(summary = "Send request for permission over a taxonomyNode", description = "sends mail to the permission", requestBody = @RequestBody(description = "Permission request data", required = true, content = @Content(schema = @Schema(implementation = PermissionData.class))), responses = {
-			@ApiResponse(responseCode = "200", description = "Request sent", content = @Content(schema = @Schema(implementation = Boolean.class))),
-			@ApiResponse(responseCode = "400", description = "unable to send the req"),
-			@ApiResponse(responseCode = "404", description = "not found") })
-	public Response requestPermission(@Context HttpServletRequest request, PermissionData permissionData) {
 
+	@ValidateUser
+	@ApiOperation(value = "Send request for permission over a taxonomyNode", notes = "sends mail to the permission", response = Boolean.class)
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "unable to send the req", response = String.class) })
+
+	public Response requestPermission(@Context HttpServletRequest request,
+			@ApiParam(name = "permissionData") PermissionData permissionData) {
 		try {
 			Boolean result = speciesService.sendPermissionRequest(request, permissionData);
 			if (result != null) {
@@ -711,13 +750,15 @@ public class SpeciesController {
 	@Path(ApiConstants.GRANT)
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	@ValidateUser
-	@Operation(summary = "validate the request for permission over a taxonomyId", description = "checks the grants the permission", requestBody = @RequestBody(description = "Encrypted permission key", required = true, content = @Content(schema = @Schema(implementation = EncryptedKey.class))), responses = {
-			@ApiResponse(responseCode = "200", description = "Permission granted", content = @Content(schema = @Schema(implementation = Boolean.class))),
-			@ApiResponse(responseCode = "400", description = "uable to grant the permission"),
-			@ApiResponse(responseCode = "501", description = "Not implemented") })
-	public Response grantPermissionrequest(@Context HttpServletRequest request, EncryptedKey encryptedKey) {
 
+	@ValidateUser
+
+	@ApiOperation(value = "validate the request for permission over a taxonomyId", notes = "checks the grants the permission", response = Boolean.class)
+	@ApiResponses(value = {
+			@ApiResponse(code = 400, message = "uable to grant the permission", response = String.class) })
+
+	public Response grantPermissionrequest(@Context HttpServletRequest request,
+			@ApiParam(name = "encryptedKey") EncryptedKey encryptedKey) {
 		try {
 			Boolean result = speciesService.sendPermissionGrant(request, encryptedKey);
 			if (result)
@@ -733,12 +774,14 @@ public class SpeciesController {
 	@Path(ApiConstants.FOLLOW + "/{speciesId}")
 	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces(MediaType.APPLICATION_JSON)
-	@ValidateUser
-	@Operation(summary = "Follow the species page", description = "Return the follow object", responses = {
-			@ApiResponse(responseCode = "200", description = "Followed species", content = @Content(schema = @Schema(implementation = Follow.class))),
-			@ApiResponse(responseCode = "400", description = "Unable to follow", content = @Content(schema = @Schema(implementation = String.class))) })
-	public Response followSpecies(@Context HttpServletRequest request, @PathParam("speciesId") String speciesId) {
 
+	@ValidateUser
+
+	@ApiOperation(value = "Follow the species Page", notes = "Return the follow object", response = Follow.class)
+	@ApiResponses(value = {
+			@ApiResponse(code = 400, message = "uable to grant the permission", response = String.class) })
+
+	public Response followSpecies(@Context HttpServletRequest request, @PathParam("speciesId") String speciesId) {
 		try {
 			Long sId = Long.parseLong(speciesId);
 			Follow result = speciesService.followRequest(request, sId);
@@ -752,12 +795,13 @@ public class SpeciesController {
 	@Path(ApiConstants.UNFOLLOW + "/{speciesId}")
 	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces(MediaType.APPLICATION_JSON)
-	@ValidateUser
-	@Operation(summary = "Unfollow the species page", description = "Unfollowed the species page", responses = {
-			@ApiResponse(responseCode = "200", description = "Unfollowed species", content = @Content(schema = @Schema(implementation = Follow.class))),
-			@ApiResponse(responseCode = "400", description = "Unable to unfollow", content = @Content(schema = @Schema(implementation = String.class))) })
-	public Response unFollowSpecies(@Context HttpServletRequest request, @PathParam("speciesId") String speciesId) {
 
+	@ValidateUser
+
+	@ApiOperation(value = "unfollow the species Page", notes = "unfollow the species Page", response = Follow.class)
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "uable to unfollow", response = String.class) })
+
+	public Response unFollowSpecies(@Context HttpServletRequest request, @PathParam("speciesId") String speciesId) {
 		try {
 			Long sId = Long.parseLong(speciesId);
 			Follow result = speciesService.unFollowRequest(request, sId);
@@ -773,12 +817,13 @@ public class SpeciesController {
 	@Path(ApiConstants.REMOVE + "/{speciesId}")
 	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces(MediaType.APPLICATION_JSON)
-	@ValidateUser
-	@Operation(summary = "Remove a species page", description = "Return boolean", responses = {
-			@ApiResponse(responseCode = "200", description = "Species page deleted"),
-			@ApiResponse(responseCode = "400", description = "Unable to remove the page", content = @Content(schema = @Schema(implementation = String.class))) })
-	public Response removeSpeciesPage(@Context HttpServletRequest request, @PathParam("speciesId") String speciesId) {
 
+	@ValidateUser
+
+	@ApiOperation(value = "Remove the species page", notes = "return boolean", response = Boolean.class)
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "unable to remove the page", response = String.class) })
+
+	public Response removeSpeciesPage(@Context HttpServletRequest request, @PathParam("speciesId") String speciesId) {
 		try {
 			Long sId = Long.parseLong(speciesId);
 			Boolean result = speciesService.removeSpeciesPage(request, sId);
@@ -795,12 +840,14 @@ public class SpeciesController {
 	@Path(ApiConstants.LIST + "/{index}/{type}")
 	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces(MediaType.APPLICATION_JSON)
-	@Operation(summary = "Search the species for list page", description = "Return species list data", responses = {
-			@ApiResponse(responseCode = "200", description = "Species list search results", content = @Content(schema = @Schema(implementation = SpeciesListPageData.class))),
-			@ApiResponse(responseCode = "400", description = "Unable to search", content = @Content(schema = @Schema(implementation = String.class))) })
+
+	@ApiOperation(value = "search the species for list page", notes = "return speceis list data", response = SpeciesListPageData.class)
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "unable to search", response = String.class) })
+
 	public Response listSearch(@DefaultValue("extended_species") @PathParam("index") String index,
 			@DefaultValue("_doc") @PathParam("type") String type,
-			@DefaultValue("0") @QueryParam("offset") Integer offset, @DefaultValue("10") @QueryParam("max") Integer max,
+			@DefaultValue(value = "0") @QueryParam("offset") Integer offset,
+			@DefaultValue("10") @QueryParam("max") Integer max,
 			@DefaultValue("species.dateCreated") @QueryParam("sort") String sortOn,
 			@QueryParam("createdOnMaxDate") String createdOnMaxDate,
 			@QueryParam("createdOnMinDate") String createdOnMinDate,
@@ -893,12 +940,14 @@ public class SpeciesController {
 	@Path(ApiConstants.ADD + "/reference" + "/{speciesId}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
+
 	@ValidateUser
-	@Operation(summary = "add reference to a species Page", description = "add common reference", parameters = {
-			@Parameter(name = "speciesId", description = "Species ID", required = true) }, requestBody = @RequestBody(description = "List of reference create data", required = true, content = @Content(array = @ArraySchema(schema = @Schema(implementation = ReferenceCreateData.class)))), responses = {
-					@ApiResponse(responseCode = "200", description = "References created", content = @Content(array = @ArraySchema(schema = @Schema(implementation = com.strandls.species.pojo.Reference.class)))),
-					@ApiResponse(responseCode = "400", description = "uable to unfollow") })
-	public Response createReference(@Context HttpServletRequest request, List<ReferenceCreateData> referenceCreateData,
+
+	@ApiOperation(value = "add reference to a species Page", notes = "add common reference", response = com.strandls.species.pojo.Reference.class)
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "uable to unfollow", response = String.class) })
+
+	public Response createReference(@Context HttpServletRequest request,
+			@ApiParam(name = "referenceCreateData") List<ReferenceCreateData> referenceCreateData,
 			@PathParam("speciesId") String speciesId) {
 		try {
 			List<com.strandls.species.pojo.Reference> result = speciesService.createReference(request,
@@ -914,12 +963,14 @@ public class SpeciesController {
 	@Path(ApiConstants.UPDATE + "/reference" + "/{speciesId}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
+
 	@ValidateUser
-	@Operation(summary = "edit references of a species Page", description = "edit common reference", parameters = {
-			@Parameter(name = "speciesId", description = "Species ID", required = true) }, requestBody = @RequestBody(description = "Reference to be updated", required = true, content = @Content(schema = @Schema(implementation = com.strandls.species.pojo.Reference.class))), responses = {
-					@ApiResponse(responseCode = "200", description = "Reference updated", content = @Content(schema = @Schema(implementation = com.strandls.species.pojo.Reference.class))),
-					@ApiResponse(responseCode = "400", description = "uable to unfollow") })
-	public Response updateReference(@Context HttpServletRequest request, com.strandls.species.pojo.Reference reference,
+
+	@ApiOperation(value = "edit references of a species Page", notes = "edit common reference", response = com.strandls.species.pojo.Reference.class)
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "uable to unfollow", response = String.class) })
+
+	public Response updateReference(@Context HttpServletRequest request,
+			@ApiParam(name = "reference") com.strandls.species.pojo.Reference reference,
 			@PathParam("speciesId") String speciesId) {
 		try {
 			com.strandls.species.pojo.Reference result = speciesService.editReference(request,
@@ -934,12 +985,13 @@ public class SpeciesController {
 	@PUT
 	@Path(ApiConstants.DELETE + "/reference" + "/{referenceId}")
 	@Produces(MediaType.APPLICATION_JSON)
-	@ValidateUser
-	@Operation(summary = "Delete a reference of a species Page", description = "Delete common reference", responses = {
-			@ApiResponse(responseCode = "200", description = "Reference deleted", content = @Content(schema = @Schema(implementation = com.strandls.species.pojo.Reference.class))),
-			@ApiResponse(responseCode = "400", description = "Unable to delete reference", content = @Content(schema = @Schema(implementation = String.class))) })
-	public Response deleteReference(@Context HttpServletRequest request, @PathParam("referenceId") String referenceId) {
 
+	@ValidateUser
+
+	@ApiOperation(value = "delete a reference of a species Page", notes = "delete common reference", response = com.strandls.species.pojo.Reference.class)
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "unable to delete", response = String.class) })
+
+	public Response deleteReference(@Context HttpServletRequest request, @PathParam("referenceId") String referenceId) {
 		try {
 			com.strandls.species.pojo.Reference result = speciesService.deleteReference(request,
 					Long.valueOf(referenceId));
@@ -951,15 +1003,15 @@ public class SpeciesController {
 	}
 
 	@POST
-	@Path("/create/field")
+	@Path("/create" + "/field")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@ValidateUser
-	@Operation(summary = "Create a new species field", description = "Returns the created field", requestBody = @RequestBody(description = "Field Data to create", required = true, content = @Content(schema = @Schema(implementation = FieldCreateData.class))), responses = {
-			@ApiResponse(responseCode = "200", description = "Field created", content = @Content(schema = @Schema(implementation = FieldNew.class))),
-			@ApiResponse(responseCode = "400", description = "Unable to create the field"),
-			@ApiResponse(responseCode = "401", description = "User not authorized to create field") })
-	public Response createField(@Context HttpServletRequest request, FieldCreateData fieldData) {
+	@ApiOperation(value = "Create a new species field", notes = "Returns the created field", response = FieldNew.class)
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "Unable to create the field", response = String.class),
+			@ApiResponse(code = 401, message = "User not authorized to create field", response = String.class) })
+	public Response createField(@Context HttpServletRequest request,
+			@ApiParam(name = "fieldData", value = "Field Data to create", required = true) FieldCreateData fieldData) {
 		try {
 			FieldNew result = speciesService.createField(request, fieldData);
 			return Response.status(Status.OK).entity(result).build();
@@ -971,10 +1023,9 @@ public class SpeciesController {
 	@GET
 	@Path("/field/{fieldId}/translations")
 	@Produces(MediaType.APPLICATION_JSON)
-	@Operation(summary = "Get all translations for a field", description = "Returns list of field headers for all available languages", parameters = {
-			@Parameter(name = "fieldId", description = "Field ID", required = true) }, responses = {
-					@ApiResponse(responseCode = "200", description = "Translations found", content = @Content(array = @ArraySchema(schema = @Schema(implementation = FieldHeader.class)))) })
-	public Response getFieldTranslations(@PathParam("fieldId") Long fieldId) {
+	@ApiOperation(value = "Get all translations for a field", notes = "Returns list of field headers for all available languages", response = FieldHeader.class, responseContainer = "List")
+	public Response getFieldTranslations(
+			@PathParam("fieldId") @ApiParam(value = "Field ID", required = true) Long fieldId) {
 		try {
 			List<FieldHeader> translations = speciesService.getFieldTranslations(fieldId);
 			return Response.ok().entity(translations).build();
@@ -986,12 +1037,10 @@ public class SpeciesController {
 	@GET
 	@Path("/field/{fieldId}/translation/{languageId}")
 	@Produces(MediaType.APPLICATION_JSON)
-	@Operation(summary = "Get specific translation for a field", description = "Returns field header for the specified language", parameters = {
-			@Parameter(name = "fieldId", description = "Field ID", required = true),
-			@Parameter(name = "languageId", description = "Language ID", required = true) }, responses = {
-					@ApiResponse(responseCode = "200", description = "Translation found", content = @Content(schema = @Schema(implementation = FieldHeader.class))),
-					@ApiResponse(responseCode = "404", description = "Translation not found") })
-	public Response getFieldTranslation(@PathParam("fieldId") Long fieldId, @PathParam("languageId") Long languageId) {
+	@ApiOperation(value = "Get specific translation for a field", notes = "Returns field header for the specified language", response = FieldHeader.class)
+	public Response getFieldTranslation(
+			@PathParam("fieldId") @ApiParam(value = "Field ID", required = true) Long fieldId,
+			@PathParam("languageId") @ApiParam(value = "Language ID", required = true) Long languageId) {
 		try {
 			FieldHeader translation = speciesService.getFieldTranslation(fieldId, languageId);
 			if (translation == null) {
@@ -1008,12 +1057,12 @@ public class SpeciesController {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@ValidateUser
-	@Operation(summary = "Update translations for multiple fields", description = "Returns updated field headers", requestBody = @RequestBody(description = "List of fields with their translations", required = true, content = @Content(array = @ArraySchema(schema = @Schema(implementation = FieldTranslationUpdateData.class)))), responses = {
-			@ApiResponse(responseCode = "200", description = "Translations updated", content = @Content(array = @ArraySchema(schema = @Schema(implementation = FieldHeader.class)))),
-			@ApiResponse(responseCode = "400", description = "Unable to update translations"),
-			@ApiResponse(responseCode = "401", description = "User not authorized to update translations") })
+	@ApiOperation(value = "Update translations for multiple fields", notes = "Returns updated field headers", response = FieldHeader.class, responseContainer = "List")
+	@ApiResponses(value = {
+			@ApiResponse(code = 400, message = "Unable to update translations", response = String.class),
+			@ApiResponse(code = 401, message = "User not authorized to update translations", response = String.class) })
 	public Response updateFieldTranslations(@Context HttpServletRequest request,
-			List<FieldTranslationUpdateData> translationData) {
+			@ApiParam(name = "translationData", value = "List of fields with their translations", required = true) List<FieldTranslationUpdateData> translationData) {
 		try {
 			List<FieldHeader> result = speciesService.updateFieldTranslations(request, translationData);
 			return Response.ok().entity(result).build();
@@ -1023,24 +1072,25 @@ public class SpeciesController {
 	}
 
 	@PUT
-	@Path(ApiConstants.UPDATE + "/{speciesId}/{taxonId}")
+	@Path(ApiConstants.UPDATE + "/{speciesId}" + "/{taxonId}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
+
 	@ValidateUser
-	@Operation(summary = "Update taxonId of a species page", description = "Updates the taxonId for the given species and returns the updated page")
-	@ApiResponses({
-			@ApiResponse(responseCode = "200", description = "Species page updated", content = @Content(schema = @Schema(implementation = ShowSpeciesPage.class))),
-			@ApiResponse(responseCode = "400", description = "Unable to update", content = @Content(schema = @Schema(implementation = String.class))),
-			@ApiResponse(responseCode = "404", description = "Not found") })
-	public Response updateTaxonId(@Context HttpServletRequest request,
-			@Parameter(description = "Species ID") @PathParam("speciesId") String speciesId,
-			@Parameter(description = "Taxon ID") @PathParam("taxonId") String taxonId) {
+
+	@ApiOperation(value = "update taxonId  of a species Page", notes = "update taoxnId", response = ShowSpeciesPage.class)
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "uable to unfollow", response = String.class) })
+
+	public Response updateTaxonId(@Context HttpServletRequest request, @PathParam("speciesId") String speciesId,
+			@PathParam("taxonId") String taxonId) {
 		try {
 			ShowSpeciesPage result = speciesService.updateTaxonId(request, Long.parseLong(speciesId),
 					Long.parseLong(taxonId));
-			return Response.status(Response.Status.OK).entity(result).build();
+			return Response.status(Status.OK).entity(result).build();
 		} catch (Exception e) {
-			return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
+
 	}
+
 }

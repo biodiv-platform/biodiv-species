@@ -1,12 +1,17 @@
 /**
- *
+ * 
  */
 package com.strandls.species.service.Impl;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.core.HttpHeaders;
 
 import org.pac4j.core.profile.CommonProfile;
 import org.slf4j.Logger;
@@ -21,14 +26,10 @@ import com.strandls.species.pojo.SpeciesFieldUpdateData;
 import com.strandls.species.pojo.SpeciesResourceData;
 import com.strandls.species.util.PropertyFileUtil;
 
-import jakarta.inject.Inject;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.ws.rs.core.HttpHeaders;
-
 /**
  * @author Abhishek Rudra
  *
- *
+ * 
  */
 public class SpeciesHelper {
 
@@ -66,7 +67,7 @@ public class SpeciesHelper {
 				filesDTO.setFiles(fileList);
 				filesDTO.setFolder("img");
 				filesDTO.setModule("SPECIES");
-				fileMap = fileUploadService.moveFiles(filesDTO).getData();
+				fileMap = fileUploadService.moveFiles(filesDTO);
 			}
 
 			for (SpeciesResourceData resourceData : resourceDataList) {
@@ -100,7 +101,7 @@ public class SpeciesHelper {
 				}
 				resource.setUrl(resourceData.getUrl());
 				resource.setRating(resourceData.getRating());
-				resource.setUploadTime(new java.util.Date());
+				resource.setUploadTime(new Date());
 				resource.setUploaderId(userId);
 				resource.setContext(context.toUpperCase());
 				resource.setLanguageId(defaultLanguageId);

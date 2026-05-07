@@ -5,6 +5,8 @@ package com.strandls.species.dao;
 
 import java.util.List;
 
+import javax.inject.Inject;
+
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
@@ -14,8 +16,6 @@ import org.slf4j.LoggerFactory;
 
 import com.strandls.species.pojo.FieldNew;
 import com.strandls.species.util.AbstractDAO;
-
-import jakarta.inject.Inject;
 
 /**
  * @author Abhishek Rudra

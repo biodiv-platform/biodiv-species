@@ -1,19 +1,28 @@
 package com.strandls.species.es.util;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+
+import javax.inject.Inject;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.strandls.esmodule.ApiException;
 import com.strandls.esmodule.controllers.EsServicesApi;
-import com.strandls.userGroup.controller.UserGroupServiceApi;
+import com.strandls.species.pojo.ShowSpeciesPage;
+import com.strandls.species.service.SpeciesServices;
+import com.strandls.userGroup.controller.UserGroupSerivceApi;
 import com.strandls.userGroup.pojo.UserGroupIbp;
-
-import jakarta.inject.Inject;
 
 public class ESUpdate {
 
@@ -23,7 +32,13 @@ public class ESUpdate {
 	private EsServicesApi esService;
 
 	@Inject
-	private UserGroupServiceApi ugService;
+	private SpeciesServices speciesService;
+
+	@Inject
+	private UserGroupSerivceApi ugService;
+
+	@Inject
+	private ObjectMapper om;
 
 	public void esBulkUpload(String speciesIds) {
 

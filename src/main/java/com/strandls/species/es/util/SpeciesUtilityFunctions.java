@@ -31,7 +31,6 @@ import com.strandls.observation.pojo.DownloadLog;
 import com.strandls.species.pojo.Reference;
 import com.strandls.species.pojo.ShowSpeciesPage;
 import com.strandls.species.pojo.SpeciesFieldData;
-import com.strandls.species.util.PropertyFileUtil;
 import com.strandls.taxonomy.pojo.BreadCrumb;
 import com.strandls.taxonomy.pojo.CommonName;
 import com.strandls.traits.pojo.FactValuePair;
@@ -46,10 +45,7 @@ public class SpeciesUtilityFunctions {
 
 	private final Logger logger = LoggerFactory.getLogger(SpeciesUtilityFunctions.class);
 
-	private Long defaultLanguageId = Long
-			.parseLong(PropertyFileUtil.fetchProperty("config.properties", "defaultLanguageId"));
-
-	private final String[] csvCoreHeaders = { "taxonomyDefinition.name", "language", "taxonomyDefinition.nameSourceId",
+	private final String[] csvCoreHeaders = { "taxonomyDefinition.name", "taxonomyDefinition.nameSourceId",
 			"taxonomyDefinition.binomialForm", "taxonomyDefinition.relationship", "taxonomyDefinition.italicisedForm",
 			"taxonomyDefinition.normalizedForm", "taxonomyDefinition.authorYear", "taxonomyDefinition.id",
 			"taxonomyDefinition.canonicalForm", "taxonomyDefinition.matchDatabaseName",
@@ -107,11 +103,9 @@ public class SpeciesUtilityFunctions {
 
 	}
 
-	private void addCoreHeaderValues(List<String> row, ShowSpeciesPage record, List<String> list, List<Long> ids,
-			String language) {
+	private void addCoreHeaderValues(List<String> row, ShowSpeciesPage record, List<String> list, List<Long> ids) {
 		try {
 			row.add(record.getTaxonomyDefinition().getName());
-			row.add(language);
 			row.add(record.getTaxonomyDefinition().getNameSourceId());
 			row.add(record.getTaxonomyDefinition().getBinomialForm());
 			row.add(record.getTaxonomyDefinition().getRelationship());
@@ -169,14 +163,15 @@ public class SpeciesUtilityFunctions {
 		for (ShowSpeciesPage record : records) {
 			List<String> row = new ArrayList<String>();
 
+			addCoreHeaderValues(row, record, list, ids);
+
 			Map<Long, LinkedHashMap<String, String>> langContent = fetchFieldDataForCsv(record.getFieldData(), ids);
 
 			int i = 0;
 			for (Entry<Long, LinkedHashMap<String, String>> content : langContent.entrySet()) {
 				LinkedHashMap<String, String> fieldContent = content.getValue();
 				if (i == 0) {
-					addCoreHeaderValues(row, record, list, ids,
-							langaugeMap.getOrDefault(content.getKey(), content.getKey().toString()));
+					row.add(langaugeMap.getOrDefault(content.getKey(), content.getKey().toString()));
 					for (Long field : ids) {
 						if (fieldContent.containsKey(field.toString())) {
 							row.add(fieldContent.get(field.toString()));
@@ -189,8 +184,8 @@ public class SpeciesUtilityFunctions {
 					String[] emptyRow = new String[csvCoreHeaders.length + list.size() + 1 + ids.size()];
 					Arrays.fill(emptyRow, "");
 					int j = csvCoreHeaders.length + list.size();
-					emptyRow[0] = record.getTaxonomyDefinition().getName();
-					emptyRow[1] = langaugeMap.getOrDefault(content.getKey(), content.getKey().toString());
+					emptyRow[j] = langaugeMap.getOrDefault(content.getKey(), content.getKey().toString());
+					j = j + 1;
 					for (Long field : ids) {
 						if (fieldContent.containsKey(field.toString())) {
 							emptyRow[j] = fieldContent.get(field.toString());
@@ -203,8 +198,6 @@ public class SpeciesUtilityFunctions {
 				i = i + 1;
 			}
 			if (i == 0) {
-				addCoreHeaderValues(row, record, list, ids,
-						langaugeMap.getOrDefault(defaultLanguageId, defaultLanguageId.toString()));
 				rowSets.add(row.stream().toArray(String[]::new));
 			}
 		}
@@ -330,26 +323,6 @@ public class SpeciesUtilityFunctions {
 				rankMap.get("family"), rankMap.get("genus"), rankMap.get("species"));
 	}
 
-	private static String decodeHtmlEntities(String text) {
-		String cleanedText = text.replace("\t", "");
-		return cleanedText.replace("&amp;", "&").replace("&lt;", "<").replace("&gt;", ">").replace("&quot;", "\"")
-				.replace("&#39;", "'").replace("&nbsp;", " ").replace("&copy;", "(c)").replace("&reg;", "(r)")
-				.replace("&#8217;", "'").replace("&#8220;", "\"").replace("&#8221;", "\"").replace("&agrave;", "à")
-				.replace("&egrave;", "è").replace("&eacute;", "é").replace("&ecirc;", "ê").replace("&Eacute;", "É")
-				.replace("&icirc;", "î").replace("&ocirc;", "ô").replace("&ucirc;", "û").replace("&ccedil;", "ç")
-				.replace("&Ccedil;", "Ç").replace("&Agrave;", "À").replace("&Egrave;", "È").replace("&acirc;", "â")
-				.replace("&iuml;", "ï").replace("&rsquo;", "’").replace("&ugrave;", "ù").replace("&acirc;", "â")
-				.replace("&ndash;", "-").replace("&deg;", "°").replace("&euml;", "ë").replace("&laquo;", "«")
-				.replace("&lsquo;", "‘").replace("&raquo;", "»").replace("&oelig;", "œ").replace("&ldquo;", "\"")
-				.replace("&uuml;", "ü").replace("&rdquo;", "\"").replace("&bull;", "•").replace("&hellip;", "…")
-				.replace("&middot;", "·").replace("&sup2", "²").replace("&omega;", "ω").replace("&shy;", "")
-				.replace("&ordm;", "º").replace("&alpha;", "α").replace("&eacute;", "é").replace("&sup1;", "¹")
-				.replace("&aacute;", "á").replace("&plusmn;", "±").replace("&Acirc;", "Â").replace("&ntilde;", "ñ")
-				.replace("&frac12;", "½").replace("&frac14;", "¼").replace("&frac34;", "¾").replace("&mdash;", "—")
-				.replace("&oacute;", "ó").replace("&Icirc;", "Î").replace("&le;", "≤").replace("&micro;", "µ")
-				.replace("&mu;", "µ").replace("&pound;", "£").replace("&sect;", "§").replace("&times;", "×");
-	}
-
 	private Map<Long, LinkedHashMap<String, String>> fetchFieldDataForCsv(List<SpeciesFieldData> fieldValues,
 			List<Long> ids) {
 		Map<String, Map<Long, List<String>>> fieldGroupedMap = new HashMap<>();
@@ -369,8 +342,7 @@ public class SpeciesUtilityFunctions {
 					}
 
 					// Create the content string
-					String content = "description:"
-							+ decodeHtmlEntities(value.getFieldData().getDescription().replaceAll("<[^>]*>", ""))
+					String content = "description:" + value.getFieldData().getDescription().replaceAll("<[^>]*>", "")
 							+ "\n\nattributions:" + value.getAttributions() + "\ncontributor:" + contriString
 							+ "\nlicense:" + value.getLicense().getName() + "|" + value.getLicense().getUrl() + "|"
 							+ value.getLicense().getId();

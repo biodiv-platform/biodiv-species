@@ -1,48 +1,56 @@
 package com.strandls.species.util;
 
+import org.hibernate.HibernateException;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.usertype.UserType;
+
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.usertype.UserType;
+/**
+ * Custom UserType for PostgreSQL ltree type
+ */
+public class LTreeType implements UserType {
 
-public class LTreeType implements UserType<String> {
 	@Override
-	public int getSqlType() {
-		return Types.OTHER;
+	public int[] sqlTypes() {
+		return new int[] { Types.OTHER };
 	}
 
+	@SuppressWarnings("rawtypes")
 	@Override
-	public Class<String> returnedClass() {
+	public Class returnedClass() {
 		return String.class;
 	}
 
 	@Override
-	public boolean equals(String x, String y) {
-		if (x == y)
+	public boolean equals(Object x, Object y) throws HibernateException {
+		if (x == y) {
 			return true;
-		if (x == null || y == null)
+		}
+		if (x == null || y == null) {
 			return false;
+		}
 		return x.equals(y);
 	}
 
 	@Override
-	public int hashCode(String x) {
+	public int hashCode(Object x) throws HibernateException {
 		return x == null ? 0 : x.hashCode();
 	}
 
 	@Override
-	public String nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner)
+	public Object nullSafeGet(ResultSet rs, String[] names, SharedSessionContractImplementor session, Object owner)
 			throws SQLException {
-		String value = rs.getString(position);
+		String value = rs.getString(names[0]);
 		return rs.wasNull() ? null : value;
 	}
 
 	@Override
-	public void nullSafeSet(PreparedStatement st, String value, int index, SharedSessionContractImplementor session)
+	public void nullSafeSet(PreparedStatement st, Object value, int index, SharedSessionContractImplementor session)
 			throws SQLException {
 		if (value == null) {
 			st.setNull(index, Types.OTHER);
@@ -52,8 +60,8 @@ public class LTreeType implements UserType<String> {
 	}
 
 	@Override
-	public String deepCopy(String value) {
-		return value == null ? null : new String(value);
+	public Object deepCopy(Object value) {
+		return value == null ? null : new String((String) value);
 	}
 
 	@Override
@@ -62,17 +70,18 @@ public class LTreeType implements UserType<String> {
 	}
 
 	@Override
-	public Serializable disassemble(String value) {
-		return value;
+	public Serializable disassemble(Object value) {
+		return (Serializable) value;
 	}
 
 	@Override
-	public String assemble(Serializable cached, Object owner) {
-		return (String) cached;
+	public Object assemble(Serializable cached, Object owner) {
+		return cached;
 	}
 
 	@Override
-	public String replace(String original, String target, Object owner) {
-		return deepCopy(original);
+	public Object replace(Object original, Object target, Object owner) {
+		return original == null ? null : deepCopy(original);
 	}
+
 }

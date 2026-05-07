@@ -1,6 +1,8 @@
 package com.strandls.species.config;
 
-import jakarta.inject.Singleton;
+import java.util.concurrent.TimeUnit;
+
+import javax.inject.Singleton;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

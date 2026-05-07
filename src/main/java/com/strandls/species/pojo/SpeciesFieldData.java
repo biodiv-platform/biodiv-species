@@ -55,8 +55,7 @@ public class SpeciesFieldData {
 	 */
 	public SpeciesFieldData(Long id, Long fieldId, Long displayOrder, String label, String fieldDescription,
 			String header, SpeciesField fieldData, List<Reference> references, String attributions,
-			List<UserIbp> contributor, String audienceType, License license, List<ResourceData> speciesFieldResource,
-			String path) {
+			List<UserIbp> contributor, String audienceType, License license, List<ResourceData> speciesFieldResource,String path) {
 		super();
 		this.id = id;
 		this.fieldId = fieldId;
@@ -73,7 +72,7 @@ public class SpeciesFieldData {
 		this.speciesFieldResource = speciesFieldResource;
 		this.path = path;
 	}
-
+	
 	public Long getId() {
 		return id;
 	}
