@@ -13,8 +13,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.core.HttpHeaders;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.ws.rs.core.HttpHeaders;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,7 +22,7 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opencsv.CSVWriter;
-import com.strandls.activity.controller.ActivitySerivceApi;
+import com.strandls.activity.controller.ActivityServiceApi;
 import com.strandls.esmodule.controllers.EsServicesApi;
 import com.strandls.esmodule.pojo.MapDocument;
 import com.strandls.esmodule.pojo.MapResponse;
@@ -30,6 +30,7 @@ import com.strandls.esmodule.pojo.MapSearchParams;
 import com.strandls.esmodule.pojo.MapSearchQuery;
 import com.strandls.species.Headers;
 import com.strandls.species.pojo.FieldDisplay;
+import com.strandls.species.pojo.FieldNewExtended;
 import com.strandls.species.pojo.FieldRender;
 import com.strandls.species.pojo.ShowSpeciesPage;
 import com.strandls.species.service.SpeciesServices;
@@ -63,12 +64,12 @@ public class SpeciesListCSVThread implements Runnable {
 	private String url;
 	private final String authorId;
 	private UserServiceApi userService;
-	private ActivitySerivceApi activityService;
+	private ActivityServiceApi activityService;
 
 	public SpeciesListCSVThread(MapSearchQuery mapSearchQuery, String index, String type, EsServicesApi esService,
 			ObjectMapper objectMapper, SpeciesServices speciesService, UtilityServiceApi utilityServices,
 			HttpServletRequest request, Headers headers, MapSearchParams mapSearchParams, String url, String authorId,
-			UserServiceApi userService, ActivitySerivceApi activityService) {
+			UserServiceApi userService, ActivityServiceApi activityService) {
 		super();
 		this.mapSearchQuery = mapSearchQuery;
 		this.index = index;
@@ -119,20 +120,29 @@ public class SpeciesListCSVThread implements Runnable {
 			// Getting species fields
 			List<FieldRender> fields = speciesService.getFields(defaultLanguageId, null);
 			List<String> fieldNames = new ArrayList<>();
-			List<FieldDisplay> speciesField = new ArrayList<>();
-			fieldNames.add("language");
 			List<Long> ids = new ArrayList<>();
 
 			// Getting leaf nodes
 			for (FieldRender field : fields) {
 				List<FieldDisplay> childFields = field.getChildField();
 				if (childFields != null && !childFields.isEmpty()) {
-					speciesField.addAll(childFields);
+					for (FieldDisplay childField : childFields) {
+						List<FieldNewExtended> grandChildFields = childField.getChildFields();
+						if (grandChildFields != null && !grandChildFields.isEmpty()) {
+							for (FieldNewExtended grandchildField : grandChildFields) {
+								fieldNames.add(
+										childField.getParentField().getHeader() + " < " + grandchildField.getHeader());
+								ids.add(grandchildField.getId());
+							}
+						} else {
+							fieldNames.add(childField.getParentField().getHeader());
+							ids.add(childField.getParentField().getId());
+						}
+					}
+				} else {
+					fieldNames.add(field.getParentField().getHeader());
+					ids.add(field.getParentField().getId());
 				}
-			}
-			for (FieldDisplay species : speciesField) {
-				fieldNames.add(species.getParentField().getHeader());
-				ids.add(species.getParentField().getId());
 			}
 
 			Set<String> allTraitNames = new LinkedHashSet<String>();

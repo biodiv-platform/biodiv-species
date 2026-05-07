@@ -1,11 +1,9 @@
 /**
- * 
+ *
  */
 package com.strandls.species;
 
-import javax.ws.rs.core.HttpHeaders;
-
-import com.strandls.activity.controller.ActivitySerivceApi;
+import com.strandls.activity.controller.ActivityServiceApi;
 import com.strandls.file.api.UploadApi;
 import com.strandls.observation.controller.ObservationServiceApi;
 import com.strandls.resource.controllers.ResourceServicesApi;
@@ -15,17 +13,19 @@ import com.strandls.taxonomy.controllers.TaxonomyServicesApi;
 import com.strandls.taxonomy.controllers.TaxonomyTreeServicesApi;
 import com.strandls.traits.controller.TraitsServiceApi;
 import com.strandls.user.controller.UserServiceApi;
-import com.strandls.userGroup.controller.UserGroupSerivceApi;
+import com.strandls.userGroup.controller.UserGroupServiceApi;
+
+import jakarta.ws.rs.core.HttpHeaders;
 import com.strandls.utility.controller.UtilityServiceApi;
 
 /**
  * @author Abhishek Rudra
  *
- * 
+ *
  */
 public class Headers {
 
-	public UserGroupSerivceApi addUserGroupHeader(UserGroupSerivceApi ugService, String authHeader) {
+	public UserGroupServiceApi addUserGroupHeader(UserGroupServiceApi ugService, String authHeader) {
 		ugService.getApiClient().addDefaultHeader(HttpHeaders.AUTHORIZATION, authHeader);
 		return ugService;
 	}
@@ -71,7 +71,7 @@ public class Headers {
 		return observationService;
 	}
 
-	public ActivitySerivceApi addActivityHeader(ActivitySerivceApi activityService, String authHeaders) {
+	public ActivityServiceApi addActivityHeader(ActivityServiceApi activityService, String authHeaders) {
 		activityService.getApiClient().addDefaultHeader(HttpHeaders.AUTHORIZATION, authHeaders);
 		return activityService;
 	}

@@ -1,6 +1,5 @@
 package com.strandls.species.util;
 
-
 public class AppUtil {
 
 	public static enum BASE_FOLDERS {
@@ -17,8 +16,7 @@ public class AppUtil {
 			return folder;
 		}
 	};
-	
-	
+
 	public static String getResourceContext(String context) {
 		String hasFolder = null;
 		if (context == null) {

@@ -1,9 +1,10 @@
 /**
- * 
+ *
  */
 package com.strandls.species.service.Impl;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -21,20 +22,15 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
-import javax.inject.Inject;
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.core.HttpHeaders;
-
 import org.pac4j.core.profile.CommonProfile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.strandls.activity.controller.ActivitySerivceApi;
+import com.strandls.activity.controller.ActivityServiceApi;
 import com.strandls.activity.pojo.Activity;
 import com.strandls.activity.pojo.CommentLoggingData;
 import com.strandls.activity.pojo.MailData;
@@ -120,7 +116,7 @@ import com.strandls.traits.pojo.TraitsValuePair;
 import com.strandls.user.controller.UserServiceApi;
 import com.strandls.user.pojo.Follow;
 import com.strandls.user.pojo.UserIbp;
-import com.strandls.userGroup.controller.UserGroupSerivceApi;
+import com.strandls.userGroup.controller.UserGroupServiceApi;
 import com.strandls.userGroup.pojo.Featured;
 import com.strandls.userGroup.pojo.FeaturedCreate;
 import com.strandls.userGroup.pojo.FeaturedCreateData;
@@ -130,12 +126,15 @@ import com.strandls.userGroup.pojo.UserGroupMappingCreateData;
 import com.strandls.userGroup.pojo.UserGroupSpeciesCreateData;
 import com.strandls.userGroup.pojo.UserGroupSpeciesFieldMeta;
 
+import jakarta.inject.Inject;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.ws.rs.core.HttpHeaders;
 import net.minidev.json.JSONArray;
 
 /**
  * @author Abhishek Rudra
  *
- * 
+ *
  */
 public class SpeciesServiceImpl implements SpeciesServices {
 
@@ -179,7 +178,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 //	injection of services
 
 	@Inject
-	private ActivitySerivceApi activityService;
+	private ActivityServiceApi activityService;
 
 	@Inject
 	private EsServicesApi esService;
@@ -209,7 +208,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 	private UserServiceApi userService;
 
 	@Inject
-	private UserGroupSerivceApi ugService;
+	private UserGroupServiceApi ugService;
 
 	@Inject
 	private TaxonomyPermissionServiceApi taxPermissionService;
@@ -354,7 +353,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 
 	/**
 	 * Removes objects from the list where all fields are null recursively
-	 * 
+	 *
 	 * @param list The list to process
 	 * @param <T>  The type of objects in the list
 	 */
@@ -390,6 +389,9 @@ public class SpeciesServiceImpl implements SpeciesServices {
 		}
 
 		for (Field field : obj.getClass().getDeclaredFields()) {
+			if (Modifier.isStatic(field.getModifiers())) {
+				continue;
+        	}
 			field.setAccessible(true);
 			try {
 				Object value = field.get(obj);
@@ -603,7 +605,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 	/**
 	 * Creates a minimal SpeciesFieldData object with just enough information to
 	 * display an empty field
-	 * 
+	 *
 	 * @param fieldNew  The FieldNew definition from the database
 	 * @param speciesId The ID of the species
 	 * @return A minimal SpeciesFieldData object
@@ -665,7 +667,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 
 			List<Reference> references = referenceDao.findBySpeciesFieldId(speciesField.getId());
 
-//			this is actually the attribution of speciesField and a String 
+//			this is actually the attribution of speciesField and a String
 
 			SpeciesFieldContributor sfAttribution = sfContributorDao.findBySpeciesFieldId(speciesField.getId());
 			Contributor attribution = null;
@@ -1156,7 +1158,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 					}
 				}
 
-//				sf license 
+//				sf license
 				if (sfdata.getIsEdit()) {
 					SpeciesFieldLicense sfLicense = sfLicenseDao.findById(speciesField.getId());
 					if (!sfLicense.getLicenseId().equals(sfdata.getLicenseId())) {
@@ -1321,7 +1323,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 			if (isContributor) {
 				commonNameService = headers.addCommonNameHeader(commonNameService,
 						request.getHeader(HttpHeaders.AUTHORIZATION));
-				List<CommonName> result = commonNameService.updateAddCommonNames(speciesId.toString(), commonNamesData);
+				List<CommonName> result = commonNameService.updateAddCommonNames(commonNamesData, speciesId.toString());
 				updateLastRevised(speciesId);
 
 				return result;
@@ -1365,8 +1367,8 @@ public class SpeciesServiceImpl implements SpeciesServices {
 				objectIds.add(obs.getId());
 			}
 
-			List<SpeciesPull> resources = resourceServices.getBulkResources("observation", offset.toString(),
-					objectIds);
+			List<SpeciesPull> resources = resourceServices.getBulkResources("observation", objectIds,
+					offset.toString());
 
 			return resources;
 
@@ -1662,7 +1664,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 				taxonomyService = headers.addTaxonomyHeader(taxonomyService,
 						request.getHeader(HttpHeaders.AUTHORIZATION));
 				List<TaxonomyDefinition> result = taxonomyService
-						.updateAddSynonym(species.getTaxonConceptId().toString(), speciesId, synonymData);
+						.updateAddSynonym(species.getTaxonConceptId().toString(), synonymData, speciesId);
 				updateLastRevised(Long.parseLong(speciesId));
 				return result;
 			}

@@ -3,7 +3,7 @@
  */
 package com.strandls.species.dao;
 
-import javax.inject.Inject;
+import java.util.List;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -16,7 +16,7 @@ import com.strandls.species.pojo.FieldHeader;
 import com.strandls.species.util.AbstractDAO;
 import com.strandls.species.util.PropertyFileUtil;
 
-import java.util.List;
+import jakarta.inject.Inject;
 
 /**
  * @author Abhishek Rudra
