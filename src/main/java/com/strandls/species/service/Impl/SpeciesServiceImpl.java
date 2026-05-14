@@ -4,6 +4,7 @@
 package com.strandls.species.service.Impl;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -224,6 +225,9 @@ public class SpeciesServiceImpl implements SpeciesServices {
 	@Inject
 	private ObjectMapper om;
 
+	@Inject
+	private com.strandls.species.config.CacheConfig cacheConfig;
+
 	private Long defaultLanguageId = Long
 			.parseLong(PropertyFileUtil.fetchProperty("config.properties", "defaultLanguageId"));
 
@@ -331,7 +335,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 			TaxonomyDefinition newTaxon = taxonomyService.getTaxonomyConceptName(taxonId.toString());
 			String newTaxonName = newTaxon.getName();
 
-			ESSpeciesUpdate(updatedSpecies.getId());
+			updateLastRevised(speciesId);
 
 			String activityDesc = "Updated taxon from " + oldTaxonName + "(Taxon ID:" + oldTaxonId + ")" + " to "
 					+ newTaxonName + "(Taxon ID:" + updatedSpecies.getTaxonConceptId() + ")";
@@ -385,6 +389,9 @@ public class SpeciesServiceImpl implements SpeciesServices {
 		}
 
 		for (Field field : obj.getClass().getDeclaredFields()) {
+			if (Modifier.isStatic(field.getModifiers())) {
+				continue;
+        	}
 			field.setAccessible(true);
 			try {
 				Object value = field.get(obj);
@@ -416,8 +423,20 @@ public class SpeciesServiceImpl implements SpeciesServices {
 	}
 
 	@Override
-	public ShowSpeciesPage showSpeciesPageFromES(Long speciesId, UserGroupIbp userGroup) {
+	public ShowSpeciesPage showSpeciesPageFromES(Long speciesId, Long userGroupId) {
 		try {
+			// Generate cache key
+			String cacheKey = cacheConfig.generateCacheKey(speciesId, userGroupId);
+
+			// Try to get from cache first
+			ShowSpeciesPage cachedPage = cacheConfig.getSpeciesPageCache().getIfPresent(cacheKey);
+			if (cachedPage != null) {
+				logger.debug("Cache hit for species: {} with userGroup: {}", speciesId, userGroupId);
+				return cachedPage;
+			}
+
+			logger.debug("Cache miss for species: {} with userGroup: {}, fetching from ES", speciesId, userGroupId);
+
 			MapDocument document = esService.fetch("extended_species", "_doc", speciesId.toString());
 			om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 			ShowSpeciesPage showPagePayload = om.readValue(String.valueOf(document.getDocument()),
@@ -459,8 +478,8 @@ public class SpeciesServiceImpl implements SpeciesServices {
 			// Add newly created fields from database that might not be in ElasticSearch yet
 
 			List<SpeciesFieldValuesDTO> ugSpeciesFields = new ArrayList<>();
-			if (userGroup != null) {
-				ugSpeciesFields = ugService.getSpeciesFieldsByUserGroupId(userGroup.getId().toString());
+			if (userGroupId != null) {
+				ugSpeciesFields = ugService.getSpeciesFieldsByUserGroupId(userGroupId.toString());
 			}
 
 			List<Long> ugFieldIds = new ArrayList<>();
@@ -487,15 +506,15 @@ public class SpeciesServiceImpl implements SpeciesServices {
 				}
 
 				List<UserGroupSpeciesFieldMeta> sfMetaData = new ArrayList<>();
-				if (userGroup != null) {
-					sfMetaData = ugService.getSpeciesFieldMetadata(userGroup.getId());
+				if (userGroupId != null) {
+					sfMetaData = ugService.getSpeciesFieldMetadata(userGroupId);
 				}
 
 				List<Long> sfContributors = fieldData.getContributor().stream().map(c -> c.getId())
 						.collect(Collectors.toList());
 
 				// UserGroup specific logic
-				if (userGroup == null || (ugFieldIds.isEmpty() && sfMetaData.isEmpty())) {
+				if (userGroupId == null || (ugFieldIds.isEmpty() && sfMetaData.isEmpty())) {
 					filteredFields.add(fieldData);
 				} else if (ugFieldIds.isEmpty() && !sfMetaData.isEmpty()) {
 					if (isMetaDataFilterTrue(sfMetaData, sfContributors)) {
@@ -511,7 +530,17 @@ public class SpeciesServiceImpl implements SpeciesServices {
 			}
 
 			showPagePayload.setFieldData(filteredFields);
-			enrichSpeciesPageWithNewFields(showPagePayload, speciesId);
+
+			// OPTIMIZED: Only enrich if we're not filtering by user group
+			// because userGroup-specific fields should already be in ES
+			if (userGroupId == null) {
+				enrichSpeciesPageWithNewFields(showPagePayload, speciesId);
+			}
+
+			// Store in cache before returning
+			cacheConfig.getSpeciesPageCache().put(cacheKey, showPagePayload);
+			logger.debug("Cached species page for species: {} with userGroup: {}", speciesId, userGroupId);
+
 			return showPagePayload;
 		}
 
@@ -524,7 +553,8 @@ public class SpeciesServiceImpl implements SpeciesServices {
 
 	/**
 	 * Enriches the species page with fields from the database that might not be in
-	 * ElasticSearch yet
+	 * ElasticSearch yet OPTIMIZED: Only fetch fields for this specific species
+	 * instead of ALL fields
 	 *
 	 * @param showPagePayload The species page payload from ElasticSearch
 	 * @param speciesId       The ID of the species
@@ -535,18 +565,26 @@ public class SpeciesServiceImpl implements SpeciesServices {
 			Set<Long> existingFieldIds = showPagePayload.getFieldData().stream().map(SpeciesFieldData::getFieldId)
 					.collect(Collectors.toSet());
 
-			// Get all fields from the database, not just fields for this species
-			List<FieldNew> allFields = fieldNewDao.findAll();
+			// OPTIMIZED: Only get fields for this specific species instead of all fields
+			List<SpeciesField> speciesFields = speciesFieldDao.findBySpeciesId(speciesId);
 
-			// For each field definition in the database
-			for (FieldNew fieldNew : allFields) {
-				// Skip fields already in the ES response
-				if (existingFieldIds.contains(fieldNew.getId())) {
-					continue;
-				}
+			if (speciesFields == null || speciesFields.isEmpty()) {
+				logger.debug("No species fields found for species: {}", speciesId);
+				return;
+			}
 
-				// Skip blacklisted fields
-				if (blackListSFId.contains(fieldNew.getId())) {
+			// Get the field IDs that are actually used by this species
+			Set<Long> speciesFieldIds = speciesFields.stream().map(SpeciesField::getFieldId)
+					.filter(fieldId -> !blackListSFId.contains(fieldId))
+					.filter(fieldId -> !existingFieldIds.contains(fieldId)).collect(Collectors.toSet());
+
+			logger.debug("Found {} new fields to enrich for species: {}", speciesFieldIds.size(), speciesId);
+
+			// Only fetch these specific fields, not all fields
+			for (Long fieldId : speciesFieldIds) {
+				FieldNew fieldNew = fieldNewDao.findById(fieldId);
+				if (fieldNew == null) {
+					logger.warn("Field not found: {}", fieldId);
 					continue;
 				}
 
@@ -559,7 +597,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 				}
 			}
 		} catch (Exception e) {
-			logger.error("Error enriching species page with new fields: " + e.getMessage());
+			logger.error("Error enriching species page with new fields: " + e.getMessage(), e);
 		}
 	}
 
@@ -990,6 +1028,10 @@ public class SpeciesServiceImpl implements SpeciesServices {
 			Species species = speciesDao.findById(speciesId);
 			species.setLastUpdated(new Date());
 			speciesDao.update(species);
+
+			// Invalidate cache for this species
+			cacheConfig.invalidateSpeciesCache(speciesId);
+
 			ESSpeciesUpdate(speciesId);
 		} catch (ApiException e) {
 			logger.error(e.getMessage());
@@ -1018,7 +1060,8 @@ public class SpeciesServiceImpl implements SpeciesServices {
 				existingFacts.addAll(result);
 				showData.setFacts(existingFacts);
 				;
-				speciesEsUpdate(showData, speciesId);
+				// speciesEsUpdate(showData, speciesId);
+				updateLastRevised(Long.parseLong(speciesId));
 				return existingFacts;
 			}
 
@@ -1820,7 +1863,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 		try {
 			if (Boolean.TRUE.equals(isContributor)) {
 				result = commonNameService.updateIsPreffered(commonNameId);
-				ESSpeciesUpdate(speciesId);
+				updateLastRevised(speciesId);
 			}
 		} catch (Exception e) {
 			logger.error(e.getMessage());

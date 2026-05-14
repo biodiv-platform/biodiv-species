@@ -52,7 +52,6 @@ import com.strandls.userGroup.pojo.Featured;
 import com.strandls.userGroup.pojo.FeaturedCreate;
 import com.strandls.userGroup.pojo.UserGroupIbp;
 import com.strandls.userGroup.pojo.UserGroupSpeciesCreateData;
-
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -110,6 +109,9 @@ public class SpeciesController {
 	@Inject
 	private ESUpdate esUpdate;
 
+	@Inject
+	private com.strandls.species.config.CacheConfig cacheConfig;
+
 	@GET
 	@Path(ApiConstants.PING)
 	@Produces(MediaType.TEXT_PLAIN)
@@ -118,6 +120,21 @@ public class SpeciesController {
 			@ApiResponse(responseCode = "200", description = "Success", content = @Content(schema = @Schema(type = "string"))) })
 	public Response getPong() {
 		return Response.status(Status.OK).entity("PONG").build();
+	}
+
+	@GET
+	@Path("/cache/stats")
+	@Produces(MediaType.APPLICATION_JSON)
+	@Operation(summary = "Get cache statistics", description = "Returns detailed cache statistics including current size, hit/miss counts, hit ratio, eviction count, and average load time")
+	@ApiResponses({
+			@ApiResponse(responseCode = "200", description = "Successfully retrieved cache statistics", content = @Content(schema = @Schema(implementation = com.strandls.species.pojo.CacheStats.class))) })
+	public Response getCacheStats() {
+		try {
+			com.strandls.species.pojo.CacheStats stats = cacheConfig.getCacheStats();
+			return Response.status(Status.OK).entity(stats).build();
+		} catch (Exception e) {
+			return Response.status(Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
+		}
 	}
 
 	@GET
@@ -141,19 +158,20 @@ public class SpeciesController {
 
 	}
 
-	@POST
+	@GET
 	@Path(ApiConstants.SHOW + "/{speciesId}")
-	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@Operation(summary = "provide the show page of speices", description = "Returns the species Show page", parameters = {
-			@Parameter(name = "speciesId", description = "Species ID", required = true) }, requestBody = @RequestBody(description = "User group information", required = true, content = @Content(schema = @Schema(implementation = UserGroupIbp.class))), responses = {
+			@Parameter(name = "speciesId", description = "Species ID", required = true),
+			@Parameter(name = "userGroupId", description = "User Group ID") }, responses = {
 					@ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = ShowSpeciesPage.class))),
 					@ApiResponse(responseCode = "400", description = "unable to fetch the show page") })
-	public Response getSpeciesShowPage(@PathParam("speciesId") String sId, UserGroupIbp userGroupIbp) {
+	public Response getSpeciesShowPage(@PathParam("speciesId") String sId,
+			@QueryParam("userGroupId") Long userGroupId) {
 
 		try {
 			Long speciesId = Long.parseLong(sId);
-			ShowSpeciesPage result = speciesService.showSpeciesPageFromES(speciesId, userGroupIbp);
+			ShowSpeciesPage result = speciesService.showSpeciesPageFromES(speciesId, userGroupId);
 			if (result != null)
 				return Response.status(Status.OK).entity(result).build();
 			return Response.status(Status.NOT_FOUND).build();
@@ -800,7 +818,7 @@ public class SpeciesController {
 			@DefaultValue("") @QueryParam("rank") String rank, @DefaultValue("") @QueryParam("path") String path,
 			@DefaultValue("") @QueryParam("description") String description,
 			@DefaultValue("") @QueryParam("attributes") String attributes,
-			@DefaultValue("40") @QueryParam("colorRange") Integer colorRange,
+			@DefaultValue("40") @QueryParam("colorRange") Integer colorRange, @QueryParam("authorId") String authorId,
 			@DefaultValue("grid") @QueryParam("view") String view, @QueryParam("bulkAction") String bulkAction,
 			@QueryParam("selectAll") Boolean selectAll, @QueryParam("bulkUsergroupIds") String bulkUsergroupIds,
 			@QueryParam("bulkSpeciesIds") String bulkSpeciesIds, @Context HttpServletRequest request,
@@ -827,7 +845,14 @@ public class SpeciesController {
 					revisedOnMaxDate, rank, path, user, attributes, reference, description, colorRange, traitParams,
 					mapSearchParams);
 
-			if (view.equalsIgnoreCase("list") || view.equalsIgnoreCase("grid")) {
+			if (view.equalsIgnoreCase("csv_download") && request.getHeader(HttpHeaders.AUTHORIZATION) != null
+					&& !request.getHeader(HttpHeaders.AUTHORIZATION).isEmpty()) {
+				listService.csvDownload(mapSearchQuery, index, type, request, mapSearchParams,
+						uriInfo.getRequestUri().toString(), authorId);
+				return Response.status(Status.OK).build();
+			}
+
+			else if (view.equalsIgnoreCase("list") || view.equalsIgnoreCase("grid")) {
 				MapAggregationResponse aggregationResult = null;
 
 				aggregationResult = listService.mapAggregate(index, type, scientificName, commonName, sGroup,

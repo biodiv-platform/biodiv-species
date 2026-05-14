@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import com.strandls.species.pojo.FieldHeader;
 import com.strandls.species.util.AbstractDAO;
+import com.strandls.species.util.PropertyFileUtil;
 
 import jakarta.inject.Inject;
 
@@ -22,9 +23,13 @@ import jakarta.inject.Inject;
  *
  * 
  */
+
 public class FieldHeaderDao extends AbstractDAO<FieldHeader, Long> {
 
 	private final Logger logger = LoggerFactory.getLogger(FieldHeaderDao.class);
+
+	private Long defaultLanguageId = Long
+			.parseLong(PropertyFileUtil.fetchProperty("config.properties", "defaultLanguageId"));
 
 	/**
 	 * @param sessionFactory
@@ -48,22 +53,6 @@ public class FieldHeaderDao extends AbstractDAO<FieldHeader, Long> {
 		return result;
 	}
 
-//	@SuppressWarnings("unchecked")
-//	public FieldHeader findByFieldId(Long fieldId, Long languageId) {
-//		String qry = "from FieldHeader where fieldId = :fieldId and languageId = :languageId ";
-//		Session session = sessionFactory.openSession();
-//		FieldHeader result = null;
-//		try {
-//			Query<FieldHeader> query = session.createQuery(qry);
-//			query.setParameter("fieldId", fieldId);
-//			query.setParameter("languageId", languageId);
-//			result = query.getSingleResult();
-//		} catch (Exception e) {
-//			logger.error(e.getMessage());
-//		}
-//		return result;
-//	}
-
 	@SuppressWarnings("unchecked")
 	public FieldHeader findByFieldId(Long fieldId, Long languageId) {
 		String qry = "from FieldHeader where fieldId = :fieldId and languageId = :languageId ";
@@ -81,7 +70,7 @@ public class FieldHeaderDao extends AbstractDAO<FieldHeader, Long> {
 			try {
 				Query<FieldHeader> fallbackQuery = session.createQuery(qry);
 				fallbackQuery.setParameter("fieldId", fieldId);
-				fallbackQuery.setParameter("languageId", 205L);
+				fallbackQuery.setParameter("languageId", defaultLanguageId);
 				result = fallbackQuery.getSingleResult();
 			} catch (Exception fallbackException) {
 				logger.error("Fallback query also failed: " + fallbackException.getMessage());
@@ -135,8 +124,8 @@ public class FieldHeaderDao extends AbstractDAO<FieldHeader, Long> {
 			tx = session.beginTransaction();
 
 			// Try to find existing translation
-			Query<FieldHeader> query = session
-					.createQuery("from FieldHeader where fieldId = :fieldId and languageId = :languageId");
+			Query<FieldHeader> query = session.createQuery(
+					"from FieldHeader where fieldId = :fieldId and languageId = :languageId");
 			query.setParameter("fieldId", fieldHeader.getFieldId());
 			query.setParameter("languageId", fieldHeader.getLanguageId());
 
