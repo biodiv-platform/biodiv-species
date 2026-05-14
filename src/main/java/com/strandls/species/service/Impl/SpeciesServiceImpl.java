@@ -423,10 +423,9 @@ public class SpeciesServiceImpl implements SpeciesServices {
 	}
 
 	@Override
-	public ShowSpeciesPage showSpeciesPageFromES(Long speciesId, UserGroupIbp userGroup) {
+	public ShowSpeciesPage showSpeciesPageFromES(Long speciesId, Long userGroupId) {
 		try {
 			// Generate cache key
-			Long userGroupId = userGroup != null ? userGroup.getId() : null;
 			String cacheKey = cacheConfig.generateCacheKey(speciesId, userGroupId);
 
 			// Try to get from cache first
@@ -479,8 +478,8 @@ public class SpeciesServiceImpl implements SpeciesServices {
 			// Add newly created fields from database that might not be in ElasticSearch yet
 
 			List<SpeciesFieldValuesDTO> ugSpeciesFields = new ArrayList<>();
-			if (userGroup != null) {
-				ugSpeciesFields = ugService.getSpeciesFieldsByUserGroupId(userGroup.getId().toString());
+			if (userGroupId != null) {
+				ugSpeciesFields = ugService.getSpeciesFieldsByUserGroupId(userGroupId.toString());
 			}
 
 			List<Long> ugFieldIds = new ArrayList<>();
@@ -507,15 +506,15 @@ public class SpeciesServiceImpl implements SpeciesServices {
 				}
 
 				List<UserGroupSpeciesFieldMeta> sfMetaData = new ArrayList<>();
-				if (userGroup != null) {
-					sfMetaData = ugService.getSpeciesFieldMetadata(userGroup.getId());
+				if (userGroupId != null) {
+					sfMetaData = ugService.getSpeciesFieldMetadata(userGroupId);
 				}
 
 				List<Long> sfContributors = fieldData.getContributor().stream().map(c -> c.getId())
 						.collect(Collectors.toList());
 
 				// UserGroup specific logic
-				if (userGroup == null || (ugFieldIds.isEmpty() && sfMetaData.isEmpty())) {
+				if (userGroupId == null || (ugFieldIds.isEmpty() && sfMetaData.isEmpty())) {
 					filteredFields.add(fieldData);
 				} else if (ugFieldIds.isEmpty() && !sfMetaData.isEmpty()) {
 					if (isMetaDataFilterTrue(sfMetaData, sfContributors)) {
@@ -534,7 +533,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 
 			// OPTIMIZED: Only enrich if we're not filtering by user group
 			// because userGroup-specific fields should already be in ES
-			if (userGroup == null) {
+			if (userGroupId == null) {
 				enrichSpeciesPageWithNewFields(showPagePayload, speciesId);
 			}
 

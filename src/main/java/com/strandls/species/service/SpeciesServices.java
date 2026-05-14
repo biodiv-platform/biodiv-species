@@ -124,7 +124,7 @@ public interface SpeciesServices {
 
 	public Activity removeSpeciesComment(HttpServletRequest request, CommentLoggingData comment, String commentId);
 
-	public ShowSpeciesPage showSpeciesPageFromES(Long speciesId, UserGroupIbp userGroup);
+	public ShowSpeciesPage showSpeciesPageFromES(Long speciesId, Long userGroupId);
 
 	public List<FieldNew> fetchLeafNodes();
 
