@@ -19,6 +19,7 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeoutException;
 
 import org.glassfish.jersey.servlet.ServletContainer;
 import org.hibernate.SessionFactory;
@@ -32,6 +33,7 @@ import com.google.inject.Injector;
 import com.google.inject.Scopes;
 import com.google.inject.servlet.GuiceServletContextListener;
 import com.google.inject.servlet.ServletModule;
+import com.rabbitmq.client.Channel;
 import com.strandls.activity.controller.ActivityServiceApi;
 import com.strandls.document.controllers.DocumentServiceApi;
 import com.strandls.esmodule.controllers.EsServicesApi;
@@ -50,6 +52,8 @@ import com.strandls.taxonomy.controllers.TaxonomyTreeServicesApi;
 import com.strandls.traits.controller.TraitsServiceApi;
 import com.strandls.user.controller.UserServiceApi;
 import com.strandls.userGroup.controller.UserGroupServiceApi;
+
+import com.strandls.species.es.util.RabbitMQConsumer;
 
 import jakarta.servlet.ServletContextEvent;
 
@@ -86,6 +90,16 @@ public class SpeciesServeletContextListener extends GuiceServletContextListener 
 				props.put("jakarta.ws.rs.Application", ApplicationConfig.class.getName());
 				props.put("jersey.config.server.provider.packages", "com");
 				props.put("jersey.config.server.wadl.disableWadl", "true");
+				
+				RabbitMqConnection rabbitConnection = new RabbitMqConnection();
+                Channel channel = null;
+                try {
+                    channel = rabbitConnection.setRabbitMQConnetion();
+                } catch (Exception e) {
+                    logger.error(e.getMessage());
+                }
+
+                bind(Channel.class).toInstance(channel);
 
 				ObjectMapper objectMapper = new ObjectMapper();
 				bind(ObjectMapper.class).toInstance(objectMapper);
@@ -115,7 +129,13 @@ public class SpeciesServeletContextListener extends GuiceServletContextListener 
 			}
 		}, new SpeciesControllerModule(), new SpeciesDaoModule(), new SpeciesServiceModule(), new ESUtilModule());
 
-		return injector;
+		try {
+            injector.getInstance(RabbitMQConsumer.class).listenToTaxonomyEvents();
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+        }
+
+        return injector;
 
 	}
 
@@ -168,6 +188,14 @@ public class SpeciesServeletContextListener extends GuiceServletContextListener 
 
 		SessionFactory sessionFactory = injector.getInstance(SessionFactory.class);
 		sessionFactory.close();
+		
+		Channel channel = injector.getInstance(Channel.class);
+        try {
+            channel.getConnection().close();
+            channel.close();
+        } catch (IOException | TimeoutException e) {
+            logger.error(e.getMessage());
+        }
 
 		super.contextDestroyed(servletContextEvent);
 		// ... First close any background tasks which may be using the DB ...

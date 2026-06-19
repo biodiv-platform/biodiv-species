@@ -45,6 +45,7 @@ import com.strandls.esmodule.controllers.EsServicesApi;
 import com.strandls.esmodule.pojo.MapDocument;
 import com.strandls.esmodule.pojo.ObservationInfo;
 import com.strandls.esmodule.pojo.ObservationMapInfo;
+import com.strandls.esmodule.pojo.TaxonomyUpdateData;
 import com.strandls.observation.controller.ObservationServiceApi;
 import com.strandls.resource.controllers.ResourceServicesApi;
 import com.strandls.resource.pojo.License;
@@ -391,7 +392,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 		for (Field field : obj.getClass().getDeclaredFields()) {
 			if (Modifier.isStatic(field.getModifiers())) {
 				continue;
-        	}
+			}
 			field.setAccessible(true);
 			try {
 				Object value = field.get(obj);
@@ -2080,6 +2081,26 @@ public class SpeciesServiceImpl implements SpeciesServices {
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 			throw new RuntimeException("Error updating field translations: " + e.getMessage());
+		}
+	}
+
+	public void handleTaxonomyUpdate(TaxonomyUpdateData message) {
+
+		if (message.getOldName() != message.getName()) {
+			Species species = speciesDao.findByTaxonId(message.getTargetId());
+			species.setTitle(message.getName());
+			species = speciesDao.update(species);
+			if (species != null) {
+				message.setSpeciesId(species.getId());
+				message.setTitle(species.getTitle());
+			}
+		}
+		try {
+			esService.updateSpecies(message);
+		} catch (com.strandls.esmodule.ApiException e) {
+			e.printStackTrace();
+		} catch (Exception e) {
+			logger.error("Exception in async update: {}", e.getMessage(), e);
 		}
 	}
 
