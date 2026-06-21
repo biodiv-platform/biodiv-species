@@ -13,48 +13,49 @@ import com.strandls.species.util.PropertyFileUtil;
 
 public class RabbitMqConnection {
 
-    private static final Logger logger = LoggerFactory.getLogger(RabbitMqConnection.class);
+	private static final Logger logger = LoggerFactory.getLogger(RabbitMqConnection.class);
 
-    public static final String EXCHANGE_BIODIV;
-    public static final String SPECIES_EVENT_QUEUE;
-    public static final String SPECIES_EVENT_ROUTING_KEY;
+	public static final String EXCHANGE_BIODIV;
+	public static final String SPECIES_EVENT_QUEUE;
+	public static final String SPECIES_EVENT_ROUTING_KEY;
 
-    static {
-        Properties properties = PropertyFileUtil.fetchProperty("config.properties");
-        EXCHANGE_BIODIV          = properties.getProperty("rabbitmq_exchange");
-        SPECIES_EVENT_QUEUE      = "speciesQueue";
-        SPECIES_EVENT_ROUTING_KEY = "taxonomy.updated";
-    }
+	static {
+		Properties properties = PropertyFileUtil.fetchProperty("config.properties");
+		EXCHANGE_BIODIV = properties.getProperty("rabbitmq_exchange");
+		SPECIES_EVENT_QUEUE = "speciesQueue";
+		SPECIES_EVENT_ROUTING_KEY = "species.updated";
+	}
 
-    public Channel setRabbitMQConnetion() throws IOException, TimeoutException {
-        InputStream in = Thread.currentThread().getContextClassLoader()
-                               .getResourceAsStream("config.properties");
-        Properties properties = new Properties();
-        try {
-            properties.load(in);
-        } catch (IOException e) {
-            logger.error(e.getMessage());
-        }
+	public Channel setRabbitMQConnetion() throws IOException, TimeoutException {
+		InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream("config.properties");
+		Properties properties = new Properties();
+		try {
+			properties.load(in);
+		} catch (IOException e) {
+			logger.error(e.getMessage());
+		}
 
-        String rabbitmqHost     = properties.getProperty("rabbitmq_host");
-        Integer rabbitmqPort    = Integer.parseInt(properties.getProperty("rabbitmq_port"));
-        String rabbitmqUsername = properties.getProperty("rabbitmq_username");
-        String rabbitmqPassword = properties.getProperty("rabbitmq_password");
-        in.close();
+		String rabbitmqHost = properties.getProperty("rabbitmq_host");
+		Integer rabbitmqPort = Integer.parseInt(properties.getProperty("rabbitmq_port"));
+		String rabbitmqUsername = properties.getProperty("rabbitmq_username");
+		String rabbitmqPassword = properties.getProperty("rabbitmq_password");
+		in.close();
 
-        ConnectionFactory factory = new ConnectionFactory();
-        factory.setHost(rabbitmqHost);
-        factory.setPort(rabbitmqPort);
-        factory.setUsername(rabbitmqUsername);
-        factory.setPassword(rabbitmqPassword);
+		ConnectionFactory factory = new ConnectionFactory();
+		factory.setHost(rabbitmqHost);
+		factory.setPort(rabbitmqPort);
+		factory.setUsername(rabbitmqUsername);
+		factory.setPassword(rabbitmqPassword);
 
-        Connection connection = factory.newConnection(); // NOSONAR
-        Channel channel = connection.createChannel();   // NOSONAR
+		Connection connection = factory.newConnection(); // NOSONAR
+		Channel channel = connection.createChannel(); // NOSONAR
 
-        channel.exchangeDeclare(EXCHANGE_BIODIV, "direct");
-        channel.queueDeclare(SPECIES_EVENT_QUEUE, false, false, false, null);
-        channel.queueBind(SPECIES_EVENT_QUEUE, EXCHANGE_BIODIV, SPECIES_EVENT_ROUTING_KEY);
+		channel.exchangeDeclare(EXCHANGE_BIODIV, "direct");
 
-        return channel;
-    }
+		// binding stays same, just routing key changes
+		channel.queueDeclare(SPECIES_EVENT_QUEUE, false, false, false, null);
+		channel.queueBind(SPECIES_EVENT_QUEUE, EXCHANGE_BIODIV, SPECIES_EVENT_ROUTING_KEY);
+
+		return channel;
+	}
 }

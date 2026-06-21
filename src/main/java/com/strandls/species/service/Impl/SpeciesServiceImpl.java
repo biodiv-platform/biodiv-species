@@ -1344,6 +1344,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 			if (isContributor) {
 				commonNameService = headers.addCommonNameHeader(commonNameService,
 						request.getHeader(HttpHeaders.AUTHORIZATION));
+				commonNameService.getApiClient().addDefaultHeader("Content-Type", "application/json");
 				List<CommonName> result = commonNameService.removeCommonName(commonNameId, speciesId.toString());
 				updateLastRevised(speciesId);
 				return result;
@@ -1683,6 +1684,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 				Species species = speciesDao.findById(Long.parseLong(speciesId));
 				taxonomyService = headers.addTaxonomyHeader(taxonomyService,
 						request.getHeader(HttpHeaders.AUTHORIZATION));
+				taxonomyService.getApiClient().addDefaultHeader("Content-Type", "application/json");
 				List<TaxonomyDefinition> result = taxonomyService.removeSynonyms(species.getTaxonConceptId().toString(),
 						synonymId, speciesId);
 				updateLastRevised(Long.parseLong(speciesId));
