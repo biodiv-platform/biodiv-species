@@ -1678,23 +1678,30 @@ public class SpeciesServiceImpl implements SpeciesServices {
 
 	@Override
 	public List<TaxonomyDefinition> removeSynonyms(HttpServletRequest request, String speciesId, String synonymId) {
-		try {
-			Boolean isContributor = checkIsContributor(request, Long.parseLong(speciesId));
-			if (isContributor) {
-				Species species = speciesDao.findById(Long.parseLong(speciesId));
-				taxonomyService = headers.addTaxonomyHeader(taxonomyService,
-						request.getHeader(HttpHeaders.AUTHORIZATION));
-				taxonomyService.getApiClient().addDefaultHeader("Content-Type", "text/plain");
-				List<TaxonomyDefinition> result = taxonomyService.removeSynonyms(species.getTaxonConceptId().toString(),
-						synonymId, speciesId);
-				updateLastRevised(Long.parseLong(speciesId));
-				return result;
-			}
+	    try {
+	        System.out.println("HI");
+	        Boolean isContributor = checkIsContributor(request, Long.parseLong(speciesId));
+	        if (isContributor) {
+	            Species species = speciesDao.findById(Long.parseLong(speciesId));
+	            
+	            TaxonomyServicesApi localTaxonomyService = new TaxonomyServicesApi();
+	            localTaxonomyService.getApiClient().setBasePath(taxonomyService.getApiClient().getBasePath());
+	            localTaxonomyService.getApiClient().addDefaultHeader(HttpHeaders.AUTHORIZATION, request.getHeader(HttpHeaders.AUTHORIZATION));
+	            localTaxonomyService.getApiClient().addDefaultHeader("Content-Type", "text/plain");
+	            
+	            logger.info("BasePath: {}", localTaxonomyService.getApiClient().getBasePath());
+	            logger.info("Default Headers: {}", localTaxonomyService.getApiClient().getHttpClient());
+	            
+	            List<TaxonomyDefinition> result = localTaxonomyService.removeSynonyms(
+	                    species.getTaxonConceptId().toString(), synonymId, speciesId);
+	            updateLastRevised(Long.parseLong(speciesId));
+	            return result;
+	        }
 
-		} catch (Exception e) {
-			logger.error(e.getMessage());
-		}
-		return null;
+	    } catch (Exception e) {
+	        logger.error(e.getMessage(), e); // full stack trace
+	    }
+	    return new ArrayList<>();
 	}
 
 	@Override
