@@ -129,7 +129,13 @@ import com.strandls.userGroup.pojo.UserGroupSpeciesFieldMeta;
 
 import jakarta.inject.Inject;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.ws.rs.client.Client;
+import jakarta.ws.rs.client.ClientBuilder;
+import jakarta.ws.rs.client.Entity;
+import jakarta.ws.rs.core.GenericType;
 import jakarta.ws.rs.core.HttpHeaders;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 import net.minidev.json.JSONArray;
 
 /**
@@ -1679,27 +1685,28 @@ public class SpeciesServiceImpl implements SpeciesServices {
 	@Override
 	public List<TaxonomyDefinition> removeSynonyms(HttpServletRequest request, String speciesId, String synonymId) {
 	    try {
-	        System.out.println("HI");
 	        Boolean isContributor = checkIsContributor(request, Long.parseLong(speciesId));
 	        if (isContributor) {
 	            Species species = speciesDao.findById(Long.parseLong(speciesId));
-	            
-	            TaxonomyServicesApi localTaxonomyService = new TaxonomyServicesApi();
-	            localTaxonomyService.getApiClient().setBasePath(taxonomyService.getApiClient().getBasePath());
-	            localTaxonomyService.getApiClient().addDefaultHeader(HttpHeaders.AUTHORIZATION, request.getHeader(HttpHeaders.AUTHORIZATION));
-	            localTaxonomyService.getApiClient().addDefaultHeader("Content-Type", "text/plain");
-	            
-	            logger.info("BasePath: {}", localTaxonomyService.getApiClient().getBasePath());
-	            logger.info("Default Headers: {}", localTaxonomyService.getApiClient().getHttpClient());
-	            
-	            List<TaxonomyDefinition> result = localTaxonomyService.removeSynonyms(
-	                    species.getTaxonConceptId().toString(), synonymId, speciesId);
+
+	            String basePath = taxonomyService.getApiClient().getBasePath();
+	            String url = basePath + "/v1/taxonomy/remove/synonym/"
+	                    + species.getTaxonConceptId() + "/" + synonymId
+	                    + "?speciesId=" + speciesId;
+
+	            Client client = ClientBuilder.newClient();
+	            Response response = client.target(url)
+	                    .request(MediaType.APPLICATION_JSON)
+	                    .header(HttpHeaders.AUTHORIZATION, request.getHeader(HttpHeaders.AUTHORIZATION))
+	                    .method("DELETE", Entity.entity("", MediaType.TEXT_PLAIN_TYPE));
+
+	            List<TaxonomyDefinition> result = response.readEntity(new GenericType<List<TaxonomyDefinition>>() {});
 	            updateLastRevised(Long.parseLong(speciesId));
 	            return result;
 	        }
 
 	    } catch (Exception e) {
-	        logger.error(e.getMessage(), e); // full stack trace
+	        logger.error(e.getMessage(), e);
 	    }
 	    return new ArrayList<>();
 	}
