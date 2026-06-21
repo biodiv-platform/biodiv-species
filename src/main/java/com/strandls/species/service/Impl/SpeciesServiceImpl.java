@@ -129,13 +129,7 @@ import com.strandls.userGroup.pojo.UserGroupSpeciesFieldMeta;
 
 import jakarta.inject.Inject;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.ws.rs.client.Client;
-import jakarta.ws.rs.client.ClientBuilder;
-import jakarta.ws.rs.client.Entity;
-import jakarta.ws.rs.core.GenericType;
 import jakarta.ws.rs.core.HttpHeaders;
-import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.Response;
 import net.minidev.json.JSONArray;
 
 /**
@@ -1684,31 +1678,24 @@ public class SpeciesServiceImpl implements SpeciesServices {
 
 	@Override
 	public List<TaxonomyDefinition> removeSynonyms(HttpServletRequest request, String speciesId, String synonymId) {
-	    try {
-	        Boolean isContributor = checkIsContributor(request, Long.parseLong(speciesId));
-	        if (isContributor) {
-	            Species species = speciesDao.findById(Long.parseLong(speciesId));
+		try {
+			System.out.println("HI");
+			Boolean isContributor = checkIsContributor(request, Long.parseLong(speciesId));
+			if (isContributor) {
+				Species species = speciesDao.findById(Long.parseLong(speciesId));
+				taxonomyService = headers.addTaxonomyHeader(taxonomyService,
+						request.getHeader(HttpHeaders.AUTHORIZATION));
+				taxonomyService.getApiClient().addDefaultHeader("Content-Type", "text/plain");
+				List<TaxonomyDefinition> result = taxonomyService.removeSynonyms(species.getTaxonConceptId().toString(),
+						synonymId, speciesId);
+				updateLastRevised(Long.parseLong(speciesId));
+				return result;
+			}
 
-	            String basePath = taxonomyService.getApiClient().getBasePath();
-	            String url = basePath + "/v1/taxonomy/remove/synonym/"
-	                    + species.getTaxonConceptId() + "/" + synonymId
-	                    + "?speciesId=" + speciesId;
-
-	            Client client = ClientBuilder.newClient();
-	            Response response = client.target(url)
-	                    .request(MediaType.APPLICATION_JSON)
-	                    .header(HttpHeaders.AUTHORIZATION, request.getHeader(HttpHeaders.AUTHORIZATION))
-	                    .method("DELETE", Entity.entity("", MediaType.TEXT_PLAIN_TYPE));
-
-	            List<TaxonomyDefinition> result = response.readEntity(new GenericType<List<TaxonomyDefinition>>() {});
-	            updateLastRevised(Long.parseLong(speciesId));
-	            return result;
-	        }
-
-	    } catch (Exception e) {
-	        logger.error(e.getMessage(), e);
-	    }
-	    return new ArrayList<>();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return null;
 	}
 
 	@Override
