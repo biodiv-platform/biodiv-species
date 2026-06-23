@@ -141,7 +141,6 @@ public class SpeciesController {
 	@Path("/cache" + ApiConstants.REMOVE + "/{speciesId}")
 	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces(MediaType.TEXT_PLAIN)
-	@ValidateUser
 	@Operation(summary = "Delete species page cache", description = "Deletes species page cache", responses = {
 			@ApiResponse(responseCode = "200", description = "Species page cache deleted"),
 			@ApiResponse(responseCode = "404", description = "Unable to delete cache", content = @Content(schema = @Schema(implementation = String.class))) })
