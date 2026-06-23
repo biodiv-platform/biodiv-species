@@ -65,28 +65,29 @@ public class SpeciesFieldDao extends AbstractDAO<SpeciesField, Long> {
 		}
 		return result;
 	}
-	
+
 	public void mergeSpeciesFields(List<Long> fromSpeciesIds, Long toSpeciesId) {
-	    Session session = sessionFactory.openSession();
-	    Transaction tx = null;
-	    try {
-	        tx = session.beginTransaction();
+		Session session = sessionFactory.openSession();
+		Transaction tx = null;
+		try {
+			tx = session.beginTransaction();
 
-	        String qry = "update SpeciesField set speciesId = :toSpeciesId " +
-	                     "where speciesId in :fromSpeciesIds and isDeleted = false";
+			String qry = "update SpeciesField set speciesId = :toSpeciesId "
+					+ "where speciesId in :fromSpeciesIds and isDeleted = false";
 
-	        Query query = session.createQuery(qry);
-	        query.setParameter("toSpeciesId", toSpeciesId);
-	        query.setParameterList("fromSpeciesIds", fromSpeciesIds);
-	        query.executeUpdate();
+			Query query = session.createQuery(qry);
+			query.setParameter("toSpeciesId", toSpeciesId);
+			query.setParameterList("fromSpeciesIds", fromSpeciesIds);
+			query.executeUpdate();
 
-	        tx.commit();
-	    } catch (Exception e) {
-	        if (tx != null) tx.rollback();
-	        logger.error(e.getMessage());
-	    } finally {
-	        session.close();
-	    }
+			tx.commit();
+		} catch (Exception e) {
+			if (tx != null)
+				tx.rollback();
+			logger.error(e.getMessage());
+		} finally {
+			session.close();
+		}
 	}
 
 }

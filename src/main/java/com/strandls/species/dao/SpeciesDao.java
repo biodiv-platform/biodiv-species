@@ -139,26 +139,26 @@ public class SpeciesDao extends AbstractDAO<Species, Long> {
 
 		return result;
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	public List<Species> findByTaxonIds(List<Long> taxonIds) {
-	    if (taxonIds == null || taxonIds.isEmpty()) {
-	        return new ArrayList<>();
-	    }
-	    
-	    String qry = "from Species where taxonConceptId in (:taxonIds)";
-	    Session session = sessionFactory.openSession();
-	    List<Species> results = null;
-	    try {
-	        Query<Species> query = session.createQuery(qry);
-	        query.setParameterList("taxonIds", taxonIds);
-	        results = query.getResultList();
-	    } catch (Exception e) {
-	        logger.error(e.getMessage());
-	    } finally {
-	        session.close();
-	    }
-	    return results != null ? results : new ArrayList<>();
+		if (taxonIds == null || taxonIds.isEmpty()) {
+			return new ArrayList<>();
+		}
+
+		String qry = "from Species where taxonConceptId in (:taxonIds)";
+		Session session = sessionFactory.openSession();
+		List<Species> results = null;
+		try {
+			Query<Species> query = session.createQuery(qry);
+			query.setParameterList("taxonIds", taxonIds);
+			results = query.getResultList();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		} finally {
+			session.close();
+		}
+		return results != null ? results : new ArrayList<>();
 	}
 
 }

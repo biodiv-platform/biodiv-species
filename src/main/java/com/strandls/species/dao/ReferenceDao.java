@@ -4,6 +4,9 @@
 package com.strandls.species.dao;
 
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -110,6 +113,58 @@ public class ReferenceDao extends AbstractDAO<Reference, Long> {
 			session.close();
 		}
 		return result;
+	}
+
+	public void mergeReferencesBySpeciesIds(List<Long> sourceSpeciesIds, Long targetSpeciesId) {
+		Session session = sessionFactory.openSession();
+		Transaction tx = null;
+
+		try {
+			tx = session.beginTransaction();
+
+			// Fetch existing titles on the target species to detect duplicates
+			List<Reference> targetReferences = findBySpeciesId(targetSpeciesId);
+			Set<String> existingTitles = targetReferences.stream().map(Reference::getTitle).filter(Objects::nonNull)
+					.map(String::toLowerCase).collect(Collectors.toSet());
+
+			for (Long sourceSpeciesId : sourceSpeciesIds) {
+				if (sourceSpeciesId.equals(targetSpeciesId))
+					continue;
+
+				List<Reference> sourceReferences = findBySpeciesId(sourceSpeciesId);
+
+				for (Reference ref : sourceReferences) {
+					String title = ref.getTitle();
+					String titleKey = title != null ? title.toLowerCase() : null;
+
+					if (titleKey != null && existingTitles.contains(titleKey)) {
+						// Duplicate title — skip
+						logger.info("Skipping duplicate reference title '{}' for targetSpeciesId {}", title,
+								targetSpeciesId);
+						continue;
+					}
+
+					// Move reference to target species
+					ref.setSpeciesId(targetSpeciesId);
+					session.merge(ref);
+
+					// Track this title so subsequent sources don't duplicate it either
+					if (titleKey != null) {
+						existingTitles.add(titleKey);
+					}
+				}
+			}
+
+			tx.commit();
+			logger.info("Merge complete into speciesId {}", targetSpeciesId);
+
+		} catch (Exception e) {
+			if (tx != null)
+				tx.rollback();
+			logger.error("Error merging references: {}", e.getMessage(), e);
+		} finally {
+			session.close();
+		}
 	}
 
 }

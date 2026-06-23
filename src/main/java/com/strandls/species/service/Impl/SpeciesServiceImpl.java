@@ -1344,7 +1344,6 @@ public class SpeciesServiceImpl implements SpeciesServices {
 			if (isContributor) {
 				commonNameService = headers.addCommonNameHeader(commonNameService,
 						request.getHeader(HttpHeaders.AUTHORIZATION));
-				commonNameService.getApiClient().addDefaultHeader("Content-Type", "text/plain");
 				List<CommonName> result = commonNameService.removeCommonName(commonNameId, speciesId.toString());
 				updateLastRevised(speciesId);
 				return result;
@@ -1679,7 +1678,6 @@ public class SpeciesServiceImpl implements SpeciesServices {
 	@Override
 	public List<TaxonomyDefinition> removeSynonyms(HttpServletRequest request, String speciesId, String synonymId) {
 		try {
-			System.out.println("HI");
 			Boolean isContributor = checkIsContributor(request, Long.parseLong(speciesId));
 			if (isContributor) {
 				Species species = speciesDao.findById(Long.parseLong(speciesId));
@@ -2087,18 +2085,19 @@ public class SpeciesServiceImpl implements SpeciesServices {
 		}
 	}
 
-	public void handleTaxonomyUpdate(TaxonomyUpdateData message) {
-		if (message.getBulkIds()!=null) {
+	public void handleTaxonomyUpdate(TaxonomyUpdateData updateData) {
+		// for bulkIds merge
+		if (updateData.getBulkIds() != null) {
 			Long mergeId = null;
-			Species species = speciesDao.findByTaxonId(message.getNewId());
-			if (species!=null) {
-				mergeId=species.getId();
+			Species species = speciesDao.findByTaxonId(updateData.getNewId());
+			if (species != null) {
+				mergeId = species.getId();
 			}
 			List<String> deleteIds = new ArrayList<>();
 			List<Long> speciesIds = new ArrayList<>();
-			List<Species> bulkSpecies = speciesDao.findByTaxonIds(message.getBulkIds());
-			for (Species sp: bulkSpecies) {
-				if (mergeId!=null) {
+			List<Species> bulkSpecies = speciesDao.findByTaxonIds(updateData.getBulkIds());
+			for (Species sp : bulkSpecies) {
+				if (mergeId != null) {
 					sp.setIsDeleted(true);
 					sp = speciesDao.update(sp);
 					if (sp.getIsDeleted().equals(true)) {
@@ -2106,35 +2105,42 @@ public class SpeciesServiceImpl implements SpeciesServices {
 						speciesIds.add(sp.getId());
 					}
 				} else {
-					sp.setTaxonConceptId(message.getNewId());
+					sp.setTaxonConceptId(updateData.getNewId());
 					mergeId = sp.getId();
 				}
 			}
-			if (mergeId!=null) {
+			if (mergeId != null) {
 				try {
 					esService.bulkDelete("extended_species", "_doc", deleteIds);
+					for (Long spId : speciesIds) {
+						cacheConfig.invalidateSpeciesCache(spId);
+					}
 					speciesFieldDao.mergeSpeciesFields(speciesIds, mergeId);
+					referenceDao.mergeReferencesBySpeciesIds(speciesIds, mergeId);
 					ESSpeciesUpdate(mergeId);
 				} catch (ApiException e) {
-					e.printStackTrace();
+					logger.error("Exception in async update: {}", e.getMessage(), e);
 				}
 			}
 			return;
 		}
-		
-		else if (message.getOldName() != message.getName()) {
-			Species species = speciesDao.findByTaxonId(message.getTargetId());
+
+		// For name edit
+		else if (updateData.getOldName() != updateData.getName()) {
+			Species species = speciesDao.findByTaxonId(updateData.getTargetId());
 			if (species != null) {
-				species.setTitle(message.getName());
+				species.setTitle(updateData.getName());
 				species = speciesDao.update(species);
-				message.setSpeciesId(species.getId());
-				message.setTitle(species.getTitle());
+				updateData.setSpeciesId(species.getId());
+				updateData.setTitle(species.getTitle());
 			}
 		}
 		try {
-			esService.updateSpecies(message);
+			esService.updateSpecies(updateData);
+			Species species = speciesDao.findByTaxonId(updateData.getTargetId());
+			cacheConfig.invalidateSpeciesCache(species.getId());
 		} catch (com.strandls.esmodule.ApiException e) {
-			e.printStackTrace();
+			logger.error("Exception in async update: {}", e.getMessage(), e);
 		} catch (Exception e) {
 			logger.error("Exception in async update: {}", e.getMessage(), e);
 		}

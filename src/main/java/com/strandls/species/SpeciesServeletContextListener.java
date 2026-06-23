@@ -90,16 +90,16 @@ public class SpeciesServeletContextListener extends GuiceServletContextListener 
 				props.put("jakarta.ws.rs.Application", ApplicationConfig.class.getName());
 				props.put("jersey.config.server.provider.packages", "com");
 				props.put("jersey.config.server.wadl.disableWadl", "true");
-				
-				RabbitMqConnection rabbitConnection = new RabbitMqConnection();
-                Channel channel = null;
-                try {
-                    channel = rabbitConnection.setRabbitMQConnetion();
-                } catch (Exception e) {
-                    logger.error(e.getMessage());
-                }
 
-                bind(Channel.class).toInstance(channel);
+				RabbitMqConnection rabbitConnection = new RabbitMqConnection();
+				Channel channel = null;
+				try {
+					channel = rabbitConnection.setRabbitMQConnetion();
+				} catch (Exception e) {
+					logger.error(e.getMessage());
+				}
+
+				bind(Channel.class).toInstance(channel);
 
 				ObjectMapper objectMapper = new ObjectMapper();
 				bind(ObjectMapper.class).toInstance(objectMapper);
@@ -130,12 +130,12 @@ public class SpeciesServeletContextListener extends GuiceServletContextListener 
 		}, new SpeciesControllerModule(), new SpeciesDaoModule(), new SpeciesServiceModule(), new ESUtilModule());
 
 		try {
-            injector.getInstance(RabbitMQConsumer.class).listenToTaxonomyEvents();
-        } catch (Exception e) {
-            logger.error(e.getMessage());
-        }
+			injector.getInstance(RabbitMQConsumer.class).listenToTaxonomyEvents();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
 
-        return injector;
+		return injector;
 
 	}
 
@@ -188,14 +188,14 @@ public class SpeciesServeletContextListener extends GuiceServletContextListener 
 
 		SessionFactory sessionFactory = injector.getInstance(SessionFactory.class);
 		sessionFactory.close();
-		
+
 		Channel channel = injector.getInstance(Channel.class);
-        try {
-            channel.getConnection().close();
-            channel.close();
-        } catch (IOException | TimeoutException e) {
-            logger.error(e.getMessage());
-        }
+		try {
+			channel.getConnection().close();
+			channel.close();
+		} catch (IOException | TimeoutException e) {
+			logger.error(e.getMessage());
+		}
 
 		super.contextDestroyed(servletContextEvent);
 		// ... First close any background tasks which may be using the DB ...

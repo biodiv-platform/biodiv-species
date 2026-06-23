@@ -52,7 +52,6 @@ public class RabbitMqConnection {
 
 		channel.exchangeDeclare(EXCHANGE_BIODIV, "direct");
 
-		// binding stays same, just routing key changes
 		channel.queueDeclare(SPECIES_EVENT_QUEUE, false, false, false, null);
 		channel.queueBind(SPECIES_EVENT_QUEUE, EXCHANGE_BIODIV, SPECIES_EVENT_ROUTING_KEY);
 
