@@ -2119,9 +2119,11 @@ public class SpeciesServiceImpl implements SpeciesServices {
 						}
 						speciesFieldDao.mergeSpeciesFields(speciesIds, mergeId);
 						referenceDao.mergeReferencesBySpeciesIds(speciesIds, mergeId);
+						resourceServices.mergeResources(mergeId.toString(), speciesIds);
+						traitService.merge(mergeId.toString(), speciesIds);;
 					}
 					ESSpeciesUpdate(mergeId);
-				} catch (ApiException e) {
+				} catch (ApiException | com.strandls.resource.ApiException | com.strandls.traits.ApiException e) {
 					logger.error("Exception in async update: {}", e.getMessage(), e);
 				}
 			}
