@@ -2106,17 +2106,20 @@ public class SpeciesServiceImpl implements SpeciesServices {
 					}
 				} else {
 					sp.setTaxonConceptId(updateData.getNewId());
+					sp = speciesDao.update(sp);
 					mergeId = sp.getId();
 				}
 			}
 			if (mergeId != null) {
 				try {
-					esService.bulkDelete("extended_species", "_doc", deleteIds);
-					for (Long spId : speciesIds) {
-						cacheConfig.invalidateSpeciesCache(spId);
+					if (!deleteIds.isEmpty()) {
+						esService.bulkDelete("extended_species", "_doc", deleteIds);
+						for (Long spId : speciesIds) {
+							cacheConfig.invalidateSpeciesCache(spId);
+						}
+						speciesFieldDao.mergeSpeciesFields(speciesIds, mergeId);
+						referenceDao.mergeReferencesBySpeciesIds(speciesIds, mergeId);
 					}
-					speciesFieldDao.mergeSpeciesFields(speciesIds, mergeId);
-					referenceDao.mergeReferencesBySpeciesIds(speciesIds, mergeId);
 					ESSpeciesUpdate(mergeId);
 				} catch (ApiException e) {
 					logger.error("Exception in async update: {}", e.getMessage(), e);

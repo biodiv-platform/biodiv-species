@@ -137,6 +137,24 @@ public class SpeciesController {
 		}
 	}
 
+	@DELETE
+	@Path("/cache" + ApiConstants.REMOVE + "/{speciesId}")
+	@Consumes(MediaType.TEXT_PLAIN)
+	@Produces(MediaType.TEXT_PLAIN)
+	@ValidateUser
+	@Operation(summary = "Delete species page cache", description = "Deletes species page cache", responses = {
+			@ApiResponse(responseCode = "200", description = "Species page cache deleted"),
+			@ApiResponse(responseCode = "404", description = "Unable to delete cache", content = @Content(schema = @Schema(implementation = String.class))) })
+	public Response removeSpeciesCache(@PathParam("speciesId") String speciesId) {
+		try {
+			Long spId = Long.parseLong(speciesId);
+			cacheConfig.invalidateSpeciesCache(spId);
+			return Response.status(Status.OK).entity("DELETED").build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+	}
+
 	@GET
 	@Path(ApiConstants.SPECIESID + "/{taxonId}")
 	@Produces(MediaType.TEXT_PLAIN)
@@ -1040,6 +1058,26 @@ public class SpeciesController {
 			ShowSpeciesPage result = speciesService.updateTaxonId(request, Long.parseLong(speciesId),
 					Long.parseLong(taxonId));
 			return Response.status(Response.Status.OK).entity(result).build();
+		} catch (Exception e) {
+			return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+	}
+
+	@PUT
+	@Path("/reindex" + "/{speciesId}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	@ValidateUser
+	@Operation(summary = "Reindex a species page", description = "Reindexes species page")
+	@ApiResponses({ @ApiResponse(responseCode = "200", description = "Species page reindexed"),
+			@ApiResponse(responseCode = "400", description = "Unable to update", content = @Content(schema = @Schema(implementation = String.class))),
+			@ApiResponse(responseCode = "404", description = "Not found") })
+	public Response reindexSpeciesId(@Context HttpServletRequest request,
+			@Parameter(description = "Species ID") @PathParam("speciesId") String speciesId) {
+		try {
+			cacheConfig.invalidateSpeciesCache(Long.parseLong(speciesId));
+			speciesService.ESSpeciesUpdate(Long.parseLong(speciesId));
+			return Response.status(Response.Status.OK).entity("REINDEXED").build();
 		} catch (Exception e) {
 			return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
