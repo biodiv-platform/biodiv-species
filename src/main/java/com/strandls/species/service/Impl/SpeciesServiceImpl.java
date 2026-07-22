@@ -392,7 +392,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 		for (Field field : obj.getClass().getDeclaredFields()) {
 			if (Modifier.isStatic(field.getModifiers())) {
 				continue;
-			}
+        	}
 			field.setAccessible(true);
 			try {
 				Object value = field.get(obj);
@@ -1627,10 +1627,9 @@ public class SpeciesServiceImpl implements SpeciesServices {
 					ugMailData.setWebAddress(ugIbp.getWebAddress());
 					userGroupData.add(ugMailData);
 				}
-
-				payload.setUserGroupData(userGroupData);
 			}
 
+			payload.setUserGroupData(userGroupData);
 			payload.setSpeciesData(speciesData);
 			return payload;
 		} catch (Exception e) {
