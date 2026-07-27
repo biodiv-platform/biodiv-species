@@ -7,6 +7,7 @@ import java.util.List;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
 import org.hibernate.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,6 +64,30 @@ public class SpeciesFieldDao extends AbstractDAO<SpeciesField, Long> {
 			session.close();
 		}
 		return result;
+	}
+
+	public void mergeSpeciesFields(List<Long> fromSpeciesIds, Long toSpeciesId) {
+		Session session = sessionFactory.openSession();
+		Transaction tx = null;
+		try {
+			tx = session.beginTransaction();
+
+			String qry = "update SpeciesField set speciesId = :toSpeciesId "
+					+ "where speciesId in :fromSpeciesIds and isDeleted = false";
+
+			Query query = session.createQuery(qry);
+			query.setParameter("toSpeciesId", toSpeciesId);
+			query.setParameterList("fromSpeciesIds", fromSpeciesIds);
+			query.executeUpdate();
+
+			tx.commit();
+		} catch (Exception e) {
+			if (tx != null)
+				tx.rollback();
+			logger.error(e.getMessage());
+		} finally {
+			session.close();
+		}
 	}
 
 }

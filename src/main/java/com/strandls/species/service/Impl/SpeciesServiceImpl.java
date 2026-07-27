@@ -45,6 +45,7 @@ import com.strandls.esmodule.controllers.EsServicesApi;
 import com.strandls.esmodule.pojo.MapDocument;
 import com.strandls.esmodule.pojo.ObservationInfo;
 import com.strandls.esmodule.pojo.ObservationMapInfo;
+import com.strandls.esmodule.pojo.TaxonomyUpdateData;
 import com.strandls.observation.controller.ObservationServiceApi;
 import com.strandls.resource.controllers.ResourceServicesApi;
 import com.strandls.resource.pojo.License;
@@ -1681,6 +1682,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 				Species species = speciesDao.findById(Long.parseLong(speciesId));
 				taxonomyService = headers.addTaxonomyHeader(taxonomyService,
 						request.getHeader(HttpHeaders.AUTHORIZATION));
+				taxonomyService.getApiClient().addDefaultHeader("Content-Type", "text/plain");
 				List<TaxonomyDefinition> result = taxonomyService.removeSynonyms(species.getTaxonConceptId().toString(),
 						synonymId, speciesId);
 				updateLastRevised(Long.parseLong(speciesId));
@@ -2079,6 +2081,72 @@ public class SpeciesServiceImpl implements SpeciesServices {
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 			throw new RuntimeException("Error updating field translations: " + e.getMessage());
+		}
+	}
+
+	public void handleTaxonomyUpdate(TaxonomyUpdateData updateData) {
+		// for bulkIds merge
+		if (updateData.getBulkIds() != null) {
+			Long mergeId = null;
+			Species species = speciesDao.findByTaxonId(updateData.getNewId());
+			if (species != null) {
+				mergeId = species.getId();
+			}
+			List<String> deleteIds = new ArrayList<>();
+			List<Long> speciesIds = new ArrayList<>();
+			List<Species> bulkSpecies = speciesDao.findByTaxonIds(updateData.getBulkIds());
+			for (Species sp : bulkSpecies) {
+				if (mergeId != null) {
+					sp.setIsDeleted(true);
+					sp = speciesDao.update(sp);
+					if (sp.getIsDeleted().equals(true)) {
+						deleteIds.add(sp.getId().toString());
+						speciesIds.add(sp.getId());
+					}
+				} else {
+					sp.setTaxonConceptId(updateData.getNewId());
+					sp = speciesDao.update(sp);
+					mergeId = sp.getId();
+				}
+			}
+			if (mergeId != null) {
+				try {
+					if (!deleteIds.isEmpty()) {
+						esService.bulkDelete("extended_species", "_doc", deleteIds);
+						for (Long spId : speciesIds) {
+							cacheConfig.invalidateSpeciesCache(spId);
+						}
+						speciesFieldDao.mergeSpeciesFields(speciesIds, mergeId);
+						referenceDao.mergeReferencesBySpeciesIds(speciesIds, mergeId);
+						resourceServices.mergeResources(mergeId.toString(), speciesIds);
+						traitService.merge(mergeId.toString(), speciesIds);;
+					}
+					ESSpeciesUpdate(mergeId);
+				} catch (ApiException | com.strandls.resource.ApiException | com.strandls.traits.ApiException e) {
+					logger.error("Exception in async update: {}", e.getMessage(), e);
+				}
+			}
+			return;
+		}
+
+		// For name edit
+		else if (updateData.getOldName() != updateData.getName()) {
+			Species species = speciesDao.findByTaxonId(updateData.getTargetId());
+			if (species != null) {
+				species.setTitle(updateData.getName());
+				species = speciesDao.update(species);
+				updateData.setSpeciesId(species.getId());
+				updateData.setTitle(species.getTitle());
+			}
+		}
+		try {
+			esService.updateSpecies(updateData);
+			Species species = speciesDao.findByTaxonId(updateData.getTargetId());
+			cacheConfig.invalidateSpeciesCache(species.getId());
+		} catch (com.strandls.esmodule.ApiException e) {
+			logger.error("Exception in async update: {}", e.getMessage(), e);
+		} catch (Exception e) {
+			logger.error("Exception in async update: {}", e.getMessage(), e);
 		}
 	}
 
