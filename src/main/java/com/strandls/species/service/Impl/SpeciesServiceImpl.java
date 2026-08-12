@@ -310,7 +310,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 			}
 
 		} catch (Exception e) {
-			logger.error(e.getMessage());
+			logger.error("Failed to build species page for species: {}", speciesId, e);
 		}
 		return null;
 	}
@@ -380,7 +380,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 			esService.create(SpeciesIndex.INDEX.getValue(), SpeciesIndex.TYPE.getValue(),
 					showData.getSpecies().getId().toString(), document);
 		} catch (Exception e) {
-			logger.error(e.getMessage());
+			logger.error("Failed to index species into Elasticsearch for species: {}", speciesId, e);
 		}
 	}
 
@@ -1034,9 +1034,8 @@ public class SpeciesServiceImpl implements SpeciesServices {
 			cacheConfig.invalidateSpeciesCache(speciesId);
 
 			ESSpeciesUpdate(speciesId);
-		} catch (ApiException e) {
-			logger.error(e.getMessage());
-
+		} catch (Exception e) {
+			logger.error("Failed to update last-revised / reindex species: {}", speciesId, e);
 		}
 	}
 
