@@ -16,6 +16,8 @@ import jakarta.inject.Inject;
 
 public class RabbitMQConsumer {
 
+	private static final String SERVICE_NAME = "biodiv-species";
+
 	private final Logger logger = LoggerFactory.getLogger(RabbitMQConsumer.class);
 
 	private static final String SPECIES_QUEUE = "speciesQueue";
@@ -54,9 +56,9 @@ public class RabbitMQConsumer {
 				public void handleRecovery(Recoverable recoverable) {
 					try {
 						listenToTaxonomyEvents();
-						logger.info("Re-subscribed RabbitMQ consumer after connection recovery");
+						logger.info("[{}] Re-subscribed RabbitMQ consumer after connection recovery", SERVICE_NAME);
 					} catch (Exception e) {
-						logger.error("Failed to re-subscribe RabbitMQ consumer after recovery", e);
+						logger.error("[{}] Failed to re-subscribe RabbitMQ consumer after recovery", SERVICE_NAME, e);
 					}
 				}
 
