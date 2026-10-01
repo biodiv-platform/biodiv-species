@@ -14,6 +14,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -45,6 +46,8 @@ import com.strandls.esmodule.controllers.EsServicesApi;
 import com.strandls.esmodule.pojo.MapDocument;
 import com.strandls.esmodule.pojo.ObservationInfo;
 import com.strandls.esmodule.pojo.ObservationMapInfo;
+import com.strandls.esmodule.pojo.TaxonomyBulkUpdateData;
+import com.strandls.esmodule.pojo.TaxonomyBulkUpdateRequest;
 import com.strandls.esmodule.pojo.TaxonomyUpdateData;
 import com.strandls.observation.controller.ObservationServiceApi;
 import com.strandls.resource.controllers.ResourceServicesApi;
@@ -392,7 +395,7 @@ public class SpeciesServiceImpl implements SpeciesServices {
 		for (Field field : obj.getClass().getDeclaredFields()) {
 			if (Modifier.isStatic(field.getModifiers())) {
 				continue;
-        	}
+			}
 			field.setAccessible(true);
 			try {
 				Object value = field.get(obj);
@@ -2119,7 +2122,8 @@ public class SpeciesServiceImpl implements SpeciesServices {
 						speciesFieldDao.mergeSpeciesFields(speciesIds, mergeId);
 						referenceDao.mergeReferencesBySpeciesIds(speciesIds, mergeId);
 						resourceServices.mergeResources(mergeId.toString(), speciesIds);
-						traitService.merge(mergeId.toString(), speciesIds);;
+						traitService.merge(mergeId.toString(), speciesIds);
+						;
 					}
 					ESSpeciesUpdate(mergeId);
 				} catch (ApiException | com.strandls.resource.ApiException | com.strandls.traits.ApiException e) {
@@ -2148,6 +2152,129 @@ public class SpeciesServiceImpl implements SpeciesServices {
 		} catch (Exception e) {
 			logger.error("Exception in async update: {}", e.getMessage(), e);
 		}
+	}
+
+	public void handleBulkTaxonUpdate(TaxonomyBulkUpdateRequest updateData) {
+		List<Species> species = speciesDao.findByTaxonIds(updateData.getRecoIds());
+		Map<Long, Species> spMapping = new HashMap<>();
+		List<Long> speciesIds = new ArrayList<>();
+		for (Species sp : species) {
+			spMapping.put(sp.getTaxonConceptId(), sp);
+		}
+		for (TaxonomyBulkUpdateData update : updateData.getUpdates()) {
+			if (spMapping.containsKey(update.getTargetId())) {
+				Species sp = spMapping.get(update.getTargetId());
+				if (update.getName() != null) {
+					sp.setTitle(update.getName());
+					sp = speciesDao.update(sp);
+					update.setSpeciesId(sp.getId());
+					update.setTitle(sp.getTitle());
+				}
+				update.setRecoId(spMapping.get(update.getTargetId()).getId());
+				speciesIds.add(spMapping.get(update.getTargetId()).getId());
+			}
+		}
+		cacheConfig.invalidateSpeciesCache(speciesIds);
+		try {
+			esService.updateBulkSpecies(updateData);
+		} catch (com.strandls.esmodule.ApiException e) {
+			logger.error("Exception in es update: {}", e.getMessage(), e);
+		} catch (Exception e) {
+			logger.error("Exception in async update: {}", e.getMessage(), e);
+		}
+	}
+
+	public void handleSpeciesCreate(List<String> events) {
+		List<Species> bulkSpecies = new ArrayList<>();
+		for (String create : events) {
+			if (create == null)
+				continue;
+
+			int sep = create.lastIndexOf('|');
+			if (sep <= 0 || sep == create.length() - 1) {
+				logger.error("Malformed species create event (expected 'name|taxonId'): {}", create);
+				continue;
+			}
+
+			String name = create.substring(0, sep).trim();
+			long taxonId;
+			try {
+				taxonId = Long.parseLong(create.substring(sep + 1).trim());
+			} catch (NumberFormatException e) {
+				logger.error("Invalid taxon id in species create event: {}", create, e);
+				continue;
+			}
+
+			Species species = new Species(null, taxonId, name, new Date(), new Date(), 0, 0L, false, null, false, null);
+			bulkSpecies.add(species);
+		}
+		List<Long> ids = speciesDao.saveAll(bulkSpecies).stream().map(Species::getId).collect(Collectors.toList());
+		speciesEsBulkCreate(ids);
+
+	}
+
+	private static final int SPECIES_ES_BATCH_SIZE = 100;
+
+	public void speciesEsBulkCreate(List<Long> speciesIds) {
+		if (speciesIds == null || speciesIds.isEmpty()) {
+			return;
+		}
+		logger.info("Species ES bulk upload started for {} ids", speciesIds.size());
+
+		// Deduplicate, keep order
+		List<Long> uniqueIds = new ArrayList<>(new LinkedHashSet<>(speciesIds));
+
+		int indexed = 0;
+		List<Long> skipped = new ArrayList<>();
+
+		for (int start = 0; start < uniqueIds.size(); start += SPECIES_ES_BATCH_SIZE) {
+			List<Long> batch = uniqueIds.subList(start, Math.min(start + SPECIES_ES_BATCH_SIZE, uniqueIds.size()));
+			List<Map<String, Object>> bulkEsDoc = new ArrayList<>();
+
+			for (Long speciesId : batch) {
+				try {
+					ShowSpeciesPage showData = showSpeciesPage(speciesId);
+					if (showData == null) {
+						// deleted species, or showSpeciesPage hit an error (it logs its own)
+						skipped.add(speciesId);
+						continue;
+					}
+					bulkEsDoc.add(toSpeciesEsMap(showData, speciesId));
+				} catch (Exception e) {
+					logger.error("Failed to build ES document for species {}", speciesId, e);
+					skipped.add(speciesId);
+				}
+			}
+
+			if (!bulkEsDoc.isEmpty()) {
+				try {
+					esService.bulkUpload(SpeciesIndex.INDEX.getValue(), SpeciesIndex.TYPE.getValue(), bulkEsDoc);
+					indexed += bulkEsDoc.size();
+				} catch (Exception e) {
+					logger.error("ES bulk upload failed for species batch {}", batch, e);
+					skipped.addAll(batch);
+				}
+			}
+		}
+
+		logger.info("Species ES bulk upload completed: {} indexed, {} skipped {}", indexed, skipped.size(), skipped);
+	}
+
+	@SuppressWarnings("unchecked")
+	private Map<String, Object> toSpeciesEsMap(ShowSpeciesPage showData, Long speciesId) {
+		ObjectNode rootNode = om.valueToTree(showData);
+
+		// Same cleanup as speciesEsUpdate
+		TaxonomyDefinition td = showData.getTaxonomyDefinition();
+		JsonNode tdNode = rootNode.get("taxonomyDefinition");
+		if (td != null && td.getDefaultHierarchy() != null && !td.getDefaultHierarchy().isEmpty()
+				&& tdNode instanceof ObjectNode) {
+			((ObjectNode) tdNode).putNull("defaultHierarchy");
+		}
+
+		Map<String, Object> doc = om.convertValue(rootNode, Map.class);
+		doc.putIfAbsent("id", speciesId);
+		return doc;
 	}
 
 }

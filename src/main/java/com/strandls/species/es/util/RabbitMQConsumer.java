@@ -2,15 +2,19 @@ package com.strandls.species.es.util;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import java.util.List;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.DeliverCallback;
 import com.rabbitmq.client.Recoverable;
 import com.rabbitmq.client.RecoveryListener;
+import com.strandls.esmodule.pojo.TaxonomyBulkUpdateRequest;
 import com.strandls.esmodule.pojo.TaxonomyUpdateData;
 import com.strandls.species.service.Impl.SpeciesServiceImpl;
+import com.fasterxml.jackson.core.type.TypeReference;
 
 import jakarta.inject.Inject;
 
@@ -73,14 +77,21 @@ public class RabbitMQConsumer {
 		DeliverCallback deliverCallback = (consumerTag, delivery) -> {
 			String message = new String(delivery.getBody(), "UTF-8");
 			System.out.println("----[SPECIES TAXONOMY EVENT]----");
+			System.out.println("Received: " + message);
 
-			try {
-				System.out.println("Received taxonomy event for species: " + message);
+			JsonNode node = objectMapper.readTree(message);
+
+			if (node.isArray()) {
+				List<String> events = objectMapper.readValue(message, new TypeReference<List<String>>() {
+				});
+				speciesService.handleSpeciesCreate(events);
+			} else if (node.has("updates")) {
+				TaxonomyBulkUpdateRequest bulkRequest = objectMapper.readValue(message,
+						TaxonomyBulkUpdateRequest.class);
+				speciesService.handleBulkTaxonUpdate(bulkRequest);
+			} else {
 				TaxonomyUpdateData event = objectMapper.readValue(message, TaxonomyUpdateData.class);
 				speciesService.handleTaxonomyUpdate(event);
-
-			} catch (Exception e) {
-				System.err.println("Failed to process event: " + e.getMessage());
 			}
 		};
 

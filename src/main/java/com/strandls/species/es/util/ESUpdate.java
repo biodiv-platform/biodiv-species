@@ -1,15 +1,19 @@
 package com.strandls.species.es.util;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.strandls.esmodule.ApiException;
 import com.strandls.esmodule.controllers.EsServicesApi;
+import com.strandls.species.pojo.ShowSpeciesPage;
 import com.strandls.userGroup.controller.UserGroupServiceApi;
 import com.strandls.userGroup.pojo.UserGroupIbp;
 

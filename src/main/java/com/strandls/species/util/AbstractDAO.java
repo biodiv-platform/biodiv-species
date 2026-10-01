@@ -2,6 +2,7 @@ package com.strandls.species.util;
 
 import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
+import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.Session;
@@ -25,6 +26,24 @@ public abstract class AbstractDAO<T, K extends Serializable> {
 		return executeInTransaction(session -> {
 			session.save(entity);
 			return entity;
+		});
+	}
+
+	public List<T> saveAll(List<T> entities) {
+		if (entities == null || entities.isEmpty()) {
+			return Collections.emptyList();
+		}
+		return executeInTransaction(session -> {
+			final int batchSize = 50; // keep in sync with hibernate.jdbc.batch_size
+			for (int i = 0; i < entities.size(); i++) {
+				session.persist(entities.get(i));
+				if ((i + 1) % batchSize == 0) {
+					session.flush(); // push inserts to the DB
+					session.clear(); // keep the session's memory bounded
+				}
+			}
+			session.flush();
+			return entities;
 		});
 	}
 

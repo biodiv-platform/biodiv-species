@@ -2,6 +2,11 @@ package com.strandls.species.config;
 
 import jakarta.inject.Singleton;
 
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,6 +73,35 @@ public class CacheConfig {
 		if (invalidatedCount > 0) {
 			logger.info("Invalidated {} cache entries for species: {}", invalidatedCount, speciesId);
 		}
+	}
+	
+	public void invalidateSpeciesCache(List<Long> speciesIds) {
+	    if (speciesIds == null || speciesIds.isEmpty()) {
+	        return;
+	    }
+
+	    Set<String> baseKeys = speciesIds.stream()
+	            .filter(Objects::nonNull)
+	            .map(id -> "species:" + id)
+	            .collect(Collectors.toSet());
+
+	    List<String> keysToInvalidate = speciesPageCache.asMap().keySet().stream()
+	            .filter(key -> matchesAny(key, baseKeys))
+	            .collect(Collectors.toList());
+
+	    speciesPageCache.invalidateAll(keysToInvalidate);
+
+	    if (!keysToInvalidate.isEmpty()) {
+	        logger.info("Invalidated {} cache entries for species: {}", keysToInvalidate.size(), speciesIds);
+	    }
+	}
+
+	private boolean matchesAny(String key, Set<String> baseKeys) {
+	    if (baseKeys.contains(key)) {
+	        return true;
+	    }
+	    int idx = key.indexOf(':', "species:".length());
+	    return idx > 0 && baseKeys.contains(key.substring(0, idx));
 	}
 
 	/**
