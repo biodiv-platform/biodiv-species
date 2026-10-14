@@ -14,6 +14,8 @@ import org.slf4j.LoggerFactory;
 import com.strandls.esmodule.ApiException;
 import com.strandls.esmodule.controllers.EsServicesApi;
 import com.strandls.species.pojo.ShowSpeciesPage;
+import com.strandls.taxonomy.controllers.TaxonomyServicesApi;
+import com.strandls.taxonomy.pojo.TaxonomicNames;
 import com.strandls.userGroup.controller.UserGroupServiceApi;
 import com.strandls.userGroup.pojo.UserGroupIbp;
 
@@ -28,6 +30,9 @@ public class ESUpdate {
 
 	@Inject
 	private UserGroupServiceApi ugService;
+
+	@Inject
+	private TaxonomyServicesApi taxonomyService;
 
 	public void esBulkUpload(String speciesIds) {
 
@@ -51,6 +56,43 @@ public class ESUpdate {
 				Map<String, Object> payload = new HashMap<>();
 				payload.put("id", id);
 				payload.put("userGroups", userGroupList);
+				ESSpeciesShowList.add(payload);
+
+			}
+
+			if (!ESSpeciesShowList.isEmpty()) {
+
+				esService.bulkUpdate(SpeciesIndex.INDEX.getValue(), SpeciesIndex.TYPE.getValue(), ESSpeciesShowList);
+
+			}
+
+		} catch (ApiException e) {
+			logger.error(e.getMessage());
+		}
+	}
+
+	public void esBulkTaxonUpload(String speciesIds) {
+
+		if (speciesIds == null || speciesIds.isEmpty()) {
+			return;
+		}
+
+		List<Map<String, Object>> ESSpeciesShowList = new ArrayList<>();
+
+		try {
+
+			for (String id : speciesIds.split(",")) {
+				TaxonomicNames names = new TaxonomicNames();
+
+				try {
+					names = taxonomyService.getNames(id);
+				} catch (com.strandls.taxonomy.ApiException e) {
+					logger.error(e.getMessage());
+				}
+
+				Map<String, Object> payload = new HashMap<>();
+				payload.put("id", id);
+				payload.put("taxonomicNames", names);
 				ESSpeciesShowList.add(payload);
 
 			}
