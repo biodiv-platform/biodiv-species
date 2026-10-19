@@ -71,7 +71,7 @@ public class ESUpdate {
 		}
 	}
 
-	public void esBulkTaxonUpload(String speciesIds) {
+	public void esBulkTaxonUpload(List<String> speciesIds) {
 
 		if (speciesIds == null || speciesIds.isEmpty()) {
 			return;
@@ -81,17 +81,18 @@ public class ESUpdate {
 
 		try {
 
-			for (String id : speciesIds.split(",")) {
+			for (String id : speciesIds) {
 				TaxonomicNames names = new TaxonomicNames();
 
 				try {
-					names = taxonomyService.getNames(id);
+					names = taxonomyService.getNames(id.split("#")[1]);
+					System.out.println(names);
 				} catch (com.strandls.taxonomy.ApiException e) {
 					logger.error(e.getMessage());
 				}
 
 				Map<String, Object> payload = new HashMap<>();
-				payload.put("id", id);
+				payload.put("id", id.split("#")[0]);
 				payload.put("taxonomicNames", names);
 				ESSpeciesShowList.add(payload);
 

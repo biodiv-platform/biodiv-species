@@ -22,6 +22,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.pac4j.core.profile.CommonProfile;
 import org.slf4j.Logger;
@@ -67,6 +68,7 @@ import com.strandls.species.dao.SpeciesFieldContributorDao;
 import com.strandls.species.dao.SpeciesFieldDao;
 import com.strandls.species.dao.SpeciesFieldLicenseDao;
 import com.strandls.species.dao.SpeciesFieldUserDao;
+import com.strandls.species.es.util.ESUpdate;
 import com.strandls.species.es.util.SpeciesIndex;
 import com.strandls.species.pojo.Contributor;
 import com.strandls.species.pojo.FieldCreateData;
@@ -146,6 +148,9 @@ public class SpeciesServiceImpl implements SpeciesServices {
 
 	@Inject
 	private Headers headers;
+	
+	@Inject
+	private ESUpdate esUpdate;
 
 //	Injection of Dao
 
@@ -2158,6 +2163,8 @@ public class SpeciesServiceImpl implements SpeciesServices {
 		List<Species> species = speciesDao.findByTaxonIds(updateData.getRecoIds());
 		Map<Long, Species> spMapping = new HashMap<>();
 		List<Long> speciesIds = new ArrayList<>();
+		List<Long> newIds = new ArrayList<>();
+		List<String> newSpeciesMapping = new ArrayList<>();
 		for (Species sp : species) {
 			spMapping.put(sp.getTaxonConceptId(), sp);
 		}
@@ -2170,13 +2177,25 @@ public class SpeciesServiceImpl implements SpeciesServices {
 					update.setSpeciesId(sp.getId());
 					update.setTitle(sp.getTitle());
 				}
+				if (update.getNewId()!=null) {
+					newIds.add(update.getNewId());
+				}
 				update.setRecoId(spMapping.get(update.getTargetId()).getId());
 				speciesIds.add(spMapping.get(update.getTargetId()).getId());
 			}
 		}
-		cacheConfig.invalidateSpeciesCache(speciesIds);
+		List<Species> newSpecies = speciesDao.findByTaxonIds(newIds);
+		List<Long> newSpeciesIds = new ArrayList<>();
+		for (Species sp : newSpecies) {
+			newSpeciesIds.add(sp.getId());
+			newSpeciesMapping.add(sp.getId()+"#"+sp.getTaxonConceptId());
+		}
+		List<Long> d = Stream.concat(speciesIds.stream(), newSpeciesIds.stream()).toList();
+		cacheConfig.invalidateSpeciesCache(d);
 		try {
+			esUpdate.esBulkTaxonUpload(newSpeciesMapping);
 			esService.updateBulkSpecies(updateData);
+			
 		} catch (com.strandls.esmodule.ApiException e) {
 			logger.error("Exception in es update: {}", e.getMessage(), e);
 		} catch (Exception e) {
