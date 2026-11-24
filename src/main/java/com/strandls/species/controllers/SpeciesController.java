@@ -34,6 +34,9 @@ import com.strandls.species.pojo.SpeciesListPageData;
 import com.strandls.species.pojo.SpeciesPermission;
 import com.strandls.species.pojo.SpeciesResourcesPreData;
 import com.strandls.species.pojo.SpeciesTrait;
+import com.strandls.species.pojo.SpeciesBatchPreviewRequest;
+import com.strandls.species.pojo.SpeciesBatchPreviewResult;
+import com.strandls.species.service.SpeciesBatchService;
 import com.strandls.species.service.SpeciesListService;
 import com.strandls.species.service.SpeciesServices;
 import com.strandls.species.util.SpeciesBulkMappingThread;
@@ -90,6 +93,9 @@ public class SpeciesController {
 
 	@Inject
 	private SpeciesListService listService;
+
+	@Inject
+	private SpeciesBatchService batchService;
 
 	@Inject
 	private ESUtility esUtility;
@@ -966,6 +972,27 @@ public class SpeciesController {
 			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		}
 
+	}
+
+	@POST
+	@Path(ApiConstants.BATCH + ApiConstants.PREVIEW)
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	@ValidateUser
+	@Operation(summary = "Preview a species page batch upload", description = "Validates the mapped spreadsheet rows without saving anything: resolves contributors, license, language, the species page and the species field create payloads for each row", requestBody = @RequestBody(description = "Mapped rows of the batch upload sheet", required = true, content = @Content(schema = @Schema(implementation = SpeciesBatchPreviewRequest.class))), responses = {
+			@ApiResponse(responseCode = "200", description = "Preview of every row", content = @Content(array = @ArraySchema(schema = @Schema(implementation = SpeciesBatchPreviewResult.class)))),
+			@ApiResponse(responseCode = "400", description = "Empty or too large request"),
+			@ApiResponse(responseCode = "403", description = "User is not an admin") })
+	public Response previewBatchUpload(@Context HttpServletRequest request,
+			SpeciesBatchPreviewRequest previewRequest) {
+		try {
+			List<SpeciesBatchPreviewResult> result = batchService.preview(request, previewRequest);
+			return Response.status(Status.OK).entity(result).build();
+		} catch (SecurityException e) {
+			return Response.status(Status.FORBIDDEN).entity(e.getMessage()).build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
 	}
 
 	@POST

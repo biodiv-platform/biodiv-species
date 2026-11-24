@@ -50,5 +50,7 @@ public class ApiConstants {
 	public static final String SPECIESID = "/speciesid";
 	public static final String DELETE = "/delete";
 	public static final String LEAFNODES = "/leafNodes";
+	public static final String BATCH = "/batch";
+	public static final String PREVIEW = "/preview";
 
 }
