@@ -16,6 +16,8 @@ import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 import com.strandls.authentication_utility.util.AuthUtil;
+import com.strandls.observation.controller.ObservationServiceApi;
+import com.strandls.observation.pojo.Language;
 import com.strandls.resource.controllers.LicenseControllerApi;
 import com.strandls.resource.pojo.License;
 import com.strandls.species.Headers;
@@ -40,11 +42,11 @@ import com.strandls.user.pojo.EsLocationListParams;
 import com.strandls.user.pojo.User;
 import com.strandls.user.pojo.UserListData;
 import com.strandls.user.pojo.UserMappingList;
-import com.strandls.utility.controller.LanguageServiceApi;
-import com.strandls.utility.pojo.Language;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.ws.rs.core.GenericType;
 import jakarta.ws.rs.core.HttpHeaders;
+import jakarta.ws.rs.core.MediaType;
 import net.minidev.json.JSONArray;
 
 /**
@@ -77,7 +79,7 @@ public class SpeciesBatchServiceImpl implements SpeciesBatchService {
 	private LicenseControllerApi licenseService;
 
 	@Inject
-	private LanguageServiceApi languageService;
+	private ObservationServiceApi observationService;
 
 	@Inject
 	private Headers headers;
@@ -231,7 +233,7 @@ public class SpeciesBatchServiceImpl implements SpeciesBatchService {
 		result.setLicenseName(license.getName());
 	}
 
-	/** Language by name (case-insensitive) among languages with species field headers */
+	/** Language by name (case-insensitive) among all languages not marked dirty */
 	private void resolveLanguage(SpeciesBatchPreviewRow row, SpeciesBatchPreviewResult result, Lookups lookups) {
 		String cell = SpeciesBatchParser.trim(row.getLanguage());
 		List<Language> languages = lookups.languages();
@@ -460,8 +462,14 @@ public class SpeciesBatchServiceImpl implements SpeciesBatchService {
 			if (!languagesLoaded) {
 				languagesLoaded = true;
 				try {
-					languageService.getApiClient().addDefaultHeader(HttpHeaders.AUTHORIZATION, authHeader);
-					languages = languageService.getLanguagesWithFieldHeaders();
+					// GET /v1/observation/language?isDirty=false: the list the UI's axGetLangList uses.
+					// The generated getLanguaes() declares a single Language, so read the list directly.
+					com.strandls.observation.ApiClient client = observationService.getApiClient();
+					languages = client.getHttpClient().target(client.getBasePath())
+							.path("/v1/observation/language").queryParam("isDirty", false)
+							.request(MediaType.APPLICATION_JSON).header(HttpHeaders.AUTHORIZATION, authHeader)
+							.get(new GenericType<List<Language>>() {
+							});
 				} catch (Exception e) {
 					logger.error("Language list failed: {}", e.getMessage());
 				}

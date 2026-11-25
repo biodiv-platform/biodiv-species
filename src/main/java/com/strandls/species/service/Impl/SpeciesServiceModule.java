@@ -10,7 +10,6 @@ import com.strandls.species.config.CacheConfig;
 import com.strandls.species.service.SpeciesBatchService;
 import com.strandls.species.service.SpeciesListService;
 import com.strandls.species.service.SpeciesServices;
-import com.strandls.utility.controller.LanguageServiceApi;
 
 /**
  * @author Abhishek Rudra
@@ -28,7 +27,6 @@ public class SpeciesServiceModule extends AbstractModule {
 		bind(SpeciesBatchService.class).to(SpeciesBatchServiceImpl.class).in(Scopes.SINGLETON);
 		// clients used only by the batch upload preview
 		bind(LicenseControllerApi.class).in(Scopes.SINGLETON);
-		bind(LanguageServiceApi.class).in(Scopes.SINGLETON);
 		bind(CacheConfig.class).in(Scopes.SINGLETON);
 	}
 }
