@@ -15,7 +15,7 @@ import com.strandls.species.pojo.Reference;
  */
 public final class SpeciesBatchParser {
 
-	/** Separators for lists of emails / media URLs */
+	/** Separators for lists of emails */
 	private static final Pattern LIST_SEPARATOR = Pattern.compile("[\\n;,]+");
 
 	/** References keep commas (they appear in citations), so only new line and ; split */
@@ -24,14 +24,6 @@ public final class SpeciesBatchParser {
 	private static final Pattern URL = Pattern.compile("^https?://\\S+$", Pattern.CASE_INSENSITIVE);
 
 	private static final Pattern EMAIL = Pattern.compile("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$");
-
-	private static final Pattern VIDEO_HOST = Pattern.compile("(youtube\\.com|youtu\\.be|vimeo\\.com)",
-			Pattern.CASE_INSENSITIVE);
-
-	private static final List<String> VIDEO_EXT = Arrays.asList(".mp4", ".webm", ".mov", ".m4v", ".avi", ".mkv");
-
-	private static final List<String> AUDIO_EXT = Arrays.asList(".mp3", ".wav", ".ogg", ".oga", ".m4a", ".aac",
-			".flac");
 
 	private SpeciesBatchParser() {
 	}
@@ -111,16 +103,6 @@ public final class SpeciesBatchParser {
 			references.add(reference);
 		}
 		return references;
-	}
-
-	/** image | audio | video, from the host or the file extension; image by default */
-	public static String mediaTypeOf(String url) {
-		String path = url.split("[?#]", 2)[0].toLowerCase(Locale.ROOT);
-		if (VIDEO_HOST.matcher(url).find() || VIDEO_EXT.stream().anyMatch(path::endsWith))
-			return "video";
-		if (AUDIO_EXT.stream().anyMatch(path::endsWith))
-			return "audio";
-		return "image";
 	}
 
 	/** Lower case with everything but letters and digits removed: "CC-BY 4.0" == "cc by 4.0" */

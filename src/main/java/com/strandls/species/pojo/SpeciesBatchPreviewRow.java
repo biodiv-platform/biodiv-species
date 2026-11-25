@@ -17,7 +17,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
  * <li>language: language name (blank = default)</li>
  * <li>references: one per line or ; separated, each "Title | URL", "Title" or
  * "URL"</li>
- * <li>media: http(s) image / audio / video URLs separated by , ; or new line</li>
  * </ul>
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -32,7 +31,6 @@ public class SpeciesBatchPreviewRow {
 	private String language;
 	private String status;
 	private String references;
-	private String media;
 	private List<SpeciesBatchFieldValue> fields = new ArrayList<>();
 
 	public SpeciesBatchPreviewRow() {
@@ -109,14 +107,6 @@ public class SpeciesBatchPreviewRow {
 
 	public void setReferences(String references) {
 		this.references = references;
-	}
-
-	public String getMedia() {
-		return media;
-	}
-
-	public void setMedia(String media) {
-		this.media = media;
 	}
 
 	public List<SpeciesBatchFieldValue> getFields() {

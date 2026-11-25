@@ -32,7 +32,6 @@ import com.strandls.species.pojo.SpeciesBatchPreviewResult;
 import com.strandls.species.pojo.SpeciesBatchPreviewRow;
 import com.strandls.species.pojo.SpeciesField;
 import com.strandls.species.pojo.SpeciesFieldUpdateData;
-import com.strandls.species.pojo.SpeciesResourceData;
 import com.strandls.species.service.SpeciesBatchService;
 import com.strandls.species.util.PropertyFileUtil;
 import com.strandls.species.util.SpeciesBatchParser;
@@ -154,7 +153,6 @@ public class SpeciesBatchServiceImpl implements SpeciesBatchService {
 				warnings.add("Reference link \"" + reference.getUrl() + "\" isn't an http(s) URL");
 		}
 
-		resolveMedia(row, result);
 		resolveFields(row, result, lookups);
 
 		if (errors.isEmpty())
@@ -260,27 +258,15 @@ public class SpeciesBatchServiceImpl implements SpeciesBatchService {
 		result.setLanguageName(language.getName());
 	}
 
-	// ---- media / fields ----------------------------------------------------
-
-	private void resolveMedia(SpeciesBatchPreviewRow row, SpeciesBatchPreviewResult result) {
-		int skipped = 0;
-		for (String item : SpeciesBatchParser.splitList(row.getMedia())) {
-			if (!SpeciesBatchParser.isUrl(item)) {
-				skipped++;
-				continue;
-			}
-			// path stays null: the resource service stores the URL instead of a moved file
-			result.getMedia().add(new SpeciesResourceData(null, item, SpeciesBatchParser.mediaTypeOf(item), null, 0,
-					null, null));
-		}
-		if (skipped > 0)
-			result.getWarnings().add(skipped + " media value(s) aren't http(s) URLs and will be skipped");
-	}
+	// ---- fields ------------------------------------------------------------
 
 	private void resolveFields(SpeciesBatchPreviewRow row, SpeciesBatchPreviewResult result, Lookups lookups) {
 		List<SpeciesBatchFieldValue> values = row.getFields() == null ? new ArrayList<>() : row.getFields();
-		Set<Long> existing = result.getSpeciesId() == null ? new HashSet<>()
-				: lookups.filledFieldIds(result.getSpeciesId());
+		Long speciesId = result.getSpeciesId();
+		Long languageId = result.getLanguageId();
+		// Content already on the page, as "fieldId:languageId": another language isn't a duplicate
+		Set<String> existing = speciesId == null ? new HashSet<>() : lookups.filledFields(speciesId);
+		String languageName = result.getLanguageName() != null ? result.getLanguageName() : "this language";
 		Set<Long> seen = new HashSet<>();
 
 		for (SpeciesBatchFieldValue value : values) {
@@ -300,10 +286,20 @@ public class SpeciesBatchServiceImpl implements SpeciesBatchService {
 				result.getErrors().add(field.label + " isn't shown on species pages");
 				continue;
 			}
-			if (!seen.add(fieldId))
+			if (!seen.add(fieldId)) {
 				result.getWarnings().add(field.label + " is mapped more than once; each value is added");
-			else if (existing.contains(fieldId))
-				result.getWarnings().add(field.label + " already has content; this adds another entry");
+			} else if (speciesId != null && languageId != null) {
+				String fieldLanguage = fieldId + ":" + languageId;
+				if (existing.contains(fieldLanguage))
+					result.getWarnings().add(field.label + " already has " + languageName
+							+ " content; this adds another entry");
+				// Another row of this sheet for the same page, language and field
+				Integer firstRow = lookups.sheetEntries.putIfAbsent(speciesId + ":" + fieldLanguage,
+						result.getRowNumber());
+				if (firstRow != null && !firstRow.equals(result.getRowNumber()))
+					result.getWarnings().add(field.label + " is also filled in " + languageName + " in row "
+							+ firstRow + " for this page; both are added");
+			}
 
 			result.getFields().add(new SpeciesBatchFieldValue(fieldId, field.label, value.getValue().trim()));
 		}
@@ -315,18 +311,11 @@ public class SpeciesBatchServiceImpl implements SpeciesBatchService {
 		List<Long> contributorIds = result.getContributors().stream().map(SpeciesBatchContributor::getUserId)
 				.collect(Collectors.toList());
 
-		List<SpeciesResourceData> media = new ArrayList<>();
-		for (SpeciesResourceData m : result.getMedia()) {
-			media.add(new SpeciesResourceData(m.getPath(), m.getUrl(), m.getType(), m.getCaption(), m.getRating(),
-					result.getLicenseId(), result.getAttributions()));
-		}
-		result.setMedia(media);
-
 		List<SpeciesFieldUpdateData> payloads = new ArrayList<>();
 		for (SpeciesBatchFieldValue field : result.getFields()) {
 			payloads.add(new SpeciesFieldUpdateData(false, field.getFieldId(), null, result.getLicenseId(),
-					field.getValue(), result.getStatus(), result.getLanguageId(), result.getAttributions(), media,
-					contributorIds, result.getReferences()));
+					field.getValue(), result.getStatus(), result.getLanguageId(), result.getAttributions(),
+					new ArrayList<>(), contributorIds, result.getReferences()));
 		}
 		return payloads;
 	}
@@ -366,7 +355,9 @@ public class SpeciesBatchServiceImpl implements SpeciesBatchService {
 		private final Long defaultLicenseId;
 
 		private final Map<String, UserLookup> users = new HashMap<>();
-		private final Map<Long, Set<Long>> filledFields = new HashMap<>();
+		private final Map<Long, Set<String>> filledFields = new HashMap<>();
+		/** "speciesId:fieldId:languageId" -> first sheet row that fills it, across this request */
+		private final Map<String, Integer> sheetEntries = new HashMap<>();
 		private final Map<Long, FieldInfo> fields = new HashMap<>();
 		private List<License> licenses;
 		private boolean licensesLoaded;
@@ -411,13 +402,16 @@ public class SpeciesBatchServiceImpl implements SpeciesBatchService {
 			}
 		}
 
-		Set<Long> filledFieldIds(Long speciesId) {
+		/** Existing (not deleted) species field content of a page, as "fieldId:languageId" */
+		Set<String> filledFields(Long speciesId) {
 			return filledFields.computeIfAbsent(speciesId, id -> {
 				List<SpeciesField> existing = speciesFieldDao.findBySpeciesId(id);
 				if (existing == null)
 					return new HashSet<>();
 				return existing.stream().filter(sf -> !Boolean.TRUE.equals(sf.getIsDeleted()))
-						.map(SpeciesField::getFieldId).collect(Collectors.toSet());
+						.map(sf -> sf.getFieldId() + ":"
+								+ (sf.getLanguageId() != null ? sf.getLanguageId() : defaultLanguageId))
+						.collect(Collectors.toSet());
 			});
 		}
 

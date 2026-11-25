@@ -23,7 +23,6 @@ public class SpeciesBatchPreviewResult {
 	private String languageName;
 	private String status;
 	private List<Reference> references = new ArrayList<>();
-	private List<SpeciesResourceData> media = new ArrayList<>();
 	private List<SpeciesBatchFieldValue> fields = new ArrayList<>();
 	private List<SpeciesFieldUpdateData> fieldPayloads = new ArrayList<>();
 	private List<String> errors = new ArrayList<>();
@@ -119,14 +118,6 @@ public class SpeciesBatchPreviewResult {
 
 	public void setReferences(List<Reference> references) {
 		this.references = references;
-	}
-
-	public List<SpeciesResourceData> getMedia() {
-		return media;
-	}
-
-	public void setMedia(List<SpeciesResourceData> media) {
-		this.media = media;
 	}
 
 	public List<SpeciesBatchFieldValue> getFields() {
