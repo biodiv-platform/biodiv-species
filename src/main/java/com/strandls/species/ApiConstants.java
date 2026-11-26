@@ -52,5 +52,6 @@ public class ApiConstants {
 	public static final String LEAFNODES = "/leafNodes";
 	public static final String BATCH = "/batch";
 	public static final String PREVIEW = "/preview";
+	public static final String UPLOAD = "/upload";
 
 }

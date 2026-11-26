@@ -36,6 +36,8 @@ import com.strandls.species.pojo.SpeciesResourcesPreData;
 import com.strandls.species.pojo.SpeciesTrait;
 import com.strandls.species.pojo.SpeciesBatchPreviewRequest;
 import com.strandls.species.pojo.SpeciesBatchPreviewResult;
+import com.strandls.species.pojo.SpeciesBatchUploadRequest;
+import com.strandls.species.pojo.SpeciesBatchUploadResult;
 import com.strandls.species.service.SpeciesBatchService;
 import com.strandls.species.service.SpeciesListService;
 import com.strandls.species.service.SpeciesServices;
@@ -987,6 +989,26 @@ public class SpeciesController {
 			SpeciesBatchPreviewRequest previewRequest) {
 		try {
 			List<SpeciesBatchPreviewResult> result = batchService.preview(request, previewRequest);
+			return Response.status(Status.OK).entity(result).build();
+		} catch (SecurityException e) {
+			return Response.status(Status.FORBIDDEN).entity(e.getMessage()).build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		}
+	}
+
+	@POST
+	@Path(ApiConstants.BATCH + ApiConstants.UPLOAD)
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	@ValidateUser
+	@Operation(summary = "Save a species page batch upload", description = "Saves previewed rows (the field payloads the preview returned) without repeating the preview lookups: one transaction per row, one activity entry per row, one reindex per species page", requestBody = @RequestBody(description = "Previewed rows without errors", required = true, content = @Content(schema = @Schema(implementation = SpeciesBatchUploadRequest.class))), responses = {
+			@ApiResponse(responseCode = "200", description = "Result of every row (SAVED, SKIPPED or FAILED)", content = @Content(array = @ArraySchema(schema = @Schema(implementation = SpeciesBatchUploadResult.class)))),
+			@ApiResponse(responseCode = "400", description = "Empty or too large request"),
+			@ApiResponse(responseCode = "403", description = "User is not an admin") })
+	public Response uploadBatch(@Context HttpServletRequest request, SpeciesBatchUploadRequest uploadRequest) {
+		try {
+			List<SpeciesBatchUploadResult> result = batchService.upload(request, uploadRequest);
 			return Response.status(Status.OK).entity(result).build();
 		} catch (SecurityException e) {
 			return Response.status(Status.FORBIDDEN).entity(e.getMessage()).build();

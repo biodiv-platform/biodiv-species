@@ -1,9 +1,11 @@
 package com.strandls.species.service.Impl;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -15,33 +17,50 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
+import com.strandls.activity.pojo.MailData;
+import com.strandls.activity.pojo.SpeciesMailData;
+import com.strandls.activity.pojo.UserGroupMailData;
 import com.strandls.authentication_utility.util.AuthUtil;
 import com.strandls.observation.controller.ObservationServiceApi;
 import com.strandls.observation.pojo.Language;
 import com.strandls.resource.controllers.LicenseControllerApi;
+import com.strandls.resource.controllers.ResourceServicesApi;
 import com.strandls.resource.pojo.License;
+import com.strandls.resource.pojo.Resource;
 import com.strandls.species.Headers;
+import com.strandls.species.config.CacheConfig;
 import com.strandls.species.dao.FieldHeaderDao;
 import com.strandls.species.dao.FieldNewDao;
+import com.strandls.species.dao.SpeciesDao;
 import com.strandls.species.dao.SpeciesFieldDao;
 import com.strandls.species.pojo.FieldHeader;
 import com.strandls.species.pojo.FieldNew;
 import com.strandls.species.pojo.Reference;
+import com.strandls.species.pojo.Species;
 import com.strandls.species.pojo.SpeciesBatchContributor;
 import com.strandls.species.pojo.SpeciesBatchFieldValue;
 import com.strandls.species.pojo.SpeciesBatchPreviewRequest;
 import com.strandls.species.pojo.SpeciesBatchPreviewResult;
 import com.strandls.species.pojo.SpeciesBatchPreviewRow;
+import com.strandls.species.pojo.SpeciesBatchUploadRequest;
+import com.strandls.species.pojo.SpeciesBatchUploadResult;
+import com.strandls.species.pojo.SpeciesBatchUploadRow;
 import com.strandls.species.pojo.SpeciesField;
 import com.strandls.species.pojo.SpeciesFieldUpdateData;
 import com.strandls.species.service.SpeciesBatchService;
+import com.strandls.species.service.SpeciesServices;
+import com.strandls.species.util.AppUtil;
 import com.strandls.species.util.PropertyFileUtil;
 import com.strandls.species.util.SpeciesBatchParser;
+import com.strandls.taxonomy.controllers.SpeciesServicesApi;
+import com.strandls.taxonomy.pojo.SpeciesGroup;
 import com.strandls.user.controller.UserServiceApi;
 import com.strandls.user.pojo.EsLocationListParams;
 import com.strandls.user.pojo.User;
 import com.strandls.user.pojo.UserListData;
 import com.strandls.user.pojo.UserMappingList;
+import com.strandls.userGroup.controller.UserGroupServiceApi;
+import com.strandls.userGroup.pojo.UserGroupIbp;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.ws.rs.core.GenericType;
@@ -84,6 +103,32 @@ public class SpeciesBatchServiceImpl implements SpeciesBatchService {
 	@Inject
 	private Headers headers;
 
+	// ---- used by upload() -----------------------------------------------------
+
+	@Inject
+	private SpeciesBatchWriter writer;
+
+	@Inject
+	private SpeciesDao speciesDao;
+
+	@Inject
+	private SpeciesServices speciesServices;
+
+	@Inject
+	private CacheConfig cacheConfig;
+
+	@Inject
+	private LogActivities logActivity;
+
+	@Inject
+	private SpeciesServicesApi sgroupServices;
+
+	@Inject
+	private ResourceServicesApi resourceServices;
+
+	@Inject
+	private UserGroupServiceApi ugService;
+
 	private final Long defaultLanguageId = Long
 			.parseLong(PropertyFileUtil.fetchProperty("config.properties", "defaultLanguageId"));
 
@@ -94,10 +139,7 @@ public class SpeciesBatchServiceImpl implements SpeciesBatchService {
 	public List<SpeciesBatchPreviewResult> preview(HttpServletRequest request,
 			SpeciesBatchPreviewRequest previewRequest) {
 
-		CommonProfile profile = AuthUtil.getProfileFromRequest(request);
-		JSONArray roles = profile == null ? null : (JSONArray) profile.getAttribute("roles");
-		if (roles == null || !roles.contains("ROLE_ADMIN"))
-			throw new SecurityException("Only admins can batch upload species pages");
+		requireAdmin(request);
 
 		if (previewRequest == null || previewRequest.getRows() == null || previewRequest.getRows().isEmpty())
 			throw new IllegalArgumentException("No rows to preview");
@@ -121,6 +163,177 @@ public class SpeciesBatchServiceImpl implements SpeciesBatchService {
 			}
 		}
 		return results;
+	}
+
+	// ---- upload ----------------------------------------------------------------
+
+	@Override
+	public List<SpeciesBatchUploadResult> upload(HttpServletRequest request,
+			SpeciesBatchUploadRequest uploadRequest) {
+
+		// The rows are the preview's checked payloads; no preview lookup is repeated here
+		CommonProfile profile = requireAdmin(request);
+		if (uploadRequest == null || uploadRequest.getRows() == null || uploadRequest.getRows().isEmpty())
+			throw new IllegalArgumentException("No rows to upload");
+		if (uploadRequest.getRows().size() > MAX_PREVIEW_ROWS)
+			throw new IllegalArgumentException(
+					"Too many rows: " + uploadRequest.getRows().size() + " (max " + MAX_PREVIEW_ROWS + ")");
+
+		Long uploaderId = Long.parseLong(profile.getId());
+		String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
+
+		Map<Long, Species> pages = new HashMap<>();
+		Map<Long, MailData> mailData = new HashMap<>();
+		Set<Long> changedPages = new LinkedHashSet<>();
+		List<SpeciesBatchUploadResult> results = new ArrayList<>();
+
+		for (SpeciesBatchUploadRow row : uploadRequest.getRows()) {
+			SpeciesBatchUploadResult result = new SpeciesBatchUploadResult(row.getRowNumber(),
+					row.getScientificName(), row.getSpeciesId(), null, null);
+			results.add(result);
+
+			String problem = payloadProblem(row);
+			if (problem != null) {
+				result.setStatus(SpeciesBatchUploadResult.SKIPPED);
+				result.setMessage(problem);
+				continue;
+			}
+
+			// One lookup per page, so content is never added to a missing or deleted page
+			if (!pages.containsKey(row.getSpeciesId()))
+				pages.put(row.getSpeciesId(), speciesDao.findById(row.getSpeciesId()));
+			Species page = pages.get(row.getSpeciesId());
+			if (page == null || Boolean.TRUE.equals(page.getIsDeleted())) {
+				result.setStatus(SpeciesBatchUploadResult.FAILED);
+				result.setMessage("Species page " + row.getSpeciesId() + " doesn't exist");
+				continue;
+			}
+
+			// New entries always start as UNDER_CREATION, whatever was sent
+			row.getFieldPayloads().forEach(p -> p.setSfStatus(DEFAULT_STATUS));
+
+			try {
+				List<Long> ids = writer.saveRow(page.getId(), uploaderId, row.getFieldPayloads());
+				result.setSpeciesFieldIds(ids);
+				result.setStatus(SpeciesBatchUploadResult.SAVED);
+				changedPages.add(page.getId());
+				//logRowActivity(request, authHeader, page, row, ids, mailData);
+			} catch (Exception e) {
+				logger.error("Batch upload failed for row {}: {}", row.getRowNumber(), e.getMessage());
+				result.setStatus(SpeciesBatchUploadResult.FAILED);
+				result.setMessage("Couldn't save this row: " + e.getMessage());
+			}
+		}
+
+		// Once per page, not once per field: last revised date, page cache, search index
+		for (Long speciesId : changedPages)
+			refreshPage(pages.get(speciesId));
+
+		return results;
+	}
+
+	/** Checks that need no lookup: everything a species field entry must have is present */
+	private static String payloadProblem(SpeciesBatchUploadRow row) {
+		if (row.getSpeciesId() == null)
+			return "SpeciesId missing";
+		if (row.getFieldPayloads() == null || row.getFieldPayloads().isEmpty())
+			return "No species field values";
+		for (SpeciesFieldUpdateData p : row.getFieldPayloads()) {
+			if (p == null || p.getFieldId() == null || SpeciesBatchParser.isBlank(p.getSfDescription()))
+				return "A species field or its content is missing";
+			if (SpeciesBatchParser.isBlank(p.getAttributions()))
+				return "Attribution missing";
+			if (p.getLicenseId() == null)
+				return "License missing";
+			if (p.getLanguageId() == null)
+				return "Language missing";
+			if (p.getContributorIds() == null || p.getContributorIds().isEmpty()
+					|| p.getContributorIds().stream().anyMatch(id -> id == null))
+				return "Contributor missing";
+		}
+		return null;
+	}
+
+	/** The caller's profile, if they are an admin */
+	private static CommonProfile requireAdmin(HttpServletRequest request) {
+		CommonProfile profile = AuthUtil.getProfileFromRequest(request);
+		JSONArray roles = profile == null ? null : (JSONArray) profile.getAttribute("roles");
+		if (roles == null || !roles.contains("ROLE_ADMIN"))
+			throw new SecurityException("Only admins can batch upload species pages");
+		return profile;
+	}
+
+	/** One activity entry per row, listing its fields (the form logs one per field) */
+	private void logRowActivity(HttpServletRequest request, String authHeader, Species page,
+			SpeciesBatchUploadRow row, List<Long> ids, Map<Long, MailData> mailData) {
+		List<String> names = new ArrayList<>();
+		for (int i = 0; i < row.getFieldPayloads().size(); i++) {
+			SpeciesBatchFieldValue field = row.getFields() != null && i < row.getFields().size()
+					? row.getFields().get(i)
+					: null;
+			names.add(field != null && field.getLabel() != null ? field.getLabel().replace(" \u203A ", " > ")
+					: "field " + row.getFieldPayloads().get(i).getFieldId());
+		}
+		String description = (names.size() == 1 ? "Added species field : " : "Added species fields : ")
+				+ String.join(", ", names);
+		MailData mail = mailData.computeIfAbsent(page.getId(), id -> speciesMailData(request, page));
+		logActivity.LogActivity(authHeader, description, page.getId(), page.getId(), "species", ids.get(0),
+				"Added species field", mail);
+	}
+
+	private void refreshPage(Species page) {
+		try {
+			page.setLastUpdated(new Date());
+			speciesDao.update(page);
+		} catch (Exception e) {
+			logger.error("Couldn't update last revised of species {}: {}", page.getId(), e.getMessage());
+		}
+		cacheConfig.invalidateSpeciesCache(page.getId());
+		try {
+			speciesServices.ESSpeciesUpdate(page.getId());
+		} catch (Exception e) {
+			logger.error("Couldn't reindex species {}: {}", page.getId(), e.getMessage());
+		}
+	}
+
+	/** Same mail data SpeciesServiceImpl.getSpeciesMailData builds, made once per page */
+	private MailData speciesMailData(HttpServletRequest request, Species species) {
+		try {
+			SpeciesGroup speciesGroup = sgroupServices.getGroupId(species.getTaxonConceptId());
+			Resource resourceData = species.getReprImageId() != null
+					? resourceServices.getResourceDataById(species.getReprImageId().toString())
+					: null;
+			CommonProfile profile = AuthUtil.getProfileFromRequest(request);
+			SpeciesMailData speciesData = new SpeciesMailData();
+			speciesData.setAuthorId(Long.parseLong(profile.getId()));
+			speciesData.setGroup(speciesGroup != null ? speciesGroup.getName().toLowerCase() : null);
+			speciesData.setIconUrl(resourceData != null && AppUtil.getResourceContext(resourceData.getContext()) != null
+					? AppUtil.getResourceContext(resourceData.getContext()) + "/" + resourceData.getFileName()
+					: null);
+			speciesData.setSpeciesId(species.getId());
+			speciesData.setSpeciesName(species.getTitle());
+
+			List<UserGroupMailData> userGroupData = new ArrayList<>();
+			List<UserGroupIbp> userGroups = ugService.getSpeciesUserGroup(species.getId().toString());
+			if (userGroups != null) {
+				for (UserGroupIbp ug : userGroups) {
+					UserGroupMailData ugMailData = new UserGroupMailData();
+					ugMailData.setId(ug.getId());
+					ugMailData.setIcon(ug.getIcon());
+					ugMailData.setName(ug.getName());
+					ugMailData.setWebAddress(ug.getWebAddress());
+					userGroupData.add(ugMailData);
+				}
+			}
+
+			MailData payload = new MailData();
+			payload.setUserGroupData(userGroupData);
+			payload.setSpeciesData(speciesData);
+			return payload;
+		} catch (Exception e) {
+			logger.error("Couldn't build mail data for species {}: {}", species.getId(), e.getMessage());
+		}
+		return null;
 	}
 
 	private SpeciesBatchPreviewResult previewRow(SpeciesBatchPreviewRow row, Lookups lookups) {

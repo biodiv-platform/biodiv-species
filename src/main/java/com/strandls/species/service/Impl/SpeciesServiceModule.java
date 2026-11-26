@@ -25,6 +25,7 @@ public class SpeciesServiceModule extends AbstractModule {
 		bind(LogActivities.class).in(Scopes.SINGLETON);
 		bind(SpeciesListService.class).to(SpeciesListServiceImpl.class).in(Scopes.SINGLETON);
 		bind(SpeciesBatchService.class).to(SpeciesBatchServiceImpl.class).in(Scopes.SINGLETON);
+		bind(SpeciesBatchWriter.class).in(Scopes.SINGLETON);
 		// clients used only by the batch upload preview
 		bind(LicenseControllerApi.class).in(Scopes.SINGLETON);
 		bind(CacheConfig.class).in(Scopes.SINGLETON);
