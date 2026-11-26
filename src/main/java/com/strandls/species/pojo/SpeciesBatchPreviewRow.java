@@ -12,9 +12,10 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
  *
  * <ul>
  * <li>contributor: one or more user emails separated by , ; or new line</li>
- * <li>license: license name or id (blank = request default)</li>
+ * <li>attribution: required</li>
+ * <li>license: license name or id (required)</li>
  * <li>speciesId: id of the species page to fill (required, used as given)</li>
- * <li>language: language name (blank = default)</li>
+ * <li>language: language name (required)</li>
  * <li>references: one per line or ; separated, each "Title | URL", "Title" or
  * "URL"</li>
  * </ul>
@@ -29,7 +30,6 @@ public class SpeciesBatchPreviewRow {
 	private String attribution;
 	private String license;
 	private String language;
-	private String status;
 	private String references;
 	private List<SpeciesBatchFieldValue> fields = new ArrayList<>();
 
@@ -91,14 +91,6 @@ public class SpeciesBatchPreviewRow {
 
 	public void setLanguage(String language) {
 		this.language = language;
-	}
-
-	public String getStatus() {
-		return status;
-	}
-
-	public void setStatus(String status) {
-		this.status = status;
 	}
 
 	public String getReferences() {

@@ -57,8 +57,8 @@ public class SpeciesBatchServiceImpl implements SpeciesBatchService {
 
 	private final Logger logger = LoggerFactory.getLogger(SpeciesBatchServiceImpl.class);
 
-	/** Status given to species fields when the Status cell is blank */
-	static final String DEFAULT_STATUS = "PUBLISHED";
+	/** Status of every species field the batch upload adds; not taken from the sheet */
+	static final String DEFAULT_STATUS = "UNDER_CREATION";
 
 	private static final String USER_INDEX = "extended_user";
 	private static final String USER_INDEX_TYPE = "_doc";
@@ -105,8 +105,7 @@ public class SpeciesBatchServiceImpl implements SpeciesBatchService {
 			throw new IllegalArgumentException(
 					"Too many rows: " + previewRequest.getRows().size() + " (max " + MAX_PREVIEW_ROWS + ")");
 
-		Lookups lookups = new Lookups(request.getHeader(HttpHeaders.AUTHORIZATION),
-				previewRequest.getDefaultLicenseId());
+		Lookups lookups = new Lookups(request.getHeader(HttpHeaders.AUTHORIZATION));
 
 		List<SpeciesBatchPreviewResult> results = new ArrayList<>();
 		for (SpeciesBatchPreviewRow row : previewRequest.getRows()) {
@@ -134,20 +133,16 @@ public class SpeciesBatchServiceImpl implements SpeciesBatchService {
 		resolveSpeciesPage(row, result);
 		resolveContributors(row, result, lookups);
 
-		// attribution is required by updateSpeciesField; default to the contributors
+		// Attribution, License and Language are required columns
 		String attribution = SpeciesBatchParser.trim(row.getAttribution());
-		if (attribution.isEmpty() && !result.getContributors().isEmpty()) {
-			attribution = result.getContributors().stream().map(SpeciesBatchContributor::getName)
-					.collect(Collectors.joining(", "));
-			warnings.add("No attribution, contributor name will be used");
-		}
+		if (attribution.isEmpty())
+			errors.add("Attribution missing");
 		result.setAttributions(attribution);
 
 		resolveLicense(row, result, lookups);
 		resolveLanguage(row, result, lookups);
 
-		String status = SpeciesBatchParser.trim(row.getStatus()).toUpperCase(Locale.ROOT);
-		result.setStatus(status.isEmpty() ? DEFAULT_STATUS : status);
+		result.setStatus(DEFAULT_STATUS);
 
 		result.setReferences(SpeciesBatchParser.parseReferences(row.getReferences()));
 		for (Reference reference : result.getReferences()) {
@@ -210,23 +205,18 @@ public class SpeciesBatchServiceImpl implements SpeciesBatchService {
 			return;
 		}
 
-		License license = null;
-		if (!cell.isEmpty()) {
-			Long id = SpeciesBatchParser.toLong(cell);
-			String normalized = SpeciesBatchParser.normalize(cell);
-			license = licenses.stream()
-					.filter(l -> (id != null && id.equals(l.getId()))
-							|| SpeciesBatchParser.normalize(l.getName()).equals(normalized))
-					.findFirst().orElse(null);
-			if (license == null)
-				result.getWarnings().add("License \"" + cell + "\" not found, using default");
+		if (cell.isEmpty()) {
+			result.getErrors().add("License missing");
+			return;
 		}
-		if (license == null && lookups.defaultLicenseId != null) {
-			license = licenses.stream().filter(l -> lookups.defaultLicenseId.equals(l.getId())).findFirst()
-					.orElse(null);
-		}
+		Long id = SpeciesBatchParser.toLong(cell);
+		String normalized = SpeciesBatchParser.normalize(cell);
+		License license = licenses.stream()
+				.filter(l -> (id != null && id.equals(l.getId()))
+						|| SpeciesBatchParser.normalize(l.getName()).equals(normalized))
+				.findFirst().orElse(null);
 		if (license == null) {
-			result.getErrors().add("License missing and no valid default license");
+			result.getErrors().add("License \"" + cell + "\" not found");
 			return;
 		}
 		result.setLicenseId(license.getId());
@@ -239,10 +229,7 @@ public class SpeciesBatchServiceImpl implements SpeciesBatchService {
 		List<Language> languages = lookups.languages();
 
 		if (cell.isEmpty()) {
-			result.setLanguageId(defaultLanguageId);
-			if (languages != null)
-				languages.stream().filter(l -> defaultLanguageId.equals(l.getId())).findFirst()
-						.ifPresent(l -> result.setLanguageName(l.getName()));
+			result.getErrors().add("Language missing");
 			return;
 		}
 		if (languages == null) {
@@ -354,7 +341,6 @@ public class SpeciesBatchServiceImpl implements SpeciesBatchService {
 	/** Caches for one preview call */
 	private class Lookups {
 		private final String authHeader;
-		private final Long defaultLicenseId;
 
 		private final Map<String, UserLookup> users = new HashMap<>();
 		private final Map<Long, Set<String>> filledFields = new HashMap<>();
@@ -366,9 +352,8 @@ public class SpeciesBatchServiceImpl implements SpeciesBatchService {
 		private List<Language> languages;
 		private boolean languagesLoaded;
 
-		Lookups(String authHeader, Long defaultLicenseId) {
+		Lookups(String authHeader) {
 			this.authHeader = authHeader;
-			this.defaultLicenseId = defaultLicenseId;
 		}
 
 		UserLookup user(String email) {

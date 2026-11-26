@@ -11,20 +11,10 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class SpeciesBatchPreviewRequest {
 
-	/** License used for rows whose License cell is blank (the UI sends its site default) */
-	private Long defaultLicenseId;
 	private List<SpeciesBatchPreviewRow> rows = new ArrayList<>();
 
 	public SpeciesBatchPreviewRequest() {
 		super();
-	}
-
-	public Long getDefaultLicenseId() {
-		return defaultLicenseId;
-	}
-
-	public void setDefaultLicenseId(Long defaultLicenseId) {
-		this.defaultLicenseId = defaultLicenseId;
 	}
 
 	public List<SpeciesBatchPreviewRow> getRows() {
